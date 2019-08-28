@@ -244,6 +244,27 @@ export default {
     }
   },
   watch: {
+    'mobject1.className': function() {
+      if (this.finished) {
+        // draw initial scene
+        this.scene.clear();
+        let c = new Manim[this.mobject1.className]();
+        c.translateMobject(this.mobject1.position);
+        c.applyStyle(this.mobject1.style);
+        this.mobject1.mobject = c;
+        this.scene.add(c);
+      } else {
+        // redraw mobject
+        this.scene.remove(this.mobject1.mobject);
+        let c = new Manim[this.mobject1.className]();
+        c.translateMobject(this.mobject1.position);
+        c.applyStyle(this.mobject1.style);
+        this.mobject1.mobject = c;
+        this.scene.add(c);
+      }
+      this.scene.update();
+      this.finished = true;
+    },
     'mobject1.style.strokeWidth': function(width) {
       if (!this.finished) {
         this.mobject1.mobject.linewidth = width / 100;
