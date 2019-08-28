@@ -12,15 +12,7 @@ class Scene extends Two {
   }
 
   beginAnimation(animation) {
-    // TODO: remove this check after
-    // https://github.com/jonobr1/two.js/issues/389 is resolved
-    let ids = this.scene.children.map(child => child.id);
-    if (this.scene.children.reduce(
-      (acc, cur) => { acc || ids.includes(cur.id) },
-      false,
-    )) {
-      this.add(animation.mobject);
-    }
+    this.add(animation.mobject);
     this.lastStoppingFrame = this.lastFrame;
     animation.begin();
   }

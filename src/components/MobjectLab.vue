@@ -24,8 +24,8 @@
             </v-btn>
           </div>
           <div class="title">Style</div>
-          <div class="align-items-center position-relative">
-            <div class="subtitle-1">stroke</div>
+          <div class="align-items-center position-relative mb-1">
+            <div class="subtitle-1">stroke color</div>
             <div class="ml-2 picker-offset">
               <Picker
                 attr="stroke"
@@ -37,8 +37,8 @@
               />
             </div>
           </div>
-          <div class="align-items-center position-relative">
-            <div class="subtitle-1">fill</div>
+          <div class="align-items-center position-relative mb-1">
+            <div class="subtitle-1">fill color</div>
             <div class="ml-2 picker-offset">
               <Picker
                 attr="fill"
@@ -59,6 +59,7 @@
               v-bind:max="15"
             />
           </div>
+
           <v-select
             :items="mobjects"
             label="End Mobject"
@@ -290,7 +291,7 @@ export default {
 }
 .picker-offset {
   position: absolute;
-  left: 50px;
+  left: 98px;
 }
 </style>
 
