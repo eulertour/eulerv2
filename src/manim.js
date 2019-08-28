@@ -58,6 +58,7 @@ class Group extends Two.Group {
   }
 
   nullPointAlign(/*other*/) {
+    // eslint-disable-next-line
     console.log('Mobject.nullPointAlign not implemented');
   }
 
@@ -182,6 +183,7 @@ class Group extends Two.Group {
   }
 
   addSubmobjects(/*numSubmobjects*/) {
+    // eslint-disable-next-line
     console.log('Mobject.addSubmobjects not implemented');
   }
 

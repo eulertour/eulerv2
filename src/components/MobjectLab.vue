@@ -1,5 +1,5 @@
 <template>
-  <div id="lab-container" class="mt-7">
+  <div class="align-items-center justify-content-center mt-7">
     <v-card class="mr-7 pa-6" min-height="360px" min-width="400px">
       <div v-if="sceneLoaded">
         <v-card-title class="pa-0 mb-2">
@@ -14,7 +14,7 @@
             v-model="mobject1.className">
           </v-select>
           <div class="title">Position</div>
-          <div class="position-select">
+          <div class="align-items-center">
             <div class="subtitle-1">
               ({{ mobject1.position[0].toFixed(1) || 0 }},
                {{ mobject1.position[1].toFixed(1) || 0 }})
@@ -24,15 +24,41 @@
             </v-btn>
           </div>
           <div class="title">Style</div>
-          <div class="stroke-select">
+          <div class="align-items-center position-relative">
             <div class="subtitle-1">stroke</div>
-            <div class="ml-2">
-              <div id="stroke-picker"/>
+            <div class="ml-2 picker-offset">
+              <Picker
+                attr="stroke"
+                v-bind:mobject-data="mobject1"
+                v-bind:default="mobject1.style.strokeColor"
+                v-on:change="handlePickerChange"
+                v-on:hide="handlePickerHide"
+                v-on:save="handlePickerSave"
+              />
             </div>
           </div>
-          <div class="subtitle-1">fill color</div>
-          <div class="subtitle-1">fill opacity</div>
-          <div class="subtitle-1">stroke width</div>
+          <div class="align-items-center position-relative">
+            <div class="subtitle-1">fill</div>
+            <div class="ml-2 picker-offset">
+              <Picker
+                attr="fill"
+                v-bind:mobject-data="mobject1"
+                v-bind:default="mobject1.style.fillColor"
+                v-on:change="handlePickerChange"
+                v-on:hide="handlePickerHide"
+                v-on:save="handlePickerSave"
+              />
+            </div>
+          </div>
+          <div class="align-items-center justify-content-center">
+            <v-slider
+              v-model="mobject1.style.strokeWidth"
+              label="stroke width"
+              v-bind:hide-details="true"
+              v-bind:min="1"
+              v-bind:max="15"
+            />
+          </div>
           <v-select
             :items="mobjects"
             label="End Mobject"
@@ -45,8 +71,8 @@
           <v-btn>Reset</v-btn>
         </v-card-actions>
       </div>
-      <div v-else class="spinner-container">
-        <v-progress-circular indeterminate></v-progress-circular>
+      <div v-else class="spinner-container align-items-center justify-content-center">
+        <v-progress-circular indeterminate/>
       </div>
     </v-card>
     <div id="manim-background"/>
@@ -54,16 +80,15 @@
 </template>
 
 <script>
-import Vue from 'vue';
-import '@simonwep/pickr/dist/themes/nano.min.css';
-import Pickr from '@simonwep/pickr';
 import * as Manim from '../manim.js';
 import { VCard, VCardText, VCardTitle } from 'vuetify/lib'
 import 'vuetify/dist/vuetify.min.css'
+import Picker from './Picker.vue'
 
 export default {
   name: 'MobjectLab',
   components: {
+    Picker,
     VCard,
     VCardText,
     VCardTitle,
@@ -125,52 +150,6 @@ export default {
         scene.add(c);
         scene.update();
         this.sceneLoaded = true;
-      }).then(() => {
-        const pickr = Pickr.create({
-          el: '#stroke-picker',
-          default: this.mobject1.style.strokeColor,
-          theme: 'nano',
-          swatches: [
-            'rgba(255, 235, 59, 0.95)',
-            'rgba(255, 193, 7, 1)'
-          ],
-          components: {
-            // Main components
-            preview: true,
-            opacity: true,
-            hue: true,
-            // Input / output Options
-            interaction: {
-              hex: true,
-              rgba: true,
-              input: true,
-              save: true
-            }
-          }
-        }).on('change', (color, instance) => {
-          if (!this.finished) {
-            this.mobject1.mobject.stroke = color.toHEXA().toString();
-          } else {
-            // draw initial scene
-            this.scene.clear();
-            let c = new Manim[this.mobject1.className]();
-            c.translateMobject(this.mobject1.position);
-            c.applyStyle(this.mobject1.style);
-
-            c.stroke = color.toRGBA().toString();
-
-            this.mobject1.mobject = c;
-            this.scene.add(c);
-          }
-          this.scene.update();
-        }).on('hide', instance => {
-          this.mobject1.mobject.applyStyle(this.mobject1.style);
-          this.scene.update();
-        }).on('save', (color, instance) => {
-          let hexa = color.toHEXA();
-          this.mobject1.style.strokeColor = hexa.toString().slice(0, 7);
-          this.mobject1.style.strokeOpacity = color.a;
-        });
       });
     });
   },
@@ -188,10 +167,36 @@ export default {
       let s = new Manim[this.mobject2.className]();
       s.translateMobject(this.mobject2.position);
 
-
       let anim = new Manim.Transform(this.mobject1.mobject, s);
       this.scene.playAnimation(anim);
       this.finished = true;
+    },
+    handlePickerSave(attr, color, mobjectData) {
+      let hexa = color.toHEXA();
+      mobjectData.style[attr + 'Color'] = hexa.toString().slice(0, 7);
+      mobjectData.style[attr + 'Opacity'] = color.a;
+    },
+    handlePickerChange(attr, color, mobjectData) {
+      if (!this.finished) {
+        mobjectData.mobject[attr] = color.toHEXA().toString();
+      } else {
+        // draw initial scene
+        this.scene.clear();
+        let c = new Manim[mobjectData.className]();
+        c.translateMobject(mobjectData.position);
+        c.applyStyle(mobjectData.style);
+
+        c[attr] = color.toRGBA().toString();
+
+        this.mobject1.mobject = c;
+        this.scene.add(c);
+        this.finished = false;
+      }
+      this.scene.update();
+    },
+    handlePickerHide(mobjectData) {
+      mobjectData.mobject.applyStyle(mobjectData.style);
+      this.scene.update();
     },
     position(mobject) {
       this.selectingPosition = true;
@@ -227,9 +232,9 @@ export default {
 
             this.mobject1.mobject = c;
             this.scene.add(c);
+            this.finished = false;
           }
           this.scene.update();
-          this.finished = false;
         }
         document.removeEventListener('click', handlePositionClick);
         this.selectingPosition = false;
@@ -237,31 +242,28 @@ export default {
       document.addEventListener('click', handlePositionClick);
     }
   },
-  watch: {}
+  watch: {
+    'mobject1.style.strokeWidth': function(width) {
+      if (!this.finished) {
+        this.mobject1.mobject.linewidth = width / 100;
+      } else {
+        // draw initial scene
+        this.scene.clear();
+        let c = new Manim[this.mobject1.className]();
+        c.translateMobject(this.mobject1.position);
+        c.applyStyle(this.mobject1.style);
+        this.mobject1.mobject = c;
+        this.scene.add(c);
+        this.finished = false;
+      }
+      this.scene.update();
+    }
+  }
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-h3 {
-  margin: 40px 0 0;
-}
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-li {
-  display: inline-block;
-  margin: 0 10px;
-}
-a {
-  color: #42b983;
-}
-#lab-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
 .scene-info {
   margin-right: 30px;
   min-height: 360px;
@@ -269,21 +271,32 @@ a {
 }
 .spinner-container {
   height: 360px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 #manim-background {
   width: 640px;
   height: 360px;
   background-color: black;
 }
-.position-select {
+.align-items-center {
   display: flex;
   align-items: center;
 }
-.stroke-select {
+.justify-content-center {
   display: flex;
-  align-items: center;
+  justify-content: center;
+}
+.position-relative {
+  position: relative;
+}
+.picker-offset {
+  position: absolute;
+  left: 50px;
 }
 </style>
+
+<style>
+.v-input__slider .v-input__slot .v-label {
+  color: black;
+}
+</style>
+
