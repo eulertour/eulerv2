@@ -100,6 +100,7 @@ class Group extends Two.Group {
     let anchors = [];
     for (let i = 0; i < points.length / 4 + 1; i++) {
       let a = new Two.Anchor(0, 0, 0, 0, 0, 0, 'C');
+      a.relative = false;
       anchors.push(a);
     }
     for (let i = 0; i < points.length; i += 4) {
