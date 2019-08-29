@@ -35,3 +35,17 @@ export default {
   }),
 };
 </script>
+
+<style>
+.align-items-center {
+  display: flex;
+  align-items: center;
+}
+.justify-content-center {
+  display: flex;
+  justify-content: center;
+}
+.position-relative {
+  position: relative;
+}
+</style>

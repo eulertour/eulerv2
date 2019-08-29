@@ -2,71 +2,43 @@
   <div class="align-items-center justify-content-center mt-7">
     <v-card class="mr-7 pa-6" min-height="360px" min-width="400px">
       <div v-if="sceneLoaded">
-        <v-card-title class="pa-0 mb-2">
+        <v-card-title class="pa-0">
           <div class="display-1">Transform</div>
         </v-card-title>
-
+        <div class="subtitle-1">Morph one Mobject into another</div>
+        <v-divider class="my-6"/>
         <v-card-text class="pa-0">
-          Morph one Mobject into another.
-          <v-select
-            :items="mobjects"
+          <MobjectPanel
+            v-bind:mobject-data="mobject1"
+            v-bind:mobject-classes="mobjects"
+            v-bind:default-class="mobject1.className"
+            v-bind:scene-element="this.scene.renderer.domElement"
             label="Start Mobject"
-            v-model="mobject1.className">
-          </v-select>
-          <div class="title">Position</div>
-          <div class="align-items-center">
-            <div class="subtitle-1">
-              ({{ mobject1.position[0].toFixed(1) || 0 }},
-               {{ mobject1.position[1].toFixed(1) || 0 }})
-            </div>
-            <v-btn v-on:click="position(mobject1.mobject)" class="ml-3">
-              {{ selectingPosition ? "Click the Scene" : "Set position" }}
-            </v-btn>
-          </div>
-          <div class="title">Style</div>
-          <div class="align-items-center position-relative mb-1">
-            <div class="subtitle-1">stroke color</div>
-            <div class="ml-2 picker-offset">
-              <Picker
-                attr="stroke"
-                v-bind:mobject-data="mobject1"
-                v-bind:default="mobject1.style.strokeColor"
-                v-on:change="handlePickerChange"
-                v-on:hide="handlePickerHide"
-                v-on:save="handlePickerSave"
-              />
-            </div>
-          </div>
-          <div class="align-items-center position-relative mb-1">
-            <div class="subtitle-1">fill color</div>
-            <div class="ml-2 picker-offset">
-              <Picker
-                attr="fill"
-                v-bind:mobject-data="mobject1"
-                v-bind:default="mobject1.style.fillColor"
-                v-on:change="handlePickerChange"
-                v-on:hide="handlePickerHide"
-                v-on:save="handlePickerSave"
-              />
-            </div>
-          </div>
-          <div class="align-items-center justify-content-center">
-            <v-slider
-              v-model="mobject1.style.strokeWidth"
-              label="stroke width"
-              v-bind:hide-details="true"
-              v-bind:min="1"
-              v-bind:max="15"
-            />
-          </div>
 
-          <v-select
-            :items="mobjects"
+            v-on:class-change="handleClassChange"
+            v-on:position-change="handlePositionChange"
+            v-on:picker-change="handlePickerChange"
+            v-on:picker-hide="handlePickerHide"
+            v-on:picker-save="handlePickerSave"
+            v-on:width-change="handleWidthChange"
+          />
+          <v-divider class="my-6"/>
+          <MobjectPanel
+            v-bind:mobject-data="mobject2"
+            v-bind:mobject-classes="mobjects"
+            v-bind:default-class="mobject2.className"
+            v-bind:scene-element="this.scene.renderer.domElement"
             label="End Mobject"
-            v-model="mobject2.className">
-          </v-select>
-        </v-card-text>
 
+            v-on:class-change="handleClassChange"
+            v-on:position-change="handlePositionChange"
+            v-on:picker-change="handlePickerChange"
+            v-on:picker-hide="handlePickerHide"
+            v-on:picker-save="handlePickerSave"
+            v-on:width-change="handleWidthChange"
+          />
+        </v-card-text>
+        <v-divider class="my-6"/>
         <v-card-actions class="pa-0">
           <v-btn v-on:click="play" class="mr-3">Play</v-btn>
           <v-btn>Reset</v-btn>
@@ -82,27 +54,19 @@
 
 <script>
 import * as Manim from '../manim.js';
-import { VCard, VCardText, VCardTitle } from 'vuetify/lib'
-import 'vuetify/dist/vuetify.min.css'
-import Picker from './Picker.vue'
+import MobjectPanel from './MobjectPanel.vue'
 
 export default {
   name: 'MobjectLab',
   components: {
-    Picker,
-    VCard,
-    VCardText,
-    VCardTitle,
-  },
-  props: {
-    msg: String
+    MobjectPanel,
   },
   data() {
     return {
       scene: null,
       sceneLoaded: false,
       selectingPosition: false,
-      finished: false,
+      isAtStart: true,
       mobjects: ["Circle", "Square"],
       mobject1: {
         className: "Circle",
@@ -116,6 +80,7 @@ export default {
           strokeWidth: 4,
         },
         mobject: null,
+        isAtStart: true,
       },
       mobject2: {
         className: "Square",
@@ -128,6 +93,8 @@ export default {
           fillOpacity: 0,
           strokeWidth: 4,
         },
+        mobject: null,
+        isAtStart: false,
       },
     }
   },
@@ -156,7 +123,7 @@ export default {
   },
   methods: {
     play: function() {
-      if (this.finished) {
+      if (!this.isAtStart) {
         // draw initial scene
         this.scene.clear();
         let c = new Manim[this.mobject1.className]();
@@ -167,10 +134,51 @@ export default {
       }
       let s = new Manim[this.mobject2.className]();
       s.translateMobject(this.mobject2.position);
+      s.applyStyle(this.mobject2.style);
+      this.mobject2.mobject = s;
 
       let anim = new Manim.Transform(this.mobject1.mobject, s);
       this.scene.playAnimation(anim);
-      this.finished = true;
+      this.isAtStart = false;
+    },
+    handleWidthChange(width, mobjectData) {
+      mobjectData.style.strokeWidth = width;
+      if (this.isAtStart === mobjectData.isAtStart) {
+        mobjectData.mobject.linewidth = width / 100;
+      } else {
+        // draw scene
+        this.scene.clear();
+        let c = new Manim[mobjectData.className]();
+        c.translateMobject(mobjectData.position);
+        c.applyStyle(mobjectData.style);
+        mobjectData.mobject = c;
+        this.scene.add(c);
+        this.isAtStart = mobjectData.isAtStart;
+      }
+      this.scene.update();
+      this.isAtStart = mobjectData.isAtStart;
+    },
+    handleClassChange(className, mobjectData) {
+      mobjectData.className = className;
+      if (this.isAtStart === mobjectData.isAtStart) {
+        // redraw mobject
+        this.scene.remove(mobjectData.mobject);
+        let c = new Manim[mobjectData.className]();
+        c.translateMobject(mobjectData.position);
+        c.applyStyle(mobjectData.style);
+        mobjectData.mobject = c;
+        this.scene.add(c);
+      } else {
+        // draw initial scene
+        this.scene.clear();
+        let c = new Manim[mobjectData.className]();
+        c.translateMobject(mobjectData.position);
+        c.applyStyle(mobjectData.style);
+        mobjectData.mobject = c;
+        this.scene.add(c);
+      }
+      this.scene.update();
+      this.isAtStart = mobjectData.isAtStart;
     },
     handlePickerSave(attr, color, mobjectData) {
       let hexa = color.toHEXA();
@@ -178,7 +186,7 @@ export default {
       mobjectData.style[attr + 'Opacity'] = color.a;
     },
     handlePickerChange(attr, color, mobjectData) {
-      if (!this.finished) {
+      if (this.isAtStart === mobjectData.isAtStart) {
         mobjectData.mobject[attr] = color.toHEXA().toString();
       } else {
         // draw initial scene
@@ -189,98 +197,47 @@ export default {
 
         c[attr] = color.toRGBA().toString();
 
-        this.mobject1.mobject = c;
+        mobjectData.mobject = c;
         this.scene.add(c);
-        this.finished = false;
+        this.isAtStart = true;
       }
       this.scene.update();
+      this.isAtStart = mobjectData.isAtStart;
     },
     handlePickerHide(mobjectData) {
       mobjectData.mobject.applyStyle(mobjectData.style);
       this.scene.update();
     },
-    position(mobject) {
-      this.selectingPosition = true;
-      let sceneElement = this.scene.renderer.domElement;
-      let firstClick = true;
+    handlePositionChange(e, sceneElement, mobjectData) {
+      let clickedInsideScene = e.target.closest("#manim-scene") !== null;
+      if (clickedInsideScene) {
+        let scenePoint = this.scene.normalizePoint([
+          e.clientX - sceneElement.getBoundingClientRect().left,
+          e.clientY - sceneElement.getBoundingClientRect().top,
+        ]);
+        mobjectData.position = scenePoint;
 
-      let handlePositionClick = () => {
-        // this function is triggered once when it is first added, but this
-        // should be ignored
-        if (firstClick) {
-          firstClick = false;
-          return;
+        if (this.isAtStart === mobjectData.isAtStart) {
+          mobjectData.mobject.moveTo(scenePoint);
+        } else {
+          // draw initial scene
+          this.scene.clear();
+          let c = new Manim[mobjectData.className]();
+          c.translateMobject(mobjectData.position);
+          c.applyStyle(mobjectData.style);
+
+          c.moveTo(mobjectData.position);
+
+          mobjectData.mobject = c;
+          this.scene.add(c);
+          this.isAtStart = true;
         }
-        let clickedInsideScene = event.target.closest("#manim-scene") !== null;
-        if (clickedInsideScene) {
-          let scenePoint = this.scene.normalizePoint([
-            event.clientX - sceneElement.getBoundingClientRect().left,
-            event.clientY - sceneElement.getBoundingClientRect().top,
-          ]);
-          this.mobject1.position = scenePoint;
-
-
-          if (!this.finished) {
-            mobject.moveTo(scenePoint);
-          } else {
-            // draw initial scene
-            this.scene.clear();
-            let c = new Manim[this.mobject1.className]();
-            c.translateMobject(this.mobject1.position);
-            c.applyStyle(this.mobject1.style);
-
-            c.moveTo(this.mobject1.position);
-
-            this.mobject1.mobject = c;
-            this.scene.add(c);
-            this.finished = false;
-          }
-          this.scene.update();
-        }
-        document.removeEventListener('click', handlePositionClick);
-        this.selectingPosition = false;
-      };
-      document.addEventListener('click', handlePositionClick);
-    }
-  },
-  watch: {
-    'mobject1.className': function() {
-      if (this.finished) {
-        // draw initial scene
-        this.scene.clear();
-        let c = new Manim[this.mobject1.className]();
-        c.translateMobject(this.mobject1.position);
-        c.applyStyle(this.mobject1.style);
-        this.mobject1.mobject = c;
-        this.scene.add(c);
-      } else {
-        // redraw mobject
-        this.scene.remove(this.mobject1.mobject);
-        let c = new Manim[this.mobject1.className]();
-        c.translateMobject(this.mobject1.position);
-        c.applyStyle(this.mobject1.style);
-        this.mobject1.mobject = c;
-        this.scene.add(c);
+        this.scene.update();
+        this.isAtStart = mobjectData.isAtStart;
       }
-      this.scene.update();
-      this.finished = true;
     },
-    'mobject1.style.strokeWidth': function(width) {
-      if (!this.finished) {
-        this.mobject1.mobject.linewidth = width / 100;
-      } else {
-        // draw initial scene
-        this.scene.clear();
-        let c = new Manim[this.mobject1.className]();
-        c.translateMobject(this.mobject1.position);
-        c.applyStyle(this.mobject1.style);
-        this.mobject1.mobject = c;
-        this.scene.add(c);
-        this.finished = false;
-      }
-      this.scene.update();
-    }
-  }
+  },
+  watch: {}
 }
 </script>
 
@@ -299,26 +256,8 @@ export default {
   height: 360px;
   background-color: black;
 }
-.align-items-center {
-  display: flex;
-  align-items: center;
-}
-.justify-content-center {
-  display: flex;
-  justify-content: center;
-}
-.position-relative {
-  position: relative;
-}
 .picker-offset {
   position: absolute;
   left: 98px;
 }
 </style>
-
-<style>
-.v-input__slider .v-input__slot .v-label {
-  color: black;
-}
-</style>
-
