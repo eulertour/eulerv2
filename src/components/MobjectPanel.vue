@@ -1,7 +1,7 @@
 <template>
   <div>
     <v-select
-      label="Start Mobject"
+      v-bind:label="label"
       v-bind:items="mobjectClasses"
       v-model="chosenClass"
       hide-details
@@ -68,8 +68,8 @@ export default {
   props: {
     mobjectData: Object,
     mobjectClasses: Array,
-    defaultClass: String,
-    sceneElement: SVGSVGElement,
+    scene: Object,
+    label: String,
   },
   data() {
     return {
@@ -99,12 +99,19 @@ export default {
           firstClick = false;
           return;
         }
-        this.$emit(
-          'position-change',
-          e,
-          this.sceneElement,
-          this.mobjectData,
-        );
+        let sceneElement = this.scene.renderer.domElement;
+        let clickedInsideScene = e.target.closest('#' + sceneElement.id) !== null;
+        if (clickedInsideScene) {
+          let scenePoint = this.scene.normalizePoint([
+            e.clientX - sceneElement.getBoundingClientRect().left,
+            e.clientY - sceneElement.getBoundingClientRect().top,
+          ]);
+          this.$emit(
+            'position-change',
+            scenePoint,
+            this.mobjectData,
+          );
+        }
         this.selectingPosition = false;
         document.removeEventListener('click', handlePositionClick);
       };
@@ -113,7 +120,7 @@ export default {
     }
   },
   mounted() {
-    this.chosenClass = this.defaultClass;
+    this.chosenClass = this.mobjectData.className;
     this.currentStrokeWidth = this.mobjectData.style.strokeWidth;
   },
   watch: {
