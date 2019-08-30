@@ -310,9 +310,9 @@ class Mobject extends Group {
     let strokeChroma = chroma(this.stroke);
     let fillChroma = chroma(this.fill);
     return {
-      strokeColor: strokeChroma.hex(),
+      strokeColor: strokeChroma.hex().slice(0, 7),
       strokeOpacity: strokeChroma.get('rgba.a'),
-      fillColor: fillChroma.hex(),
+      fillColor: fillChroma.hex().slice(0, 7),
       fillOpacity: fillChroma.get('rgba.a'),
       strokeWidth: this.linewidth * 100,
     };

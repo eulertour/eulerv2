@@ -41,7 +41,8 @@
         <v-divider class="my-6"/>
         <v-card-actions class="pa-0">
           <v-btn v-on:click="play" class="mr-3">Play</v-btn>
-          <v-btn>Reset</v-btn>
+          <v-btn v-on:click="jumpToStart">Start</v-btn>
+          <v-btn v-on:click="jumpToEnd">End</v-btn>
         </v-card-actions>
       </div>
       <div v-else class="spinner-container align-items-center justify-content-center">
@@ -139,6 +140,34 @@ export default {
 
       let anim = new Manim.Transform(this.mobject1.mobject, s);
       this.scene.playAnimation(anim);
+      this.isAtStart = false;
+    },
+    jumpToStart: function() {
+      if (this.isAtStart) {
+        return;
+      }
+      // draw initial scene
+      this.scene.clear();
+      let c = new Manim[this.mobject1.className]();
+      c.translateMobject(this.mobject1.position);
+      c.applyStyle(this.mobject1.style);
+      this.mobject1.mobject = c;
+      this.scene.add(c);
+      this.scene.update();
+      this.isAtStart = true;
+    },
+    jumpToEnd: function() {
+      if (!this.isAtStart) {
+        return;
+      }
+      // draw final scene
+      this.scene.clear();
+      let c = new Manim[this.mobject2.className]();
+      c.translateMobject(this.mobject2.position);
+      c.applyStyle(this.mobject2.style);
+      this.mobject2.mobject = c;
+      this.scene.add(c);
+      this.scene.update();
       this.isAtStart = false;
     },
     handleWidthChange(width, mobjectData) {

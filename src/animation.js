@@ -5,10 +5,12 @@ class Animation {
   constructor(
     mobject,
     rateFunc=utils.smooth,
+    removeWhenFinished=false,
     /* suspendMobjectUpdating=true, */
   ) {
     this.mobject = mobject;
     this.rateFunc = rateFunc;
+    this.removeWhenFinished = removeWhenFinished;
   }
 
   begin() {
@@ -27,6 +29,12 @@ class Animation {
       this.mobject.suspendUpdating();
     }
     this.interpolate(0);
+  }
+
+  cleanUpFromScene(scene) {
+    if (this.removeWhenFinished) {
+      scene.remove(this.mobject);
+    }
   }
 
   finish() {
@@ -98,6 +106,11 @@ class Transform extends Animation {
     this.mobject.alignData(this.targetCopy);
 
     Animation.prototype.begin.call(this)
+  }
+
+  cleanUpFromScene(scene) {
+    scene.remove(this.mobject)
+    scene.add(this.targetMobject)
   }
 
   createTarget() {

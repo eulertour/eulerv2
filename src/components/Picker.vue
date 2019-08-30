@@ -43,4 +43,7 @@ export default {
 </script>
 
 <style>
+.pickr {
+  border: 1px solid gray;
+}
 </style>
