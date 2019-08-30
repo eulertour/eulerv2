@@ -70,10 +70,8 @@ export default {
             params: {},
             position: [-1, 0],
             style: {
-              strokeColor: "#fc6255",
-              strokeOpacity: 1,
-              fillColor: "#000000",
-              fillOpacity: 0,
+              strokeColor: "#fc6255ff",
+              fillColor: "#00000000",
               strokeWidth: 4,
             },
             mobject: null,
@@ -84,10 +82,8 @@ export default {
             params: {},
             position: [1, 0],
             style: {
-              strokeColor: "#ffffff",
-              strokeOpacity: 1,
-              fillColor: "#000000",
-              fillOpacity: 0,
+              strokeColor: "#ffffffff",
+              fillColor: "#00000000",
               strokeWidth: 4,
             },
             mobject: null,
@@ -181,8 +177,8 @@ export default {
     },
     handlePickerSave(attr, color, mobjectData) {
       let hexa = color.toHEXA();
-      mobjectData.style[attr + 'Color'] = hexa.toString().slice(0, 7);
-      mobjectData.style[attr + 'Opacity'] = color.a;
+      mobjectData.style[attr + 'Color'] = hexa.toString().slice(0, 9);
+      //mobjectData.style[attr + 'Opacity'] = color.a;
     },
     handlePickerChange(attr, color, mobjectData) {
       if (this.isAtStart !== mobjectData.isAtStart) {

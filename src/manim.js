@@ -292,12 +292,12 @@ class Mobject extends Group {
                 + strokeChroma.get('rgba.r')  + ', '
                 + strokeChroma.get('rgba.g')  + ', '
                 + strokeChroma.get('rgba.b')  + ', '
-                + combinedStyle.strokeOpacity + ')';
+                + strokeChroma.get('rgba.a') + ')';
     this.fill = 'rgba('
                 + fillChroma.get('rgba.r')  + ', '
                 + fillChroma.get('rgba.g')  + ', '
                 + fillChroma.get('rgba.b')  + ', '
-                + combinedStyle.fillOpacity + ')';
+                + fillChroma.get('rgba.a') + ')';
     this.linewidth = combinedStyle.strokeWidth / 100;
     return this;
   }
