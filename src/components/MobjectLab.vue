@@ -72,7 +72,7 @@ export default {
             style: {
               strokeColor: "#fc6255",
               strokeOpacity: 1,
-              fillColor: "#000000",
+              fillColor: "#00000000",
               fillOpacity: 0,
               strokeWidth: 4,
             },
@@ -86,7 +86,7 @@ export default {
             style: {
               strokeColor: "#ffffff",
               strokeOpacity: 1,
-              fillColor: "#000000",
+              fillColor: "#00000000",
               fillOpacity: 0,
               strokeWidth: 4,
             },
