@@ -177,8 +177,7 @@ export default {
     },
     handlePickerSave(attr, color, mobjectData) {
       let hexa = color.toHEXA();
-      mobjectData.style[attr + 'Color'] = hexa.toString().slice(0, 9);
-      //mobjectData.style[attr + 'Opacity'] = color.a;
+      mobjectData.style[attr + 'Color'] = hexa.toString();
     },
     handlePickerChange(attr, color, mobjectData) {
       if (this.isAtStart !== mobjectData.isAtStart) {
