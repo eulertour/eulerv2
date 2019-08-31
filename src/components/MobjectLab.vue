@@ -28,7 +28,7 @@
           </div>
         </v-card-text>
         <v-card-actions class="pa-0">
-          <v-btn v-on:click="play" class="mr-3">Play</v-btn>
+          <v-btn v-on:click="play" class="mr-3">{{this.scene.playing ? "Pause" : "Play"}}</v-btn>
           <v-btn v-on:click="drawScene('start')">Start</v-btn>
           <v-btn v-on:click="drawScene('end')">End</v-btn>
         </v-card-actions>
@@ -56,6 +56,7 @@ export default {
       sceneLoaded: false,
       selectingPosition: false,
       isAtStart: true,
+      inMiddleOfAnim: false,
       mobjectChoices: ["Circle", "Square"],
       animation: {
         className: "Transform",
@@ -132,7 +133,20 @@ export default {
       this.scene.update();
       this.isAtStart = position === 'start';
     },
+    onAnimationFinish: function() {
+      this.inMiddleOfAnim = false;
+    },
     play: function() {
+      if (this.inMiddleOfAnim) /* paused */{
+        this.scene.play()
+        return;
+      }
+      if (this.scene.playing) /* not paused, animation playing */{
+        this.inMiddleOfAnim = true
+        this.scene.pause();
+        return;
+      }
+      //not paused, animation not playing
       if (!this.isAtStart) {
         this.drawScene('start');
       }
@@ -148,7 +162,7 @@ export default {
         args.push(data.mobject);
       }
       let anim = new Manim[this.animation.className](...args);
-      this.scene.playAnimation(anim);
+      this.scene.playAnimation(anim, this.onAnimationFinish);
       this.isAtStart = false;
     },
     handleWidthChange(width, mobjectData) {
@@ -178,7 +192,6 @@ export default {
     handlePickerSave(attr, color, mobjectData) {
       let hexa = color.toHEXA();
       mobjectData.style[attr + 'Color'] = hexa.toString().slice(0, 9);
-      //mobjectData.style[attr + 'Opacity'] = color.a;
     },
     handlePickerChange(attr, color, mobjectData) {
       if (this.isAtStart !== mobjectData.isAtStart) {
