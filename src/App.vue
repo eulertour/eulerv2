@@ -2,17 +2,17 @@
   <v-app>
     <v-app-bar app>
       <v-toolbar-title class="headline">
-        <span class="mr-1">EulerTour</span>
+        <span class="mr-1 display-1">EulerTour</span>
         <span class="font-weight-light">v2</span>
       </v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn
         text
+        height="100%"
         href="https://github.com/eulertour/eulerv2"
         target="_blank"
       >
-        <span class="mr-2">GitHub</span>
-        <v-icon>mdi-open-in-new</v-icon>
+        <font-awesome-icon class="display-2" v-bind:icon="['fab', 'github']"/>
       </v-btn>
     </v-app-bar>
 
