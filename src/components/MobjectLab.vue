@@ -110,6 +110,7 @@ export default {
   methods: {
     // TODO: the argument should be an integer denoting the timestamp
     drawScene: function(position, forceDraw=false) {
+      this.scene.unbind('update');
       if (position !== 'start' && position !== 'end') {
         // eslint-disable-next-line
         console.log("invalid call drawScene(" + position + ")");
