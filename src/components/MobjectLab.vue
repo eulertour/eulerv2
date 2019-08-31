@@ -28,12 +28,8 @@
           </div>
         </v-card-text>
         <v-card-actions class="pa-0">
-          <div v-if="this.scene.playing">
-            <v-btn v-on:click="pause" class="mr-3">Pause</v-btn>
-          </div>
-          <div v-else>
-            <v-btn v-on:click="play" class="mr-3">Play</v-btn>
-          </div>
+            <v-btn v-if="this.scene.playing" v-on:click="pause" class="mr-3">Pause</v-btn>
+            <v-btn v-else v-on:click="play" class="mr-3">Play</v-btn>
           <v-btn v-on:click="drawScene('start')">Start</v-btn>
           <v-btn v-on:click="drawScene('end')">End</v-btn>
         </v-card-actions>
@@ -116,6 +112,7 @@ export default {
   methods: {
     // TODO: the argument should be an integer denoting the timestamp
     drawScene: function(position, forceDraw=false) {
+      this.inMiddleOfAnim = false;
       if (position !== 'start' && position !== 'end') {
         // eslint-disable-next-line
         console.log("invalid call drawScene(" + position + ")");
@@ -147,6 +144,7 @@ export default {
       return;
     },
     play: function() {
+      console.log("play")
       //paused
 
       if (this.inMiddleOfAnim) {
@@ -154,7 +152,7 @@ export default {
         return;
       }
       //not paused
-
+      console.log("restarting")
       if (!this.isAtStart) {
         this.drawScene('start');
       }
