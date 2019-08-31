@@ -38,7 +38,7 @@ class Animation {
   }
 
   finish() {
-    //console.log('finished');
+    // console.log('finished');
   }
 
   interpolate(alpha) {

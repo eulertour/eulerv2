@@ -12,10 +12,9 @@ class Scene extends Two {
     });
   }
 
-
   clearAnimation() {
-    console.log('clearing animation')
-    this.unbind('update', this.wrapper)
+    this.pause();
+    this.unbind('update', this.wrapper);
   }
 
   beginAnimation(animation) {
@@ -28,22 +27,21 @@ class Scene extends Two {
     animation.finish();
   }
 
-  playAnimation(animation, onAnimationFinish) {
+  playAnimation(animation, onFinish=null) {
     this.beginAnimation(animation);
-
     this.update();
     this.wrapper = function(frameCount) {
       animation.interpolate((frameCount - this.lastStoppingFrame) / 60);
       if (animation.isFinished((frameCount - this.lastStoppingFrame) / 60)) {
-        this.unbind('update', this.wrapper);
-        this.pause();
+        this.clearAnimation();
         this.lastStoppingFrame = frameCount;
         this.finishAnimation(animation);
-        onAnimationFinish();
         animation.cleanUpFromScene(this);
+        if (onFinish !== null) {
+          onFinish();
+        }
       }
     };
-
     this.bind('update', this.wrapper).play();
   }
 
