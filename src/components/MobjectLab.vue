@@ -112,7 +112,10 @@ export default {
   methods: {
     // TODO: the argument should be an integer denoting the timestamp
     drawScene: function(position, forceDraw=false) {
-      this.inMiddleOfAnim = false;
+      if (this.inMiddleOfAnim) {
+        this.inMiddleOfAnim = false;
+        this.scene.clearAnimation();
+      } 
       if (position !== 'start' && position !== 'end') {
         // eslint-disable-next-line
         console.log("invalid call drawScene(" + position + ")");
@@ -152,7 +155,7 @@ export default {
         return;
       }
       //not paused
-      console.log("restarting")
+
       if (!this.isAtStart) {
         this.drawScene('start');
       }
