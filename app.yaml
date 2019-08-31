@@ -1,10 +1,19 @@
 runtime: nodejs10
+default_expiration: 5m
 handlers:
+  # pyodide
+- url: /pyodide/(.*\..+)$
+  secure: always
+  static_files: dist/pyodide/\1
+  upload: dist/pyodide/(.*\..+)$
+  mime_type: application/wasm
   # Serve all static files with urls ending with a file extension
-- url: /(.*\..+)$ 
+- url: /(.*\..+)$
+  secure: always
   static_files: dist/\1
   upload: dist/(.*\..+)$
   # catch all handler to index.html
 - url: /.*
+  secure: always
   static_files: dist/index.html
   upload: dist/index.html
