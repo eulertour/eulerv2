@@ -21,6 +21,7 @@ export function pathFromAnchors(anchors, leftHandles, rightHandles) {
     /*curved=*/true,
     /*manual=*/true,
   );
+  path.cap = 'square';
   return path;
 }
 
