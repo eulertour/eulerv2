@@ -12,7 +12,7 @@
         href="https://github.com/eulertour/eulerv2"
         target="_blank"
       >
-        <font-awesome-icon class="display-2" v-bind:icon="['fab', 'github']"/>
+        <v-icon class="display-2">mdi-github-circle</v-icon>
       </v-btn>
     </v-app-bar>
 
@@ -37,14 +37,6 @@ export default {
 </script>
 
 <style>
-.align-items-center {
-  display: flex;
-  align-items: center;
-}
-.justify-content-center {
-  display: flex;
-  justify-content: center;
-}
 .position-relative {
   position: relative;
 }

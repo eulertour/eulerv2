@@ -1,5 +1,5 @@
 <template>
-  <div class="align-items-center justify-content-center mt-7">
+  <div class="d-flex align-center justify-center mt-7">
     <v-card class="mr-7 pa-6" min-height="360px" min-width="400px">
       <div v-if="sceneLoaded">
         <v-card-title class="pa-0">
@@ -34,34 +34,46 @@
           <v-btn v-on:click="drawScene('end')">End</v-btn>
         </v-card-actions>
       </div>
-      <div v-else class="spinner-container align-items-center justify-content-center">
+      <div v-else class="spinner-container d-flex align-center justify-center">
         <v-progress-circular indeterminate/>
       </div>
     </v-card>
-    <div id="manim-background"/>
+    <div id="background-with-timeline">
+      <div id="manim-background"/>
+      <Timeline
+        class="my-2"
+        v-bind:animations="[animation]"
+        v-bind:index="currentAnimationIndex"
+        v-bind:offset="currentAnimationOffset"
+      />
+    </div>
   </div>
 </template>
 
 <script>
 import * as Manim from '../manim.js';
 import MobjectPanel from './MobjectPanel.vue'
+import Timeline from './Timeline.vue'
 
 export default {
   name: 'MobjectLab',
   components: {
     MobjectPanel,
+    Timeline,
   },
   data() {
     return {
       scene: null,
       sceneLoaded: false,
-      selectingPosition: false,
       isAtStart: true,
       inMiddleOfAnim: false,
+      currentAnimationIndex: 0,
+      currentAnimationOffset: 0,
       mobjectChoices: ["Circle", "Square"],
       animation: {
         className: "Transform",
         description: "Morph one Mobject into another",
+        durationSeconds: 1,
         args: ["mobject1", "mobject2"],
         argDescriptions: ["Start Mobject", "End Mobject"],
         startMobjects: ["mobject1"],
@@ -142,6 +154,9 @@ export default {
     onAnimationFinish: function() {
       this.inMiddleOfAnim = false;
     },
+    onAnimationStep: function(elapsedSeconds) {
+      this.currentAnimationOffset = elapsedSeconds;
+    },
     pause: function () {
       this.scene.pause();
       return;
@@ -166,7 +181,11 @@ export default {
         args.push(data.mobject);
       }
       let anim = new Manim[this.animation.className](...args);
-      this.scene.playAnimation(anim, /*onFinish=*/this.onAnimationFinish);
+      this.scene.playAnimation(
+        anim,
+        /*onStep=*/this.onAnimationStep,
+        /*onFinish=*/this.onAnimationFinish,
+      );
       this.isAtStart = false;
       this.inMiddleOfAnim = true;
     },
