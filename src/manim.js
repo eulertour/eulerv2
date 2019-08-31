@@ -1,7 +1,7 @@
 import * as Two from '../node_modules/two.js/build/two.js';
 import * as consts from './constants.js';
 import * as utils from './utils.js';
-import * as chroma from 'chroma-js';
+import chroma from 'chroma-js';
 import { Animation, Transform } from './animation.js';
 import { Scene } from './scene.js';
 
@@ -272,32 +272,13 @@ class Mobject extends Group {
   ) {
     super([path].concat(submobjects), /*fillTopLevel=*/true);
     this.normalizeToCanvas();
-
     this.applyStyle(style);
-  }
-
-  setStrokeRGBA(rgba) {
-    this.stroke = 'rgba('
-                + rgba[0] + ', '
-                + rgba[1] + ', '
-                + rgba[2] + ', '
-                + rgba[3] + ')';
   }
 
   applyStyle(style) {
     let combinedStyle = this.getFullStyle(style);
-    let strokeChroma = chroma(combinedStyle.strokeColor);
-    let fillChroma = chroma(combinedStyle.fillColor);
-    this.stroke = 'rgba('
-                + strokeChroma.get('rgba.r')  + ', '
-                + strokeChroma.get('rgba.g')  + ', '
-                + strokeChroma.get('rgba.b')  + ', '
-                + strokeChroma.get('rgba.a') + ')';
-    this.fill = 'rgba('
-                + fillChroma.get('rgba.r')  + ', '
-                + fillChroma.get('rgba.g')  + ', '
-                + fillChroma.get('rgba.b')  + ', '
-                + fillChroma.get('rgba.a') + ')';
+    this.stroke = combinedStyle.strokeColor;
+    this.fill = combinedStyle.fillColor;
     this.linewidth = combinedStyle.strokeWidth / 100;
     return this;
   }
@@ -307,13 +288,9 @@ class Mobject extends Group {
   }
 
   getStyleDict() {
-    let strokeChroma = chroma(this.stroke);
-    let fillChroma = chroma(this.fill);
     return {
-      strokeColor: strokeChroma.hex().slice(0, 7),
-      strokeOpacity: strokeChroma.get('rgba.a'),
-      fillColor: fillChroma.hex().slice(0, 7),
-      fillOpacity: fillChroma.get('rgba.a'),
+      strokeColor: this.stroke,
+      fillColor: this.fill,
       strokeWidth: this.linewidth * 100,
     };
   }
