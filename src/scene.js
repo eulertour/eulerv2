@@ -6,9 +6,15 @@ class Scene extends Two {
     super(conf);
     this.lastStoppingFrame = 0;
     this.lastFrame = 0;
+    this.wrapper = null;
     this.bind('update', (frameCount) => {
       this.lastFrame = frameCount; 
     });
+  }
+
+  clearAnimation() {
+    this.pause();
+    this.unbind('update', this.wrapper);
   }
 
   beginAnimation(animation) {
@@ -21,22 +27,22 @@ class Scene extends Two {
     animation.finish();
   }
 
-  playAnimation(animation) {
+  playAnimation(animation, onFinish=null) {
     this.beginAnimation(animation);
-
     this.update();
-    let wrapper = function(frameCount) {
+    this.wrapper = function(frameCount) {
       animation.interpolate((frameCount - this.lastStoppingFrame) / 60);
       if (animation.isFinished((frameCount - this.lastStoppingFrame) / 60)) {
-        this.unbind('update', wrapper);
-        this.pause();
+        this.clearAnimation();
         this.lastStoppingFrame = frameCount;
         this.finishAnimation(animation);
         animation.cleanUpFromScene(this);
+        if (onFinish !== null) {
+          onFinish();
+        }
       }
     };
-
-    this.bind('update', wrapper).play();
+    this.bind('update', this.wrapper).play();
   }
 
   normalizePoint(p) {

@@ -28,7 +28,8 @@
           </div>
         </v-card-text>
         <v-card-actions class="pa-0">
-          <v-btn v-on:click="play" class="mr-3">Play</v-btn>
+          <v-btn v-if="this.scene.playing" v-on:click="pause" class="mr-3">Pause</v-btn>
+          <v-btn v-else v-on:click="play" class="mr-3">Play</v-btn>
           <v-btn v-on:click="drawScene('start')">Start</v-btn>
           <v-btn v-on:click="drawScene('end')">End</v-btn>
         </v-card-actions>
@@ -56,6 +57,7 @@ export default {
       sceneLoaded: false,
       selectingPosition: false,
       isAtStart: true,
+      inMiddleOfAnim: false,
       mobjectChoices: ["Circle", "Square"],
       animation: {
         className: "Transform",
@@ -114,10 +116,14 @@ export default {
         // eslint-disable-next-line
         console.log("invalid call drawScene(" + position + ")");
       }
-      if (!forceDraw) {
-        if (position === 'start' &&  this.isAtStart ||
-            position === 'end'   && !this.isAtStart) {
-          return;
+      if (this.inMiddleOfAnim) {
+        this.scene.clearAnimation();
+      } else {
+        if (!forceDraw) {
+          if (position === 'start' &&  this.isAtStart ||
+              position === 'end'   && !this.isAtStart) {
+            return;
+          }
         }
       }
       this.scene.clear();
@@ -131,8 +137,20 @@ export default {
       }
       this.scene.update();
       this.isAtStart = position === 'start';
+      this.inMiddleOfAnim = false;
+    },
+    onAnimationFinish: function() {
+      this.inMiddleOfAnim = false;
+    },
+    pause: function () {
+      this.scene.pause();
+      return;
     },
     play: function() {
+      if (this.inMiddleOfAnim) {
+        this.scene.play()
+        return;
+      }
       if (!this.isAtStart) {
         this.drawScene('start');
       }
@@ -148,8 +166,9 @@ export default {
         args.push(data.mobject);
       }
       let anim = new Manim[this.animation.className](...args);
-      this.scene.playAnimation(anim);
+      this.scene.playAnimation(anim, /*onFinish=*/this.onAnimationFinish);
       this.isAtStart = false;
+      this.inMiddleOfAnim = true;
     },
     handleWidthChange(width, mobjectData) {
       mobjectData.style.strokeWidth = width;
