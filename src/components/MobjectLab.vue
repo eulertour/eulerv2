@@ -28,7 +28,12 @@
           </div>
         </v-card-text>
         <v-card-actions class="pa-0">
-          <v-btn v-on:click="play" class="mr-3">{{this.scene.playing ? "Pause" : "Play"}}</v-btn>
+          <div v-if="this.scene.playing">
+            <v-btn v-on:click="pause" class="mr-3">Pause</v-btn>
+          </div>
+          <div v-else>
+            <v-btn v-on:click="play" class="mr-3">Play</v-btn>
+          </div>
           <v-btn v-on:click="drawScene('start')">Start</v-btn>
           <v-btn v-on:click="drawScene('end')">End</v-btn>
         </v-card-actions>
@@ -136,17 +141,20 @@ export default {
     onAnimationFinish: function() {
       this.inMiddleOfAnim = false;
     },
+    pause: function () {
+      this.inMiddleOfAnim = true;
+      this.scene.pause();
+      return;
+    },
     play: function() {
-      if (this.inMiddleOfAnim) /* paused */{
+      //paused
+
+      if (this.inMiddleOfAnim) {
         this.scene.play()
         return;
       }
-      if (this.scene.playing) /* not paused, animation playing */{
-        this.inMiddleOfAnim = true
-        this.scene.pause();
-        return;
-      }
-      //not paused, animation not playing
+      //not paused
+
       if (!this.isAtStart) {
         this.drawScene('start');
       }
