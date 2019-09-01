@@ -27,24 +27,41 @@
             <v-divider class="my-6"/>
           </div>
         </v-card-text>
-        <v-card-actions class="pa-0">
-          <v-btn v-if="this.scene.playing" v-on:click="pause" class="mr-3">Pause</v-btn>
-          <v-btn v-else v-on:click="play" class="mr-3">Play</v-btn>
-          <v-btn v-on:click="drawScene('start')">Start</v-btn>
-          <v-btn v-on:click="drawScene('end')">End</v-btn>
+        <v-card-actions class="d-flex justify-center pa-0">
+          <v-btn fab v-on:click="jumpToAnimationStart" class="mx-2">
+            <v-icon color="black" x-large>mdi-skip-previous</v-icon>
+          </v-btn>
+          <v-btn fab v-if="this.scene.playing" v-on:click="scene.pause" class="mx-4">
+            <v-icon color="black" x-large>mdi-pause</v-icon>
+          </v-btn>
+          <v-btn fab v-else v-on:click="play" class="mx-4">
+            <v-icon color="black" x-large>mdi-play</v-icon>
+          </v-btn>
+          <v-btn fab v-on:click="jumpToAnimationEnd" class="mx-2">
+            <v-icon color="black" x-large>mdi-skip-next</v-icon>
+          </v-btn>
         </v-card-actions>
       </div>
       <div v-else class="d-flex align-stretch justify-center">
         <v-progress-circular indeterminate/>
       </div>
     </v-card>
-    <div id="background-with-timeline">
+    <div id="video-controls">
       <div id="manim-background"/>
       <Timeline
         class="mt-2"
         v-bind:animations="animations"
         v-bind:index="animationIndex"
         v-bind:offset="animationOffset"
+        v-on:new-animation="handleNewAnimation"
+      />
+      <VideoControls
+        v-if="sceneLoaded"
+        v-on:play="play"
+        v-on:pause="scene.pause"
+        v-on:step-backward="stepBackward"
+        v-on:step-forward="stepForward"
+        v-bind:scene="scene"
       />
     </div>
   </div>
@@ -54,25 +71,26 @@
 import * as Manim from '../manim.js';
 import MobjectPanel from './MobjectPanel.vue'
 import Timeline from './Timeline.vue'
+import VideoControls from './VideoControls.vue'
+import { AnimationPosition } from '../constants.js';
 
 export default {
   name: 'MobjectLab',
   components: {
     MobjectPanel,
     Timeline,
+    VideoControls,
   },
   computed: {
     currentAnimation() {
       return this.animations[this.animationIndex];
-    }
+    },
   },
   data() {
     return {
       scene: null,
       sceneLoaded: false,
       mobjectChoices: ["Circle", "Square"],
-      isAtStart: true,
-      inMiddleOfAnim: false,
       animationIndex: 0,
       animationOffset: 0,
       animations: [{
@@ -113,39 +131,37 @@ export default {
     }
   },
   mounted() {
-    let scene = new Manim.Scene({ width: 640, height: 360 });
-    scene.appendTo(document.getElementById("manim-background"));
-    scene.update();
-    scene.renderer.domElement.id = "manim-scene";
-    this.scene = scene;
+    this.scene = new Manim.Scene({ width: 640, height: 360 });
+    this.scene.appendTo(document.getElementById("manim-background"));
+    this.scene.update();
+    this.scene.renderer.domElement.id = "manim-scene";
     window.languagePluginLoader.then(() => {
       window.pyodide.loadPackage("numpy").then(() => {
         window.pyodide.runPython("import numpy");
-        this.drawScene('start', /*forceDraw=*/true);
+        this.clearAndDrawScene(0, AnimationPosition.START, /*forceDraw=*/true);
         this.sceneLoaded = true;
       });
     });
   },
   methods: {
     // TODO: the argument should be an integer denoting the timestamp
-    drawScene: function(position, forceDraw=false) {
-      if (position !== 'start' && position !== 'end') {
-        // eslint-disable-next-line
-        console.log("invalid call drawScene(" + position + ")");
+    clearAndDrawScene: function(index, position, forceDraw=false) {
+      let offsetFromPostion = (position === AnimationPosition.START ? 0 : 1);
+      if (!forceDraw &&
+          this.animationIndex === index &&
+          this.animationOffset === offsetFromPostion) {
+          return;
       }
-      if (this.inMiddleOfAnim) {
+      if (this.animationOffset !== 0 && this.animationOffset !== 1) {
         this.scene.clearAnimation();
-      } else {
-        if (!forceDraw) {
-          if (position === 'start' &&  this.isAtStart ||
-              position === 'end'   && !this.isAtStart) {
-            return;
-          }
-        }
       }
+      let positionString = (position === AnimationPosition.START
+                              ? 'start'
+                              : 'end');
       this.scene.clear();
-      for (let key of this.currentAnimation[position + "Mobjects"]) {
-        let data = this.currentAnimation.mobjects[key];
+      let targetAnimation = this.animations[index];
+      for (let key of targetAnimation[positionString + "Mobjects"]) {
+        let data = targetAnimation.mobjects[key];
         let mob = new Manim[data.className]();
         mob.translateMobject(data.position);
         mob.applyStyle(data.style);
@@ -153,25 +169,16 @@ export default {
         this.scene.add(mob);
       }
       this.scene.update();
-      this.isAtStart = position === 'start';
-      this.inMiddleOfAnim = false;
-    },
-    onAnimationFinish: function() {
-      this.inMiddleOfAnim = false;
-    },
-    onAnimationStep: function(elapsedSeconds) {
-      this.animationOffset = elapsedSeconds;
-    },
-    pause: function () {
-      this.scene.pause();
+      this.animationIndex = index;
+      this.animationOffset = offsetFromPostion;
     },
     play: function() {
-      if (this.inMiddleOfAnim) {
+      if (this.animationOffset !== 0 && this.animationOffset !== 1) {
         this.scene.play()
         return;
       }
-      if (!this.isAtStart) {
-        this.drawScene('start');
+      if (this.animationOffset !== 0) {
+        this.clearAndDrawScene(this.animationIndex, AnimationPosition.START);
       }
       let args = [];
       for (let key of this.currentAnimation.args) {
@@ -185,26 +192,49 @@ export default {
         args.push(data.mobject);
       }
       let anim = new Manim[this.currentAnimation.className](...args);
-      this.scene.playAnimation(
-        anim,
-        /*onStep=*/this.onAnimationStep,
-        /*onFinish=*/this.onAnimationFinish,
-      );
-      this.isAtStart = false;
-      this.inMiddleOfAnim = true;
+      this.scene.playAnimation(anim, /*onStep=*/this.onAnimationStep);
+    },
+    jumpToAnimationStart: function() {
+      this.clearAndDrawScene(this.animationIndex, AnimationPosition.START);
+    },
+    jumpToAnimationEnd: function() {
+      this.clearAndDrawScene(this.animationIndex, AnimationPosition.END);
+    },
+    stepForward: function() {
+      if (this.animationIndex < this.animations.length - 1) {
+        this.clearAndDrawScene(this.animationIndex + 1, AnimationPosition.START);
+      } else {
+        this.clearAndDrawScene(this.animationIndex, AnimationPosition.END);
+      }
+    },
+    stepBackward: function() {
+      if (this.animationIndex > 0) {
+        this.clearAndDrawScene(this.animationIndex - 1, AnimationPosition.START);
+      } else {
+        this.clearAndDrawScene(this.animationIndex, AnimationPosition.START);
+      }
+    },
+    onAnimationStep: function(elapsedSeconds) {
+      this.animationOffset = elapsedSeconds;
     },
     handleWidthChange(width, mobjectData) {
       mobjectData.style.strokeWidth = width;
-      if (this.isAtStart === mobjectData.isAtStart) {
+      if (
+        (mobjectData.isAtStart && this.animationOffset === 0) ||
+        (!mobjectData.isAtStart && this.animationOffset === 1)
+      ) {
         mobjectData.mobject.linewidth = width / 100;
         this.scene.update();
       } else {
-        this.drawScene(mobjectData.isAtStart ? 'start' : 'end');
+        this.clearAndDrawScene(this.animationIndex, mobjectData.isAtStart ? AnimationPosition.START : AnimationPosition.END);
       }
     },
     handleClassChange(className, mobjectData) {
       mobjectData.className = className;
-      if (this.isAtStart === mobjectData.isAtStart) {
+      if (
+        (mobjectData.isAtStart && this.animationOffset === 0) ||
+        (!mobjectData.isAtStart && this.animationOffset === 1)
+      ) {
         // redraw mobject
         this.scene.remove(mobjectData.mobject);
         let c = new Manim[mobjectData.className]();
@@ -214,7 +244,7 @@ export default {
         this.scene.add(c);
         this.scene.update();
       } else {
-        this.drawScene(mobjectData.isAtStart ? 'start' : 'end');
+        this.clearAndDrawScene(this.animationIndex, mobjectData.isAtStart ? AnimationPosition.START : AnimationPosition.END);
       }
     },
     handlePickerSave(attr, color, mobjectData) {
@@ -222,8 +252,11 @@ export default {
       mobjectData.style[attr + 'Color'] = hexa.toString();
     },
     handlePickerChange(attr, color, mobjectData) {
-      if (this.isAtStart !== mobjectData.isAtStart) {
-        this.drawScene(mobjectData.isAtStart ? 'start' : 'end');
+      if (
+        !(mobjectData.isAtStart && this.animationOffset === 0) ||
+         (!mobjectData.isAtStart && this.animationOffset === 1)
+      ) {
+        this.clearAndDrawScene(this.animationIndex, mobjectData.isAtStart ? AnimationPosition.START : AnimationPosition.END);
       }
       mobjectData.mobject[attr] = color.toHEXA().toString();
       this.scene.update();
@@ -234,14 +267,52 @@ export default {
     },
     handlePositionChange(position, mobjectData) {
       mobjectData.position = position;
-      if (this.isAtStart === mobjectData.isAtStart) {
+      if (
+        (mobjectData.isAtStart && this.animationOffset === 0) ||
+        (!mobjectData.isAtStart && this.animationOffset === 1)
+      ) {
         mobjectData.mobject.moveTo(position);
         this.scene.update();
       } else {
-        this.drawScene(mobjectData.isAtStart ? 'start' : 'end');
+        this.clearAndDrawScene(this.animationIndex, mobjectData.isAtStart ? AnimationPosition.START : AnimationPosition.END);
       }
     },
+    handleNewAnimation() {
+      this.animations.push({
+        className: "Wait",
+        description: "Hold a still frame",
+        durationSeconds: 1,
+        args: [],
+        argDescriptions: [],
+        startMobjects: ["mobject1"],
+        endMobjects: ["mobject1"],
+        mobjects: {
+          mobject1: {
+            className: "Square",
+            params: {},
+            position: [1, 0],
+            style: {
+              strokeColor: "#ffffffff",
+              fillColor: "#00000000",
+              strokeWidth: 4,
+            },
+            mobject: null,
+            isAtStart: true,
+          },
+        }
+      });
+      this.animationIndex = this.animations.length - 1;
+      this.animationIndex = 0;
+      this.clearAndDrawScene(this.animationIndex, AnimationPosition.START);
+      /* FIX clearAndDrawScene(index, location) */
+    }
   },
+  watch: {
+    animations: function() {
+      // eslint-disable-next-line
+      console.log(this.animations);
+    }
+  }
 }
 </script>
 

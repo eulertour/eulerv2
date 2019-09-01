@@ -1,10 +1,12 @@
 <template>
   <div class="d-flex align-center timeline">
-    <v-card class="keyframe">
-      <v-card-text>Transform</v-card-text>
+    <v-card class="d-flex flex-column justify-center keyframe">
+      <v-card-title class="d-flex justify-center headline px-2">Transform</v-card-title>
     </v-card>
     <v-card class="keyframe d-flex align-center justify-center">
-      <v-icon color="black" class="display-2">mdi-plus</v-icon>
+      <v-btn v-on:click="$emit('new-animation')" height="100%" width="100%">
+        <v-icon class="display-2">mdi-plus</v-icon>
+      </v-btn>
     </v-card>
     <div id="position-indicator" v-bind:style="timelineOffset"/>
   </div>
@@ -24,7 +26,7 @@ export default {
   computed: {
     timelineOffset() {
       return {
-        'left': this.offset * 120 + 'px',
+        'left': this.offset * 135 + 'px',
       }
     }
   },
@@ -49,11 +51,12 @@ export default {
 
 <style scoped>
 .keyframe {
-  height: 120px;
-  width: 120px;
+  height: 135px;
+  width: 135px;
 }
 .timeline {
   position: relative;
+  border: 1px solid black;
 }
 #position-indicator {
   background-color: black;

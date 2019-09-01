@@ -27,7 +27,7 @@ class Scene extends Two {
     animation.finish();
   }
 
-  playAnimation(animation, onStep=null, onFinish=null) {
+  playAnimation(animation, onStep=null) {
     this.beginAnimation(animation);
     this.update();
     this.wrapper = function(frameCount) {
@@ -40,9 +40,6 @@ class Scene extends Two {
         this.lastStoppingFrame = frameCount;
         this.finishAnimation(animation);
         animation.cleanUpFromScene(this);
-        if (onFinish !== null) {
-          onFinish();
-        }
       }
     };
     this.bind('update', this.wrapper).play();
