@@ -31,7 +31,7 @@
           <v-btn fab v-on:click="jumpToAnimationStart" class="mx-2">
             <v-icon color="black" x-large>mdi-skip-previous</v-icon>
           </v-btn>
-          <v-btn fab v-if="this.scene.playing" v-on:click="scene.pause" class="mx-4">
+          <v-btn fab v-if="this.scene.playing" v-on:click="pause" class="mx-4">
             <v-icon color="black" x-large>mdi-pause</v-icon>
           </v-btn>
           <v-btn fab v-else v-on:click="play" class="mx-4">
@@ -58,7 +58,7 @@
       <VideoControls
         v-if="sceneLoaded"
         v-on:play="play"
-        v-on:pause="scene.pause"
+        v-on:pause="pause"
         v-on:step-backward="stepBackward"
         v-on:step-forward="stepForward"
         v-bind:scene="scene"
@@ -171,6 +171,9 @@ export default {
       this.scene.update();
       this.animationIndex = index;
       this.animationOffset = offsetFromPostion;
+    },
+    pause: function() {
+      this.scene.pause();
     },
     play: function() {
       if (this.animationOffset !== 0 && this.animationOffset !== 1) {
