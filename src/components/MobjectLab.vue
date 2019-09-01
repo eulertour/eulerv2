@@ -1,22 +1,22 @@
 <template>
-  <div class="d-flex align-center justify-center mt-7">
-    <v-card class="mr-7 pa-6" min-height="360px" min-width="400px">
-      <div v-if="sceneLoaded">
+  <div class="d-flex justify-center align-center mt-7">
+    <v-card class="d-flex flex-column justify-center info-card mr-7 pa-6">
+      <div v-if="sceneLoaded" class="d-flex flex-column">
         <v-card-title class="pa-0">
-          <div class="display-1">{{ animation.className }}</div>
+          <div class="display-1">{{ currentAnimation.className }}</div>
         </v-card-title>
-        <div class="subtitle-1">{{ animation.description }}</div>
+        <div class="subtitle-1">{{ currentAnimation.description }}</div>
         <v-divider class="my-6"/>
         <v-card-text class="pa-0">
           <div
-            v-for="(mobject, index) in animation.args"
+            v-for="(mobject, index) in currentAnimation.args"
             v-bind:key="mobject"
           >
             <MobjectPanel
-              v-bind:mobject-data="animation.mobjects[mobject]"
+              v-bind:mobject-data="currentAnimation.mobjects[mobject]"
               v-bind:mobject-classes="mobjectChoices"
               v-bind:scene="scene"
-              v-bind:label="animation.argDescriptions[index]"
+              v-bind:label="currentAnimation.argDescriptions[index]"
               v-on:class-change="handleClassChange"
               v-on:position-change="handlePositionChange"
               v-on:picker-change="handlePickerChange"
@@ -34,17 +34,17 @@
           <v-btn v-on:click="drawScene('end')">End</v-btn>
         </v-card-actions>
       </div>
-      <div v-else class="spinner-container d-flex align-center justify-center">
+      <div v-else class="d-flex align-stretch justify-center">
         <v-progress-circular indeterminate/>
       </div>
     </v-card>
     <div id="background-with-timeline">
       <div id="manim-background"/>
       <Timeline
-        class="my-2"
-        v-bind:animations="[animation]"
-        v-bind:index="currentAnimationIndex"
-        v-bind:offset="currentAnimationOffset"
+        class="mt-2"
+        v-bind:animations="animations"
+        v-bind:index="animationIndex"
+        v-bind:offset="animationOffset"
       />
     </div>
   </div>
@@ -61,16 +61,21 @@ export default {
     MobjectPanel,
     Timeline,
   },
+  computed: {
+    currentAnimation() {
+      return this.animations[this.animationIndex];
+    }
+  },
   data() {
     return {
       scene: null,
       sceneLoaded: false,
+      mobjectChoices: ["Circle", "Square"],
       isAtStart: true,
       inMiddleOfAnim: false,
-      currentAnimationIndex: 0,
-      currentAnimationOffset: 0,
-      mobjectChoices: ["Circle", "Square"],
-      animation: {
+      animationIndex: 0,
+      animationOffset: 0,
+      animations: [{
         className: "Transform",
         description: "Morph one Mobject into another",
         durationSeconds: 1,
@@ -104,7 +109,7 @@ export default {
             isAtStart: false,
           },
         }
-      },
+      }],
     }
   },
   mounted() {
@@ -139,8 +144,8 @@ export default {
         }
       }
       this.scene.clear();
-      for (let key of this.animation[position + "Mobjects"]) {
-        let data = this.animation.mobjects[key];
+      for (let key of this.currentAnimation[position + "Mobjects"]) {
+        let data = this.currentAnimation.mobjects[key];
         let mob = new Manim[data.className]();
         mob.translateMobject(data.position);
         mob.applyStyle(data.style);
@@ -155,11 +160,10 @@ export default {
       this.inMiddleOfAnim = false;
     },
     onAnimationStep: function(elapsedSeconds) {
-      this.currentAnimationOffset = elapsedSeconds;
+      this.animationOffset = elapsedSeconds;
     },
     pause: function () {
       this.scene.pause();
-      return;
     },
     play: function() {
       if (this.inMiddleOfAnim) {
@@ -170,8 +174,8 @@ export default {
         this.drawScene('start');
       }
       let args = [];
-      for (let key of this.animation.args) {
-        let data = this.animation.mobjects[key];
+      for (let key of this.currentAnimation.args) {
+        let data = this.currentAnimation.mobjects[key];
         if (data.mobject === null) {
           let s = new Manim[data.className]();
           s.translateMobject(data.position);
@@ -180,7 +184,7 @@ export default {
         }
         args.push(data.mobject);
       }
-      let anim = new Manim[this.animation.className](...args);
+      let anim = new Manim[this.currentAnimation.className](...args);
       this.scene.playAnimation(
         anim,
         /*onStep=*/this.onAnimationStep,
@@ -243,14 +247,6 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.scene-info {
-  margin-right: 30px;
-  min-height: 360px;
-  width: 400px;
-}
-.spinner-container {
-  height: 360px;
-}
 #manim-background {
   width: 640px;
   height: 360px;
@@ -259,5 +255,9 @@ export default {
 .picker-offset {
   position: absolute;
   left: 98px;
+}
+.info-card {
+  width: 400px;
+  align-self: stretch;
 }
 </style>
