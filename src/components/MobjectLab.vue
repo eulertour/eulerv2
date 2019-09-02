@@ -1,68 +1,73 @@
 <template>
   <div class="d-flex justify-center align-top mt-7">
-    <v-card
-      class="d-flex flex-column info-card mr-7 pa-6"
-      v-bind:class="[sceneLoaded ? 'justify-space-between' : 'justify-center']"
-    >
-      <template v-if="sceneLoaded">
-        <div>
-          <v-card-title class="pa-0">
-            <div class="display-1">{{ currentAnimation.className }}</div>
-          </v-card-title>
-          <div class="subtitle-1">{{ currentAnimation.description }}</div>
-          <v-divider class="my-6"/>
-          <v-card-text class="pa-0">
-            <div
-              v-for="(mobject, index) in currentAnimation.args"
-              v-bind:key="mobject"
-            >
-              <MobjectPanel
-                v-bind:mobject-data="currentAnimation.mobjects[mobject]"
-                v-bind:mobject-classes="mobjectChoices"
-                v-bind:scene="scene"
-                v-bind:label="currentAnimation.argDescriptions[index]"
-                v-on:class-change="handleClassChange"
-                v-on:position-change="handlePositionChange"
-                v-on:picker-change="handlePickerChange"
-                v-on:picker-hide="handlePickerHide"
-                v-on:picker-save="handlePickerSave"
-                v-on:width-change="handleWidthChange"
-              />
-              <v-divider class="my-6"/>
-            </div>
-          </v-card-text>
+    <template v-if="sceneLoaded">
+    <v-expansion-panels id="info-panels" class="mr-4">
+    <v-expansion-panel class="info-panel">
+    <v-expansion-panel-header>Animation</v-expansion-panel-header>
+    <v-expansion-panel-content>
+      <div>
+        <div class="pa-0">
+          <div class="display-1">{{ currentAnimation.className }}</div>
         </div>
-        <v-card-actions class="d-flex justify-center pa-0">
-          <v-btn fab v-on:click="jumpToAnimationStart" class="mx-2">
-            <v-icon color="black" x-large>mdi-skip-previous</v-icon>
-          </v-btn>
-          <v-btn fab v-if="this.scene.playing" v-on:click="pause" class="mx-4">
-            <v-icon color="black" x-large>mdi-pause</v-icon>
-          </v-btn>
-          <v-btn
-            fab
-            v-else-if="animationOffset === 1"
-            v-on:click="replay($event, /*currentOnly=*/true)"
-            class="mx-4"
+        <div class="subtitle-1">{{ currentAnimation.description }}</div>
+        <v-divider class="my-6"/>
+        <div class="pa-0">
+          <template
+            v-for="(mobject, index) in currentAnimation.args"
           >
-            <v-icon color="black" x-large>mdi-replay</v-icon>
-          </v-btn>
-          <v-btn
-            fab
-            v-else
-            v-on:click="play($event, /*currentOnly=*/true)"
-            class="mx-4"
-          >
-            <v-icon color="black" x-large>mdi-play</v-icon>
-          </v-btn>
-          <v-btn fab v-on:click="jumpToAnimationEnd" class="mx-2">
-            <v-icon color="black" x-large>mdi-skip-next</v-icon>
-          </v-btn>
-        </v-card-actions>
-      </template>
-      <div v-else class="d-flex align-stretch justify-center">
-        <v-progress-circular indeterminate/>
+            <MobjectPanel
+              v-bind:mobject-data="currentAnimation.mobjects[mobject]"
+              v-bind:mobject-classes="mobjectChoices"
+              v-bind:scene="scene"
+              v-bind:label="currentAnimation.argDescriptions[index]"
+              v-on:class-change="handleClassChange"
+              v-on:position-change="handlePositionChange"
+              v-on:picker-change="handlePickerChange"
+              v-on:picker-hide="handlePickerHide"
+              v-on:picker-save="handlePickerSave"
+              v-on:width-change="handleWidthChange"
+              v-bind:key="'mobject-panel-' + index"
+            />
+            <v-divider class="my-6" v-bind:key="'mobject-divider-' + index"/>
+          </template>
+        </div>
       </div>
+      <div class="d-flex justify-center pa-0">
+        <v-btn fab v-on:click="jumpToAnimationStart" class="mx-2">
+          <v-icon color="black" x-large>mdi-skip-previous</v-icon>
+        </v-btn>
+        <v-btn fab v-if="this.scene.playing" v-on:click="pause" class="mx-4">
+          <v-icon color="black" x-large>mdi-pause</v-icon>
+        </v-btn>
+        <v-btn
+          fab
+          v-else-if="animationOffset === 1"
+          v-on:click="replay($event, /*currentOnly=*/true)"
+          class="mx-4"
+        >
+          <v-icon color="black" x-large>mdi-replay</v-icon>
+        </v-btn>
+        <v-btn
+          fab
+          v-else
+          v-on:click="play($event, /*currentOnly=*/true)"
+          class="mx-4"
+        >
+          <v-icon color="black" x-large>mdi-play</v-icon>
+        </v-btn>
+        <v-btn fab v-on:click="jumpToAnimationEnd" class="mx-2">
+          <v-icon color="black" x-large>mdi-skip-next</v-icon>
+        </v-btn>
+      </div>
+    </v-expansion-panel-content>
+    </v-expansion-panel>
+    </v-expansion-panels>
+    </template>
+    <v-card v-else
+      class="d-flex justify-center align-center mr-4"
+      id="spinner-container"
+    >
+      <v-progress-circular indeterminate/>
     </v-card>
     <div id="visualization-placeholder">
       <div id="visualization">
@@ -367,19 +372,25 @@ export default {
   height: 360px;
   background-color: black;
 }
-#visualization {
-  position: fixed;
+#info-panels {
+  width: 400px;
+}
+#spinner-container {
+  height: 575px;
+  width: 400px;
 }
 #visualization-placeholder {
-  width: 642px;
+  width: 640px;
   height: 575px;
+}
+#visualization {
+  position: fixed;
 }
 .picker-offset {
   position: absolute;
   left: 98px;
 }
-.info-card {
-  width: 400px;
-  align-self: stretch;
+.info-panel {
+  height: fit-content;
 }
 </style>
