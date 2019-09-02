@@ -1,32 +1,37 @@
 <template>
-  <div class="d-flex justify-center align-center mt-7">
-    <v-card class="d-flex flex-column justify-center info-card mr-7 pa-6">
-      <div v-if="sceneLoaded" class="d-flex flex-column">
-        <v-card-title class="pa-0">
-          <div class="display-1">{{ currentAnimation.className }}</div>
-        </v-card-title>
-        <div class="subtitle-1">{{ currentAnimation.description }}</div>
-        <v-divider class="my-6"/>
-        <v-card-text class="pa-0">
-          <div
-            v-for="(mobject, index) in currentAnimation.args"
-            v-bind:key="mobject"
-          >
-            <MobjectPanel
-              v-bind:mobject-data="currentAnimation.mobjects[mobject]"
-              v-bind:mobject-classes="mobjectChoices"
-              v-bind:scene="scene"
-              v-bind:label="currentAnimation.argDescriptions[index]"
-              v-on:class-change="handleClassChange"
-              v-on:position-change="handlePositionChange"
-              v-on:picker-change="handlePickerChange"
-              v-on:picker-hide="handlePickerHide"
-              v-on:picker-save="handlePickerSave"
-              v-on:width-change="handleWidthChange"
-            />
-            <v-divider class="my-6"/>
-          </div>
-        </v-card-text>
+  <div class="d-flex justify-center align-top mt-7">
+    <v-card
+      class="d-flex flex-column info-card mr-7 pa-6"
+      v-bind:class="[sceneLoaded ? 'justify-space-between' : 'justify-center']"
+    >
+      <template v-if="sceneLoaded">
+        <div>
+          <v-card-title class="pa-0">
+            <div class="display-1">{{ currentAnimation.className }}</div>
+          </v-card-title>
+          <div class="subtitle-1">{{ currentAnimation.description }}</div>
+          <v-divider class="my-6"/>
+          <v-card-text class="pa-0">
+            <div
+              v-for="(mobject, index) in currentAnimation.args"
+              v-bind:key="mobject"
+            >
+              <MobjectPanel
+                v-bind:mobject-data="currentAnimation.mobjects[mobject]"
+                v-bind:mobject-classes="mobjectChoices"
+                v-bind:scene="scene"
+                v-bind:label="currentAnimation.argDescriptions[index]"
+                v-on:class-change="handleClassChange"
+                v-on:position-change="handlePositionChange"
+                v-on:picker-change="handlePickerChange"
+                v-on:picker-hide="handlePickerHide"
+                v-on:picker-save="handlePickerSave"
+                v-on:width-change="handleWidthChange"
+              />
+              <v-divider class="my-6"/>
+            </div>
+          </v-card-text>
+        </div>
         <v-card-actions class="d-flex justify-center pa-0">
           <v-btn fab v-on:click="jumpToAnimationStart" class="mx-2">
             <v-icon color="black" x-large>mdi-skip-previous</v-icon>
@@ -54,30 +59,32 @@
             <v-icon color="black" x-large>mdi-skip-next</v-icon>
           </v-btn>
         </v-card-actions>
-      </div>
+      </template>
       <div v-else class="d-flex align-stretch justify-center">
         <v-progress-circular indeterminate/>
       </div>
     </v-card>
-    <div id="video-controls">
-      <div id="manim-background"/>
-      <Timeline
-        class="mt-2"
-        v-bind:animations="animations"
-        v-bind:index="animationIndex"
-        v-bind:offset="animationOffset"
-        v-on:new-animation="handleNewAnimation"
-      />
-      <VideoControls
-        v-if="sceneLoaded"
-        v-on:play="play($event, /*currentOnly=*/false)"
-        v-on:replay="replay"
-        v-on:pause="pause"
-        v-on:step-backward="stepBackward"
-        v-on:step-forward="stepForward"
-        v-bind:scene="scene"
-        v-bind:finished="animationIndex === animations.length - 1 && animationOffset === 1"
-      />
+    <div id="visualization-placeholder">
+      <div id="visualization">
+        <div id="manim-background"/>
+        <Timeline
+          class="mt-2"
+          v-bind:animations="animations"
+          v-bind:index="animationIndex"
+          v-bind:offset="animationOffset"
+          v-on:new-animation="handleNewAnimation"
+        />
+        <VideoControls
+          v-if="sceneLoaded"
+          v-on:play="play($event, /*currentOnly=*/false)"
+          v-on:replay="replay"
+          v-on:pause="pause"
+          v-on:step-backward="stepBackward"
+          v-on:step-forward="stepForward"
+          v-bind:scene="scene"
+          v-bind:finished="animationIndex === animations.length - 1 && animationOffset === 1"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -359,6 +366,13 @@ export default {
   width: 640px;
   height: 360px;
   background-color: black;
+}
+#visualization {
+  position: fixed;
+}
+#visualization-placeholder {
+  width: 642px;
+  height: 575px;
 }
 .picker-offset {
   position: absolute;
