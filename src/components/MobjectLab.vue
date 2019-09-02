@@ -83,6 +83,7 @@
 </template>
 
 <script>
+import * as _ from 'lodash';
 import * as Manim from '../manim.js';
 import MobjectPanel from './MobjectPanel.vue'
 import Timeline from './Timeline.vue'
@@ -208,8 +209,7 @@ export default {
       if (this.animationIndex === this.animations.length - 1) {
         return;
       }
-      this.animationIndex += 1;
-      this.animationOffset = 0;
+      this.clearAndDrawScene(this.animationIndex + 1, AnimationPosition.START);
       this.scene.playAnimation(
         this.buildCurrentAnimation(),
         /*onStep=*/this.onAnimationStep,
@@ -219,8 +219,8 @@ export default {
     play: function(e, currentOnly=true) {
       if (this.animationOffset !== 0 && this.animationOffset !== 1) {
         this.scene.onNextAnimation = (currentOnly
-            ? this.chainNextAnimation
-            : null);
+            ? null
+            : this.chainNextAnimation);
         this.scene.play()
         return;
       } else if (this.animationOffset === 1) {
@@ -330,28 +330,20 @@ export default {
       }
     },
     handleNewAnimation() {
+      let newAnimationMobjects = {};
+      let lastAnimation = this.animations[this.animations.length - 1];
+      for (let key of lastAnimation.endMobjects) {
+        newAnimationMobjects[key] = _.cloneDeep(lastAnimation.mobjects[key]);
+      }
       this.animations.push({
         className: "Wait",
         description: "Hold a still frame",
         durationSeconds: 1,
         args: [],
         argDescriptions: [],
-        startMobjects: ["mobject1"],
-        endMobjects: ["mobject1"],
-        mobjects: {
-          mobject1: {
-            className: "Square",
-            params: {},
-            position: [1, 0],
-            style: {
-              strokeColor: "#ffffffff",
-              fillColor: "#00000000",
-              strokeWidth: 4,
-            },
-            mobject: null,
-            isAtStart: true,
-          },
-        }
+        startMobjects: _.cloneDeep(lastAnimation.endMobjects),
+        endMobjects: _.cloneDeep(lastAnimation.endMobjects),
+        mobjects: newAnimationMobjects,
       });
       this.animationIndex = 0;
       this.clearAndDrawScene(this.animations.length - 1, AnimationPosition.START);
