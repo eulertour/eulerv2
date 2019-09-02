@@ -36,6 +36,14 @@
           </v-btn>
           <v-btn
             fab
+            v-else-if="animationOffset === 1"
+            v-on:click="replay($event, /*currentOnly=*/true)"
+            class="mx-4"
+          >
+            <v-icon color="black" x-large>mdi-replay</v-icon>
+          </v-btn>
+          <v-btn
+            fab
             v-else
             v-on:click="play($event, /*currentOnly=*/true)"
             class="mx-4"
@@ -227,9 +235,12 @@ export default {
         /*onNextAnimation=*/currentOnly ? null: this.chainNextAnimation,
       );
     },
-    replay: function() {
-      this.clearAndDrawScene(0, AnimationPosition.START);
-      this.play(null, /*currentOnly=*/false);
+    replay: function(e, currentOnly=true) {
+      this.clearAndDrawScene(
+        currentOnly ? this.animationIndex : 0,
+        AnimationPosition.START,
+      );
+      this.play(e, currentOnly);
     },
     jumpToAnimationStart: function() {
       this.clearAndDrawScene(this.animationIndex, AnimationPosition.START);
