@@ -1,7 +1,13 @@
 <template>
   <div class="d-flex align-center timeline">
-    <v-card class="d-flex flex-column justify-center keyframe">
-      <v-card-title class="d-flex justify-center headline px-2">Transform</v-card-title>
+    <v-card
+      v-for="(animation, index) in animations"
+      v-bind:key="index"
+      class="d-flex flex-column justify-center keyframe"
+    >
+    <v-card-title class="d-flex justify-center headline px-2">
+      {{ animation.className }}
+    </v-card-title>
     </v-card>
     <v-card class="keyframe d-flex align-center justify-center">
       <v-btn v-on:click="$emit('new-animation')" height="100%" width="100%">
@@ -26,7 +32,7 @@ export default {
   computed: {
     timelineOffset() {
       return {
-        'left': this.offset * 135 + 'px',
+        'left': 135 * (this.index + this.offset) + 'px',
       }
     }
   },
@@ -41,11 +47,6 @@ export default {
   mounted() {
 
   },
-  watch: {
-    offset: function() {
-      // console.log(this.offset);
-    }
-  }
 }
 </script>
 

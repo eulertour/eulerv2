@@ -41,6 +41,11 @@ class Animation {
     // console.log('finished');
   }
 
+  getFamily() {
+    // To be implemented in subclasses
+    return [];
+  }
+
   interpolate(alpha) {
     if (alpha < 0) {
       alpha = 0;
@@ -124,10 +129,16 @@ class Transform extends Animation {
   interpolateSubmobject(alpha, submob, start, targetCopy) {
     submob.interpolate(start, targetCopy, alpha);
   }
+}
 
+class Wait extends Animation {
+  interpolateSubmobject() {
+    // do nothing
+  }
 }
 
 export {
   Animation,
+  Wait,
   Transform,
 }

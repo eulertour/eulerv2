@@ -211,10 +211,14 @@ export default {
       }
     },
     stepBackward: function() {
+      if (this.animationOffset != 0) {
+        this.jumpToAnimationStart();
+        return;
+      }
       if (this.animationIndex > 0) {
         this.clearAndDrawScene(this.animationIndex - 1, AnimationPosition.START);
       } else {
-        this.clearAndDrawScene(this.animationIndex, AnimationPosition.START);
+        this.jumpToAnimationStart();
       }
     },
     onAnimationStep: function(elapsedSeconds) {
@@ -304,18 +308,11 @@ export default {
           },
         }
       });
-      this.animationIndex = this.animations.length - 1;
       this.animationIndex = 0;
-      this.clearAndDrawScene(this.animationIndex, AnimationPosition.START);
+      this.clearAndDrawScene(this.animations.length - 1, AnimationPosition.START);
       /* FIX clearAndDrawScene(index, location) */
     }
   },
-  watch: {
-    animations: function() {
-      // eslint-disable-next-line
-      console.log(this.animations);
-    }
-  }
 }
 </script>
 
