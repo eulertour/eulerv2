@@ -6,6 +6,9 @@
     <v-btn fab v-if="playing" v-on:click="$emit('pause')" class="mx-4">
       <v-icon color="black" x-large>mdi-pause</v-icon>
     </v-btn>
+    <v-btn fab v-else-if="finished" v-on:click="$emit('replay')" class="mx-4">
+      <v-icon color="black" x-large>mdi-replay</v-icon>
+    </v-btn>
     <v-btn fab v-else v-on:click="$emit('play')" class="mx-4">
       <v-icon color="black" x-large>mdi-play</v-icon>
     </v-btn>
@@ -23,6 +26,7 @@ export default {
   },
   props: {
     scene: Object,
+    finished: Boolean,
   },
   computed: {
     playing: function() {

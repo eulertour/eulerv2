@@ -7,6 +7,7 @@ class Scene extends Two {
     this.lastStoppingFrame = 0;
     this.lastFrame = 0;
     this.wrapper = null;
+    this.onNextAnimation = null;
     this.bind('update', (frameCount) => {
       this.lastFrame = frameCount; 
     });
@@ -30,6 +31,7 @@ class Scene extends Two {
   playAnimation(animation, onStep=null, onNextAnimation=null) {
     this.beginAnimation(animation);
     this.update();
+    this.onNextAnimation = onNextAnimation;
     this.wrapper = function(frameCount) {
       animation.interpolate((frameCount - this.lastStoppingFrame) / 60);
       if (onStep !== null) {
@@ -40,8 +42,8 @@ class Scene extends Two {
         this.lastStoppingFrame = frameCount;
         this.finishAnimation(animation);
         animation.cleanUpFromScene(this);
-        if (onNextAnimation !== null) {
-          onNextAnimation();
+        if (this.onNextAnimation !== null) {
+          this.onNextAnimation();
         }
       }
     };

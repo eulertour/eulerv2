@@ -63,10 +63,12 @@
       <VideoControls
         v-if="sceneLoaded"
         v-on:play="play($event, /*currentOnly=*/false)"
+        v-on:replay="replay"
         v-on:pause="pause"
         v-on:step-backward="stepBackward"
         v-on:step-forward="stepForward"
         v-bind:scene="scene"
+        v-bind:finished="animationIndex === animations.length - 1 && animationOffset === 1"
       />
     </div>
   </div>
@@ -208,17 +210,26 @@ export default {
     },
     play: function(e, currentOnly=true) {
       if (this.animationOffset !== 0 && this.animationOffset !== 1) {
+        this.scene.onNextAnimation = (currentOnly
+            ? this.chainNextAnimation
+            : null);
         this.scene.play()
         return;
-      }
-      if (this.animationOffset !== 0) {
-        this.clearAndDrawScene(this.animationIndex, AnimationPosition.START);
+      } else if (this.animationOffset === 1) {
+        this.clearAndDrawScene(
+          this.animationIndex + (currentOnly ? 0 : 1),
+          AnimationPosition.START,
+        );
       }
       this.scene.playAnimation(
         this.buildCurrentAnimation(),
         /*onStep=*/this.onAnimationStep,
         /*onNextAnimation=*/currentOnly ? null: this.chainNextAnimation,
       );
+    },
+    replay: function() {
+      this.clearAndDrawScene(0, AnimationPosition.START);
+      this.play(null, /*currentOnly=*/false);
     },
     jumpToAnimationStart: function() {
       this.clearAndDrawScene(this.animationIndex, AnimationPosition.START);
