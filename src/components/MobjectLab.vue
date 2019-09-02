@@ -34,7 +34,12 @@
           <v-btn fab v-if="this.scene.playing" v-on:click="pause" class="mx-4">
             <v-icon color="black" x-large>mdi-pause</v-icon>
           </v-btn>
-          <v-btn fab v-else v-on:click="play" class="mx-4">
+          <v-btn
+            fab
+            v-else
+            v-on:click="play($event, /*currentOnly=*/true)"
+            class="mx-4"
+          >
             <v-icon color="black" x-large>mdi-play</v-icon>
           </v-btn>
           <v-btn fab v-on:click="jumpToAnimationEnd" class="mx-2">
@@ -57,7 +62,7 @@
       />
       <VideoControls
         v-if="sceneLoaded"
-        v-on:play="play"
+        v-on:play="play($event, /*currentOnly=*/false)"
         v-on:pause="pause"
         v-on:step-backward="stepBackward"
         v-on:step-forward="stepForward"
@@ -175,14 +180,7 @@ export default {
     pause: function() {
       this.scene.pause();
     },
-    play: function() {
-      if (this.animationOffset !== 0 && this.animationOffset !== 1) {
-        this.scene.play()
-        return;
-      }
-      if (this.animationOffset !== 0) {
-        this.clearAndDrawScene(this.animationIndex, AnimationPosition.START);
-      }
+    buildCurrentAnimation() {
       let args = [];
       for (let key of this.currentAnimation.args) {
         let data = this.currentAnimation.mobjects[key];
@@ -194,8 +192,33 @@ export default {
         }
         args.push(data.mobject);
       }
-      let anim = new Manim[this.currentAnimation.className](...args);
-      this.scene.playAnimation(anim, /*onStep=*/this.onAnimationStep);
+      return new Manim[this.currentAnimation.className](...args);
+    },
+    chainNextAnimation() {
+      if (this.animationIndex === this.animations.length - 1) {
+        return;
+      }
+      this.animationIndex += 1;
+      this.animationOffset = 0;
+      this.scene.playAnimation(
+        this.buildCurrentAnimation(),
+        /*onStep=*/this.onAnimationStep,
+        this.chainNextAnimation,
+      );
+    },
+    play: function(e, currentOnly=true) {
+      if (this.animationOffset !== 0 && this.animationOffset !== 1) {
+        this.scene.play()
+        return;
+      }
+      if (this.animationOffset !== 0) {
+        this.clearAndDrawScene(this.animationIndex, AnimationPosition.START);
+      }
+      this.scene.playAnimation(
+        this.buildCurrentAnimation(),
+        /*onStep=*/this.onAnimationStep,
+        /*onNextAnimation=*/currentOnly ? null: this.chainNextAnimation,
+      );
     },
     jumpToAnimationStart: function() {
       this.clearAndDrawScene(this.animationIndex, AnimationPosition.START);
