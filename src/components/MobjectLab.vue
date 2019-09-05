@@ -1,67 +1,93 @@
 <template>
-  <div class="align-items-center justify-content-center mt-7">
-    <v-card class="mr-7 pa-6" min-height="360px" min-width="400px">
-      <div v-if="sceneLoaded">
-        <v-card-title class="pa-0">
-          <div class="display-1">{{ animation.className }}</div>
-        </v-card-title>
-        <div class="subtitle-1">{{ animation.description }}</div>
-        <v-divider class="my-6"/>
-        <v-card-text class="pa-0">
-          <div
-            v-for="(mobject, index) in animation.args"
-            v-bind:key="mobject"
-          >
-            <MobjectPanel
-              v-bind:mobject-data="animation.mobjects[mobject]"
-              v-bind:mobject-classes="mobjectChoices"
-              v-bind:scene="scene"
-              v-bind:label="animation.argDescriptions[index]"
-              v-on:class-change="handleClassChange"
-              v-on:position-change="handlePositionChange"
-              v-on:picker-change="handlePickerChange"
-              v-on:picker-hide="handlePickerHide"
-              v-on:picker-save="handlePickerSave"
-              v-on:width-change="handleWidthChange"
-            />
-            <v-divider class="my-6"/>
-          </div>
-        </v-card-text>
-        <v-card-actions class="pa-0">
-          <v-btn v-if="this.scene.playing" v-on:click="pause" class="mr-3">Pause</v-btn>
-          <v-btn v-else v-on:click="play" class="mr-3">Play</v-btn>
-          <v-btn v-on:click="drawScene('start')">Start</v-btn>
-          <v-btn v-on:click="drawScene('end')">End</v-btn>
-        </v-card-actions>
-      </div>
-      <div v-else class="spinner-container align-items-center justify-content-center">
-        <v-progress-circular indeterminate/>
-      </div>
+  <div class="d-flex justify-center align-top mt-7">
+    <template v-if="sceneLoaded">
+    <v-expansion-panels id="info-panels" class="mr-4">
+    <v-expansion-panel class="info-panel">
+    <v-expansion-panel-header>Animation</v-expansion-panel-header>
+    <v-expansion-panel-content>
+      <AnimationPanel
+        v-bind:animation-data="currentAnimation"
+        v-bind:mobject-classes="mobjectChoices"
+        v-bind:scene="scene"
+        v-bind:animation-offset="animationOffset"
+        v-on:class-change="handleClassChange"
+        v-on:position-change="handlePositionChange"
+        v-on:picker-change="handlePickerChange"
+        v-on:picker-hide="handlePickerHide"
+        v-on:picker-save="handlePickerSave"
+        v-on:width-change="handleWidthChange"
+        v-on:jump-to-start="jumpToAnimationStart"
+        v-on:jump-to-end="jumpToAnimationEnd"
+        v-on:pause="pause"
+        v-on:play="(e)=>play(e, /*currentOnly=*/true)"
+        v-on:replay="(e)=>replay(e, /*currentOnly=*/true)"
+      />
+    </v-expansion-panel-content>
+    </v-expansion-panel>
+    </v-expansion-panels>
+    </template>
+    <v-card v-else
+      class="d-flex justify-center align-center mr-4"
+      id="spinner-container"
+    >
+      <v-progress-circular indeterminate/>
     </v-card>
-    <div id="manim-background"/>
+    <div id="visualization-placeholder">
+      <div id="visualization">
+        <div id="manim-background"/>
+        <Timeline
+          class="mt-2"
+          v-bind:animations="animations"
+          v-bind:index="animationIndex"
+          v-bind:offset="animationOffset"
+          v-on:new-animation="handleNewAnimation"
+        />
+        <VideoControls
+          v-if="sceneLoaded"
+          v-on:play="play($event, /*currentOnly=*/false)"
+          v-on:replay="replay"
+          v-on:pause="pause"
+          v-on:step-backward="stepBackward"
+          v-on:step-forward="stepForward"
+          v-bind:scene="scene"
+          v-bind:finished="animationIndex === animations.length - 1 && animationOffset === 1"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import * as _ from 'lodash';
 import * as Manim from '../manim.js';
-import MobjectPanel from './MobjectPanel.vue'
+import AnimationPanel from './AnimationPanel.vue'
+import Timeline from './Timeline.vue'
+import VideoControls from './VideoControls.vue'
+import { AnimationPosition } from '../constants.js';
 
 export default {
   name: 'MobjectLab',
   components: {
-    MobjectPanel,
+    Timeline,
+    VideoControls,
+    AnimationPanel,
+  },
+  computed: {
+    currentAnimation() {
+      return this.animations[this.animationIndex];
+    },
   },
   data() {
     return {
       scene: null,
       sceneLoaded: false,
-      selectingPosition: false,
-      isAtStart: true,
-      inMiddleOfAnim: false,
       mobjectChoices: ["Circle", "Square"],
-      animation: {
+      animationIndex: 0,
+      animationOffset: 0,
+      animations: [{
         className: "Transform",
         description: "Morph one Mobject into another",
+        durationSeconds: 1,
         args: ["mobject1", "mobject2"],
         argDescriptions: ["Start Mobject", "End Mobject"],
         startMobjects: ["mobject1"],
@@ -92,43 +118,41 @@ export default {
             isAtStart: false,
           },
         }
-      },
+      }],
     }
   },
   mounted() {
-    let scene = new Manim.Scene({ width: 640, height: 360 });
-    scene.appendTo(document.getElementById("manim-background"));
-    scene.update();
-    scene.renderer.domElement.id = "manim-scene";
-    this.scene = scene;
+    this.scene = new Manim.Scene({ width: 640, height: 360 });
+    this.scene.appendTo(document.getElementById("manim-background"));
+    this.scene.update();
+    this.scene.renderer.domElement.id = "manim-scene";
     window.languagePluginLoader.then(() => {
       window.pyodide.loadPackage("numpy").then(() => {
         window.pyodide.runPython("import numpy");
-        this.drawScene('start', /*forceDraw=*/true);
+        this.clearAndDrawScene(0, AnimationPosition.START, /*forceDraw=*/true);
         this.sceneLoaded = true;
       });
     });
   },
   methods: {
     // TODO: the argument should be an integer denoting the timestamp
-    drawScene: function(position, forceDraw=false) {
-      if (position !== 'start' && position !== 'end') {
-        // eslint-disable-next-line
-        console.log("invalid call drawScene(" + position + ")");
+    clearAndDrawScene: function(index, position, forceDraw=false) {
+      let offsetFromPostion = (position === AnimationPosition.START ? 0 : 1);
+      if (!forceDraw &&
+          this.animationIndex === index &&
+          this.animationOffset === offsetFromPostion) {
+          return;
       }
-      if (this.inMiddleOfAnim) {
+      if (this.animationOffset !== 0 && this.animationOffset !== 1) {
         this.scene.clearAnimation();
-      } else {
-        if (!forceDraw) {
-          if (position === 'start' &&  this.isAtStart ||
-              position === 'end'   && !this.isAtStart) {
-            return;
-          }
-        }
       }
+      let positionString = (position === AnimationPosition.START
+                              ? 'start'
+                              : 'end');
       this.scene.clear();
-      for (let key of this.animation[position + "Mobjects"]) {
-        let data = this.animation.mobjects[key];
+      let targetAnimation = this.animations[index];
+      for (let key of targetAnimation[positionString + "Mobjects"]) {
+        let data = targetAnimation.mobjects[key];
         let mob = new Manim[data.className]();
         mob.translateMobject(data.position);
         mob.applyStyle(data.style);
@@ -136,27 +160,16 @@ export default {
         this.scene.add(mob);
       }
       this.scene.update();
-      this.isAtStart = position === 'start';
-      this.inMiddleOfAnim = false;
+      this.animationIndex = index;
+      this.animationOffset = offsetFromPostion;
     },
-    onAnimationFinish: function() {
-      this.inMiddleOfAnim = false;
-    },
-    pause: function () {
+    pause: function() {
       this.scene.pause();
-      return;
     },
-    play: function() {
-      if (this.inMiddleOfAnim) {
-        this.scene.play()
-        return;
-      }
-      if (!this.isAtStart) {
-        this.drawScene('start');
-      }
+    buildCurrentAnimation() {
       let args = [];
-      for (let key of this.animation.args) {
-        let data = this.animation.mobjects[key];
+      for (let key of this.currentAnimation.args) {
+        let data = this.currentAnimation.mobjects[key];
         if (data.mobject === null) {
           let s = new Manim[data.className]();
           s.translateMobject(data.position);
@@ -165,23 +178,90 @@ export default {
         }
         args.push(data.mobject);
       }
-      let anim = new Manim[this.animation.className](...args);
-      this.scene.playAnimation(anim, /*onFinish=*/this.onAnimationFinish);
-      this.isAtStart = false;
-      this.inMiddleOfAnim = true;
+      return new Manim[this.currentAnimation.className](...args);
+    },
+    chainNextAnimation() {
+      if (this.animationIndex === this.animations.length - 1) {
+        return;
+      }
+      this.clearAndDrawScene(this.animationIndex + 1, AnimationPosition.START);
+      this.scene.playAnimation(
+        this.buildCurrentAnimation(),
+        /*onStep=*/this.onAnimationStep,
+        this.chainNextAnimation,
+      );
+    },
+    play: function(e, currentOnly=true) {
+      if (this.animationOffset !== 0 && this.animationOffset !== 1) {
+        this.scene.onNextAnimation = (currentOnly
+            ? null
+            : this.chainNextAnimation);
+        this.scene.play()
+        return;
+      } else if (this.animationOffset === 1) {
+        this.clearAndDrawScene(
+          this.animationIndex + (currentOnly ? 0 : 1),
+          AnimationPosition.START,
+        );
+      }
+      this.scene.playAnimation(
+        this.buildCurrentAnimation(),
+        /*onStep=*/this.onAnimationStep,
+        /*onNextAnimation=*/currentOnly ? null: this.chainNextAnimation,
+      );
+    },
+    replay: function(e, currentOnly=true) {
+      this.clearAndDrawScene(
+        currentOnly ? this.animationIndex : 0,
+        AnimationPosition.START,
+      );
+      this.play(e, currentOnly);
+    },
+    jumpToAnimationStart: function() {
+      this.clearAndDrawScene(this.animationIndex, AnimationPosition.START);
+    },
+    jumpToAnimationEnd: function() {
+      this.clearAndDrawScene(this.animationIndex, AnimationPosition.END);
+    },
+    stepForward: function() {
+      if (this.animationIndex < this.animations.length - 1) {
+        this.clearAndDrawScene(this.animationIndex + 1, AnimationPosition.START);
+      } else {
+        this.clearAndDrawScene(this.animationIndex, AnimationPosition.END);
+      }
+    },
+    stepBackward: function() {
+      if (this.animationOffset != 0) {
+        this.jumpToAnimationStart();
+        return;
+      }
+      if (this.animationIndex > 0) {
+        this.clearAndDrawScene(this.animationIndex - 1, AnimationPosition.START);
+      } else {
+        this.jumpToAnimationStart();
+      }
+    },
+    onAnimationStep: function(elapsedSeconds) {
+      this.animationOffset = elapsedSeconds;
     },
     handleWidthChange(width, mobjectData) {
       mobjectData.style.strokeWidth = width;
-      if (this.isAtStart === mobjectData.isAtStart) {
+      if (
+        (mobjectData.isAtStart && this.animationOffset === 0) ||
+        (!mobjectData.isAtStart && this.animationOffset === 1)
+      ) {
         mobjectData.mobject.linewidth = width / 100;
         this.scene.update();
       } else {
-        this.drawScene(mobjectData.isAtStart ? 'start' : 'end');
+        this.clearAndDrawScene(this.animationIndex, mobjectData.isAtStart ? AnimationPosition.START : AnimationPosition.END);
       }
     },
     handleClassChange(className, mobjectData) {
       mobjectData.className = className;
-      if (this.isAtStart === mobjectData.isAtStart) {
+      if (
+        (mobjectData.isAtStart && this.animationOffset === 0) ||
+        (!mobjectData.isAtStart && this.animationOffset === 1)
+      ) {
         // redraw mobject
         this.scene.remove(mobjectData.mobject);
         let c = new Manim[mobjectData.className]();
@@ -191,7 +271,7 @@ export default {
         this.scene.add(c);
         this.scene.update();
       } else {
-        this.drawScene(mobjectData.isAtStart ? 'start' : 'end');
+        this.clearAndDrawScene(this.animationIndex, mobjectData.isAtStart ? AnimationPosition.START : AnimationPosition.END);
       }
     },
     handlePickerSave(attr, color, mobjectData) {
@@ -199,8 +279,11 @@ export default {
       mobjectData.style[attr + 'Color'] = hexa.toString();
     },
     handlePickerChange(attr, color, mobjectData) {
-      if (this.isAtStart !== mobjectData.isAtStart) {
-        this.drawScene(mobjectData.isAtStart ? 'start' : 'end');
+      if (
+        !(mobjectData.isAtStart && this.animationOffset === 0) ||
+         (!mobjectData.isAtStart && this.animationOffset === 1)
+      ) {
+        this.clearAndDrawScene(this.animationIndex, mobjectData.isAtStart ? AnimationPosition.START : AnimationPosition.END);
       }
       mobjectData.mobject[attr] = color.toHEXA().toString();
       this.scene.update();
@@ -211,34 +294,66 @@ export default {
     },
     handlePositionChange(position, mobjectData) {
       mobjectData.position = position;
-      if (this.isAtStart === mobjectData.isAtStart) {
+      if (
+        (mobjectData.isAtStart && this.animationOffset === 0) ||
+        (!mobjectData.isAtStart && this.animationOffset === 1)
+      ) {
         mobjectData.mobject.moveTo(position);
         this.scene.update();
       } else {
-        this.drawScene(mobjectData.isAtStart ? 'start' : 'end');
+        this.clearAndDrawScene(this.animationIndex, mobjectData.isAtStart ? AnimationPosition.START : AnimationPosition.END);
       }
     },
+    handleNewAnimation() {
+      let newAnimationMobjects = {};
+      let lastAnimation = this.animations[this.animations.length - 1];
+      for (let key of lastAnimation.endMobjects) {
+        newAnimationMobjects[key] = _.cloneDeep(lastAnimation.mobjects[key]);
+      }
+      this.animations.push({
+        className: "Wait",
+        description: "Hold a still frame",
+        durationSeconds: 1,
+        args: [],
+        argDescriptions: [],
+        startMobjects: _.cloneDeep(lastAnimation.endMobjects),
+        endMobjects: _.cloneDeep(lastAnimation.endMobjects),
+        mobjects: newAnimationMobjects,
+      });
+      this.animationIndex = 0;
+      this.clearAndDrawScene(this.animations.length - 1, AnimationPosition.START);
+      /* FIX clearAndDrawScene(index, location) */
+    }
   },
 }
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.scene-info {
-  margin-right: 30px;
-  min-height: 360px;
-  width: 400px;
-}
-.spinner-container {
-  height: 360px;
-}
 #manim-background {
   width: 640px;
   height: 360px;
   background-color: black;
 }
+#info-panels {
+  width: 400px;
+}
+#spinner-container {
+  height: 575px;
+  width: 400px;
+}
+#visualization-placeholder {
+  width: 640px;
+  height: 575px;
+}
+#visualization {
+  position: fixed;
+}
 .picker-offset {
   position: absolute;
   left: 98px;
+}
+.info-panel {
+  height: fit-content;
 }
 </style>

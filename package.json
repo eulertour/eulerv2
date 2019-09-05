@@ -8,11 +8,8 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-svg-core": "^1.2.22",
-    "@fortawesome/free-brands-svg-icons": "^5.10.2",
     "@fortawesome/free-regular-svg-icons": "^5.10.2",
     "@fortawesome/free-solid-svg-icons": "^5.10.2",
-    "@fortawesome/vue-fontawesome": "^0.1.6",
     "@simonwep/pickr": "^1.4.0",
     "chroma-js": "^2.0.4",
     "core-js": "^2.6.5",

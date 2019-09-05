@@ -8,7 +8,7 @@
       class="mb-2">
     </v-select>
     <div class="title">Position</div>
-    <div class="align-items-center">
+    <div class="d-flex align-center">
       <div class="subtitle-1">
         ({{ mobjectData.position[0].toFixed(1) || 0 }},
          {{ mobjectData.position[1].toFixed(1) || 0 }})
@@ -18,7 +18,7 @@
       </v-btn>
     </div>
     <div class="title">Style</div>
-    <div class="align-items-center position-relative mb-1">
+    <div class="d-flex align-center position-relative mb-2">
       <div class="subtitle-1">stroke color</div>
       <div class="ml-2 picker-offset">
         <Picker
@@ -31,7 +31,7 @@
         />
       </div>
     </div>
-    <div class="align-items-center position-relative mb-1">
+    <div class="d-flex align-center position-relative mb-2">
       <div class="subtitle-1">fill color</div>
       <div class="ml-2 picker-offset">
         <Picker
@@ -44,7 +44,7 @@
         />
       </div>
     </div>
-    <div class="align-items-center justify-content-center">
+    <div class="d-flex align-center justify-center">
       <v-slider
         v-model="currentStrokeWidth"
         label="stroke width"

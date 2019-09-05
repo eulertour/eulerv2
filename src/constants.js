@@ -139,23 +139,8 @@ export const PINK="#D147BD"
 export const GREEN_SCREEN="#00FF00"
 export const ORANGE="#FF862F"
 
-/* some old debugging code */
-// for (let i = 0; i < path.vertices.length; i++) {
-//   let vertex = path.vertices[i];
-
-//   let circle2 = new Two.Circle(vertex.controls.left.x, vertex.controls.left.y, 0.03);
-//   circle2.fill = "red";
-//   circle2.linewidth = 0;
-//   g.add(circle2);
-
-//   let circle1 = new Two.Circle(vertex.x, vertex.y, 0.03);
-//   circle1.fill = "green";
-//   circle1.linewidth = 0;
-//   g.add(circle1);
-
-//   let circle3 = new Two.Circle(vertex.controls.right.x, vertex.controls.right.y, 0.03);
-//   circle3.fill = "blue";
-//   circle3.linewidth = 0;
-//   g.add(circle3);
-// }
-/* some old debugging code */
+// MobjectLab
+export const AnimationPosition = {
+  START: 1,
+  END: 2,
+}
