@@ -5,60 +5,23 @@
     <v-expansion-panel class="info-panel">
     <v-expansion-panel-header>Animation</v-expansion-panel-header>
     <v-expansion-panel-content>
-      <div>
-        <div class="pa-0">
-          <div class="display-1">{{ currentAnimation.className }}</div>
-        </div>
-        <div class="subtitle-1">{{ currentAnimation.description }}</div>
-        <v-divider class="my-6"/>
-        <div class="pa-0">
-          <template
-            v-for="(mobject, index) in currentAnimation.args"
-          >
-            <MobjectPanel
-              v-bind:mobject-data="currentAnimation.mobjects[mobject]"
-              v-bind:mobject-classes="mobjectChoices"
-              v-bind:scene="scene"
-              v-bind:label="currentAnimation.argDescriptions[index]"
-              v-on:class-change="handleClassChange"
-              v-on:position-change="handlePositionChange"
-              v-on:picker-change="handlePickerChange"
-              v-on:picker-hide="handlePickerHide"
-              v-on:picker-save="handlePickerSave"
-              v-on:width-change="handleWidthChange"
-              v-bind:key="'mobject-panel-' + index"
-            />
-            <v-divider class="my-6" v-bind:key="'mobject-divider-' + index"/>
-          </template>
-        </div>
-      </div>
-      <div class="d-flex justify-center pa-0">
-        <v-btn fab v-on:click="jumpToAnimationStart" class="mx-2">
-          <v-icon color="black" x-large>mdi-skip-previous</v-icon>
-        </v-btn>
-        <v-btn fab v-if="this.scene.playing" v-on:click="pause" class="mx-4">
-          <v-icon color="black" x-large>mdi-pause</v-icon>
-        </v-btn>
-        <v-btn
-          fab
-          v-else-if="animationOffset === 1"
-          v-on:click="replay($event, /*currentOnly=*/true)"
-          class="mx-4"
-        >
-          <v-icon color="black" x-large>mdi-replay</v-icon>
-        </v-btn>
-        <v-btn
-          fab
-          v-else
-          v-on:click="play($event, /*currentOnly=*/true)"
-          class="mx-4"
-        >
-          <v-icon color="black" x-large>mdi-play</v-icon>
-        </v-btn>
-        <v-btn fab v-on:click="jumpToAnimationEnd" class="mx-2">
-          <v-icon color="black" x-large>mdi-skip-next</v-icon>
-        </v-btn>
-      </div>
+      <AnimationPanel
+        v-bind:animation-data="currentAnimation"
+        v-bind:mobject-classes="mobjectChoices"
+        v-bind:scene="scene"
+        v-bind:animation-offset="animationOffset"
+        v-on:class-change="handleClassChange"
+        v-on:position-change="handlePositionChange"
+        v-on:picker-change="handlePickerChange"
+        v-on:picker-hide="handlePickerHide"
+        v-on:picker-save="handlePickerSave"
+        v-on:width-change="handleWidthChange"
+        v-on:jump-to-start="jumpToAnimationStart"
+        v-on:jump-to-end="jumpToAnimationEnd"
+        v-on:pause="pause"
+        v-on:play="(e)=>play(e, /*currentOnly=*/true)"
+        v-on:replay="(e)=>replay(e, /*currentOnly=*/true)"
+      />
     </v-expansion-panel-content>
     </v-expansion-panel>
     </v-expansion-panels>
@@ -97,7 +60,7 @@
 <script>
 import * as _ from 'lodash';
 import * as Manim from '../manim.js';
-import MobjectPanel from './MobjectPanel.vue'
+import AnimationPanel from './AnimationPanel.vue'
 import Timeline from './Timeline.vue'
 import VideoControls from './VideoControls.vue'
 import { AnimationPosition } from '../constants.js';
@@ -105,9 +68,9 @@ import { AnimationPosition } from '../constants.js';
 export default {
   name: 'MobjectLab',
   components: {
-    MobjectPanel,
     Timeline,
     VideoControls,
+    AnimationPanel,
   },
   computed: {
     currentAnimation() {
