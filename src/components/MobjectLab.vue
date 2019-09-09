@@ -1,31 +1,53 @@
 <template>
   <div class="d-flex justify-center align-top mt-7">
-    <template v-if="sceneLoaded">
-    <v-expansion-panels id="info-panels" class="mr-4">
-    <v-expansion-panel class="info-panel">
-    <v-expansion-panel-header>Animation</v-expansion-panel-header>
-    <v-expansion-panel-content>
-      <AnimationPanel
-        v-bind:animation-data="currentAnimation"
-        v-bind:mobject-classes="mobjectChoices"
-        v-bind:scene="scene"
-        v-bind:animation-offset="animationOffset"
-        v-on:class-change="handleClassChange"
-        v-on:position-change="handlePositionChange"
-        v-on:picker-change="handlePickerChange"
-        v-on:picker-hide="handlePickerHide"
-        v-on:picker-save="handlePickerSave"
-        v-on:width-change="handleWidthChange"
-        v-on:jump-to-start="jumpToAnimationStart"
-        v-on:jump-to-end="jumpToAnimationEnd"
-        v-on:pause="pause"
-        v-on:play="(e)=>play(e, /*currentOnly=*/true)"
-        v-on:replay="(e)=>replay(e, /*currentOnly=*/true)"
-      />
-    </v-expansion-panel-content>
-    </v-expansion-panel>
-    </v-expansion-panels>
-    </template>
+    <div v-if="sceneLoaded">
+      <v-expansion-panels id="info-panels" class="mr-4" accordion>
+        <v-expansion-panel>
+        <v-expansion-panel-header>Animation</v-expansion-panel-header>
+        <v-expansion-panel-content>
+          <AnimationPanel
+            v-bind:animation-data="currentAnimation"
+            v-bind:mobject-data="mobjects"
+            v-bind:mobject-classes="mobjectChoices"
+            v-bind:scene="scene"
+            v-bind:animation-offset="animationOffset"
+            v-on:class-change="handleClassChange"
+            v-on:position-change="handlePositionChange"
+            v-on:picker-change="handlePickerChange"
+            v-on:picker-hide="handlePickerHide"
+            v-on:picker-save="handlePickerSave"
+            v-on:width-change="handleWidthChange"
+            v-on:jump-to-start="jumpToAnimationStart"
+            v-on:jump-to-end="jumpToAnimationEnd"
+            v-on:pause="pause"
+            v-on:play="(e)=>play(e, /*currentOnly=*/true)"
+            v-on:replay="(e)=>replay(e, /*currentOnly=*/true)"
+          />
+        </v-expansion-panel-content>
+        </v-expansion-panel>
+        <v-expansion-panel>
+        <v-expansion-panel-header>Mobjects</v-expansion-panel-header>
+        <v-expansion-panel-content>
+          <div
+            v-for="[key, val] in Object.entries(mobjects)"
+            v-bind:key="key"
+          >
+            <MobjectPanel
+              v-bind:mobject-classes="mobjectChoices"
+              v-bind:mobject-data="val"
+              v-bind:scene="scene"
+              v-on:class-change="handleClassChange"
+              v-on:position-change="handlePositionChange"
+              v-on:picker-change="handlePickerChange"
+              v-on:picker-hide="handlePickerHide"
+              v-on:picker-save="handlePickerSave"
+              v-on:width-change="handleWidthChange"
+            />
+          </div>
+        </v-expansion-panel-content>
+        </v-expansion-panel>
+      </v-expansion-panels>
+    </div>
     <v-card v-else
       class="d-flex justify-center align-center mr-4"
       id="spinner-container"
@@ -61,9 +83,10 @@
 import * as _ from 'lodash';
 import * as Manim from '../manim.js';
 import AnimationPanel from './AnimationPanel.vue'
+import MobjectPanel from './MobjectPanel.vue'
 import Timeline from './Timeline.vue'
 import VideoControls from './VideoControls.vue'
-import { AnimationPosition } from '../constants.js';
+import { AnimationPosition } from '../constants.js'
 
 export default {
   name: 'MobjectLab',
@@ -71,6 +94,7 @@ export default {
     Timeline,
     VideoControls,
     AnimationPanel,
+    MobjectPanel,
   },
   computed: {
     currentAnimation() {
@@ -92,33 +116,33 @@ export default {
         argDescriptions: ["Start Mobject", "End Mobject"],
         startMobjects: ["mobject1"],
         endMobjects: ["mobject2"],
-        mobjects: {
-          mobject1: {
-            className: "Circle",
-            params: {},
-            position: [-1, 0],
-            style: {
-              strokeColor: "#fc6255ff",
-              fillColor: "#00000000",
-              strokeWidth: 4,
-            },
-            mobject: null,
-            isAtStart: true,
-          },
-          mobject2: {
-            className: "Square",
-            params: {},
-            position: [1, 0],
-            style: {
-              strokeColor: "#ffffffff",
-              fillColor: "#00000000",
-              strokeWidth: 4,
-            },
-            mobject: null,
-            isAtStart: false,
-          },
-        }
       }],
+      mobjects: {
+        mobject1: {
+          className: "Circle",
+          params: {},
+          position: [-1, 0],
+          style: {
+            strokeColor: "#fc6255ff",
+            fillColor: "#00000000",
+            strokeWidth: 4,
+          },
+          mobject: null,
+          isAtStart: true,
+        },
+        mobject2: {
+          className: "Square",
+          params: {},
+          position: [1, 0],
+          style: {
+            strokeColor: "#ffffffff",
+            fillColor: "#00000000",
+            strokeWidth: 4,
+          },
+          mobject: null,
+          isAtStart: false,
+        },
+      },
     }
   },
   mounted() {
@@ -152,7 +176,7 @@ export default {
       this.scene.clear();
       let targetAnimation = this.animations[index];
       for (let key of targetAnimation[positionString + "Mobjects"]) {
-        let data = targetAnimation.mobjects[key];
+        let data = this.mobjects[key];
         let mob = new Manim[data.className]();
         mob.translateMobject(data.position);
         mob.applyStyle(data.style);
@@ -169,7 +193,7 @@ export default {
     buildCurrentAnimation() {
       let args = [];
       for (let key of this.currentAnimation.args) {
-        let data = this.currentAnimation.mobjects[key];
+        let data = this.mobjects[key];
         if (data.mobject === null) {
           let s = new Manim[data.className]();
           s.translateMobject(data.position);
@@ -305,11 +329,7 @@ export default {
       }
     },
     handleNewAnimation() {
-      let newAnimationMobjects = {};
       let lastAnimation = this.animations[this.animations.length - 1];
-      for (let key of lastAnimation.endMobjects) {
-        newAnimationMobjects[key] = _.cloneDeep(lastAnimation.mobjects[key]);
-      }
       this.animations.push({
         className: "Wait",
         description: "Hold a still frame",
@@ -318,11 +338,9 @@ export default {
         argDescriptions: [],
         startMobjects: _.cloneDeep(lastAnimation.endMobjects),
         endMobjects: _.cloneDeep(lastAnimation.endMobjects),
-        mobjects: newAnimationMobjects,
       });
       this.animationIndex = 0;
       this.clearAndDrawScene(this.animations.length - 1, AnimationPosition.START);
-      /* FIX clearAndDrawScene(index, location) */
     }
   },
 }

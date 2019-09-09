@@ -8,6 +8,7 @@
   <component
     v-bind:is="animationComponent"
     v-bind:animation-data="animationData"
+    v-bind:mobject-data="mobjectData"
     v-bind:mobject-classes="mobjectClasses"
     v-bind:scene="scene"
     v-on:class-change="(className, mobjectData)=>$emit('class-change', className, mobjectData)"
@@ -61,6 +62,7 @@ export default {
     animationData: Object,
     animationOffset: Number,
     mobjectClasses: Array,
+    mobjectData: Object,
     scene: Object,
   },
   computed: {

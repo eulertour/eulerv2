@@ -2,7 +2,7 @@
   <div class="pa-0">
     <MobjectPanel
       v-bind:mobject-classes="mobjectClasses"
-      v-bind:mobject-data="animationData.mobjects[animationData.args[0]]"
+      v-bind:mobject-data="mobjectData[animationData.args[0]]"
       v-bind:scene="scene"
       label="Start Mobject"
       v-on:class-change="handleClassChange"
@@ -15,7 +15,7 @@
     <v-divider class="my-6"/>
     <MobjectPanel
       v-bind:mobject-classes="mobjectClasses"
-      v-bind:mobject-data="animationData.mobjects[animationData.args[1]]"
+      v-bind:mobject-data="mobjectData[animationData.args[1]]"
       v-bind:scene="scene"
       label="End Mobject"
       v-on:class-change="handleClassChange"
@@ -39,6 +39,7 @@ export default {
   },
   props: {
     animationData: Object,
+    mobjectData: Object,
     mobjectClasses: Array,
     scene: Object,
   },
