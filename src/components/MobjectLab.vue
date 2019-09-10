@@ -28,6 +28,7 @@
         <v-expansion-panel>
         <v-expansion-panel-header>Mobjects</v-expansion-panel-header>
         <v-expansion-panel-content>
+          <v-divider class="my-6"/>
           <div
             v-for="[key, val] in Object.entries(mobjects)"
             v-bind:key="key"
@@ -43,6 +44,7 @@
               v-on:picker-save="handlePickerSave"
               v-on:width-change="handleWidthChange"
             />
+            <v-divider class="my-6"/>
           </div>
         </v-expansion-panel-content>
         </v-expansion-panel>
@@ -80,7 +82,7 @@
 </template>
 
 <script>
-import * as _ from 'lodash';
+import * as _ from 'lodash'
 import * as Manim from '../manim.js';
 import AnimationPanel from './AnimationPanel.vue'
 import MobjectPanel from './MobjectPanel.vue'
@@ -117,8 +119,9 @@ export default {
         startMobjects: ["mobject1"],
         endMobjects: ["mobject2"],
       }],
-      mobjects: {
-        mobject1: {
+      mobjects: [
+        {
+          name: "mobject1",
           className: "Circle",
           params: {},
           position: [-1, 0],
@@ -130,7 +133,8 @@ export default {
           mobject: null,
           isAtStart: true,
         },
-        mobject2: {
+        {
+          name: "mobject2",
           className: "Square",
           params: {},
           position: [1, 0],
@@ -142,7 +146,7 @@ export default {
           mobject: null,
           isAtStart: false,
         },
-      },
+      ],
     }
   },
   mounted() {
@@ -176,7 +180,7 @@ export default {
       this.scene.clear();
       let targetAnimation = this.animations[index];
       for (let key of targetAnimation[positionString + "Mobjects"]) {
-        let data = this.mobjects[key];
+        let data = _.find(this.mobjects, (o) => {return o.name === key});
         let mob = new Manim[data.className]();
         mob.translateMobject(data.position);
         mob.applyStyle(data.style);
@@ -193,7 +197,7 @@ export default {
     buildCurrentAnimation() {
       let args = [];
       for (let key of this.currentAnimation.args) {
-        let data = this.mobjects[key];
+        let data = _.find(this.mobjects, (o) => {return o.name === key});
         if (data.mobject === null) {
           let s = new Manim[data.className]();
           s.translateMobject(data.position);

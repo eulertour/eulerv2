@@ -2,7 +2,7 @@
   <div class="pa-0">
     <MobjectPanel
       v-bind:mobject-classes="mobjectClasses"
-      v-bind:mobject-data="mobjectData[animationData.args[0]]"
+      v-bind:mobject-data="getArgData(0)"
       v-bind:scene="scene"
       label="Start Mobject"
       v-on:class-change="handleClassChange"
@@ -15,7 +15,7 @@
     <v-divider class="my-6"/>
     <MobjectPanel
       v-bind:mobject-classes="mobjectClasses"
-      v-bind:mobject-data="mobjectData[animationData.args[1]]"
+      v-bind:mobject-data="getArgData(1)"
       v-bind:scene="scene"
       label="End Mobject"
       v-on:class-change="handleClassChange"
@@ -31,6 +31,7 @@
 
 <script>
 import MobjectPanel from './MobjectPanel.vue'
+import * as _ from 'lodash'
 
 export default {
   name: 'TransformPanel',
@@ -39,11 +40,14 @@ export default {
   },
   props: {
     animationData: Object,
-    mobjectData: Object,
+    mobjectData: Array,
     mobjectClasses: Array,
     scene: Object,
   },
   methods: {
+    getArgData(argNum) {
+      return _.find(this.mobjectData, (o) => {return o.name === this.animationData.args[argNum]});
+    },
     handleClassChange(className, mobjectData) {
       this.$emit('class-change', className, mobjectData);
     },

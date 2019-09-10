@@ -62,7 +62,7 @@ export default {
     animationData: Object,
     animationOffset: Number,
     mobjectClasses: Array,
-    mobjectData: Object,
+    mobjectData: Array,
     scene: Object,
   },
   computed: {
