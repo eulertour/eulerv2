@@ -11,12 +11,6 @@
             v-bind:mobject-classes="mobjectChoices"
             v-bind:scene="scene"
             v-bind:animation-offset="animationOffset"
-            v-on:class-change="handleClassChange"
-            v-on:position-change="handlePositionChange"
-            v-on:picker-change="handlePickerChange"
-            v-on:picker-hide="handlePickerHide"
-            v-on:picker-save="handlePickerSave"
-            v-on:width-change="handleWidthChange"
             v-on:jump-to-start="jumpToAnimationStart"
             v-on:jump-to-end="jumpToAnimationEnd"
             v-on:pause="pause"
@@ -28,21 +22,16 @@
         <v-expansion-panel>
         <v-expansion-panel-header>Mobjects</v-expansion-panel-header>
         <v-expansion-panel-content>
-          <v-divider class="my-6"/>
+          <v-divider/>
           <div
-            v-for="[key, val] in Object.entries(mobjects)"
-            v-bind:key="key"
+            v-for="(mob, i) in mobjects"
+            v-bind:key="i"
           >
             <MobjectPanel
               v-bind:mobject-classes="mobjectChoices"
-              v-bind:mobject-data="val"
+              v-bind:mobject-data="mob"
               v-bind:scene="scene"
-              v-on:class-change="handleClassChange"
-              v-on:position-change="handlePositionChange"
-              v-on:picker-change="handlePickerChange"
-              v-on:picker-hide="handlePickerHide"
-              v-on:picker-save="handlePickerSave"
-              v-on:width-change="handleWidthChange"
+              v-on:mobject-update="handleMobjectUpdate"
             />
             <v-divider class="my-6"/>
           </div>
@@ -118,7 +107,9 @@ export default {
         argDescriptions: ["Start Mobject", "End Mobject"],
         startMobjects: ["mobject1"],
         endMobjects: ["mobject2"],
+        diff: [null, "mobject1", "mobject2"],
       }],
+      currentMobjects: [],
       mobjects: [
         {
           name: "mobject1",
@@ -157,30 +148,26 @@ export default {
     window.languagePluginLoader.then(() => {
       window.pyodide.loadPackage("numpy").then(() => {
         window.pyodide.runPython("import numpy");
-        this.clearAndDrawScene(0, AnimationPosition.START, /*forceDraw=*/true);
+        let name = this.currentAnimation.args[0];
+        let data = _.cloneDeep(_.find(this.mobjects, (o) => {return o.name === name}));
+        let s = new Manim[data.className]();
+        s.translateMobject(data.position);
+        s.applyStyle(data.style);
+        data.mobject = s;
+        this.currentMobjects.push(data);
+        this.clearAndDrawScene();
         this.sceneLoaded = true;
       });
     });
   },
   methods: {
-    // TODO: the argument should be an integer denoting the timestamp
-    clearAndDrawScene: function(index, position, forceDraw=false) {
-      let offsetFromPostion = (position === AnimationPosition.START ? 0 : 1);
-      if (!forceDraw &&
-          this.animationIndex === index &&
-          this.animationOffset === offsetFromPostion) {
-          return;
-      }
+    clearAndDrawScene: function() {
       if (this.animationOffset !== 0 && this.animationOffset !== 1) {
         this.scene.clearAnimation();
       }
-      let positionString = (position === AnimationPosition.START
-                              ? 'start'
-                              : 'end');
       this.scene.clear();
-      let targetAnimation = this.animations[index];
-      for (let key of targetAnimation[positionString + "Mobjects"]) {
-        let data = _.find(this.mobjects, (o) => {return o.name === key});
+
+      for (let data of this.currentMobjects) {
         let mob = new Manim[data.className]();
         mob.translateMobject(data.position);
         mob.applyStyle(data.style);
@@ -188,102 +175,151 @@ export default {
         this.scene.add(mob);
       }
       this.scene.update();
-      this.animationIndex = index;
-      this.animationOffset = offsetFromPostion;
     },
     pause: function() {
       this.scene.pause();
     },
-    buildCurrentAnimation() {
+    buildCurrentAnimation: function() {
       let args = [];
       for (let key of this.currentAnimation.args) {
-        let data = _.find(this.mobjects, (o) => {return o.name === key});
-        if (data.mobject === null) {
+        let data = _.find(this.currentMobjects, (o) => {return o.name === key});
+        if (data === undefined) {
+          data = _.cloneDeep(_.find(this.mobjects, (o) => {return o.name === key}));
           let s = new Manim[data.className]();
           s.translateMobject(data.position);
           s.applyStyle(data.style);
           data.mobject = s;
+          this.currentMobjects.push(data);
         }
         args.push(data.mobject);
       }
       return new Manim[this.currentAnimation.className](...args);
     },
-    chainNextAnimation() {
+    chainNextAnimation: function() {
       if (this.animationIndex === this.animations.length - 1) {
         return;
       }
-      this.clearAndDrawScene(this.animationIndex + 1, AnimationPosition.START);
+      this.animationIndex++;
+      this.animationOffset = 0;
+      this.clearAndDrawScene();
       this.scene.playAnimation(
         this.buildCurrentAnimation(),
         /*onStep=*/this.onAnimationStep,
         this.chainNextAnimation,
       );
     },
+    applyAnimationDiff(reverse=false) {
+      this.applyDiff(this.currentAnimation.diff, reverse);
+    },
     play: function(e, currentOnly=true) {
       if (this.animationOffset !== 0 && this.animationOffset !== 1) {
         this.scene.onNextAnimation = (currentOnly
-            ? null
+            ? this.applyAnimationDiff
             : this.chainNextAnimation);
         this.scene.play()
         return;
       } else if (this.animationOffset === 1) {
-        this.clearAndDrawScene(
-          this.animationIndex + (currentOnly ? 0 : 1),
-          AnimationPosition.START,
-        );
+        this.jumpToAnimationStart();
+        this.clearAndDrawScene();
       }
       this.scene.playAnimation(
         this.buildCurrentAnimation(),
         /*onStep=*/this.onAnimationStep,
-        /*onNextAnimation=*/currentOnly ? null: this.chainNextAnimation,
+        /*onNextAnimation=*/currentOnly ? this.applyAnimationDiff : this.chainNextAnimation,
+        /*onNextAnimation=*/()=>{
+          this.applyAnimationDiff();
+          if (currentOnly) {
+            this.chainNextAnimation();
+          }
+        },
       );
     },
     replay: function(e, currentOnly=true) {
-      this.clearAndDrawScene(
-        currentOnly ? this.animationIndex : 0,
-        AnimationPosition.START,
-      );
+      if (currentOnly) {
+        this.jumpToAnimationStart();
+      } else {
+        // eslint-disable-next-line
+        console.log('didn\'t implement global replay');
+      }
       this.play(e, currentOnly);
     },
-    jumpToAnimationStart: function() {
-      this.clearAndDrawScene(this.animationIndex, AnimationPosition.START);
-    },
-    jumpToAnimationEnd: function() {
-      this.clearAndDrawScene(this.animationIndex, AnimationPosition.END);
-    },
-    stepForward: function() {
-      if (this.animationIndex < this.animations.length - 1) {
-        this.clearAndDrawScene(this.animationIndex + 1, AnimationPosition.START);
-      } else {
-        this.clearAndDrawScene(this.animationIndex, AnimationPosition.END);
+    applyDiff: function(diff, reverse=false) {
+      let diffCopy = _.cloneDeep(diff);
+      if (reverse) {
+        diffCopy[1] = diff[2];
+        diffCopy[2] = diff[1];
       }
+      let attr = diff[0]
+      if (attr === null) {
+        // replace mobject
+        let startName = diffCopy[1];
+        let endName = diffCopy[2];
+        let startIndex = _.findIndex(this.currentMobjects, function(data) {
+          return data.name === startName;
+        });
+        if (startIndex === -1) {
+          // eslint-disable-next-line
+          console.log('something\'s wrong');
+          // eslint-disable-next-line
+          console.log(startName);
+          // eslint-disable-next-line
+          console.log(endName);
+        } else {
+          // TODO: all animation args other than the end mobjects should be removed
+          _.remove(this.currentMobjects, (o) => {
+            return o.name === endName;
+          });
+          let endData = _.find(this.mobjects, (o) => {return o.name === endName});
+          this.currentMobjects[startIndex] = endData;
+        }
+      } else {
+        // update property
+      }
+      this.animationOffset = reverse ? 0 : 1;
     },
-    stepBackward: function() {
-      if (this.animationOffset != 0) {
-        this.jumpToAnimationStart();
+    jumpToAnimationStart: function(forceDraw=false) {
+      if (this.animationOffset === 0 && forceDraw) {
+        if (forceDraw) {
+          this.clearAndDrawScene();
+        }
         return;
       }
+      this.applyDiff(this.currentAnimation.diff, /*reverse=*/true);
+      this.clearAndDrawScene();
+    },
+    jumpToAnimationEnd: function(forceDraw=false) {
+      if (this.animationOffset === 1) {
+        if (forceDraw) {
+          this.clearAndDrawScene();
+        } else {
+          return;
+        }
+      }
+      this.applyDiff(this.currentAnimation.diff);
+      this.clearAndDrawScene();
+    },
+    stepForward: function() {
+      this.jumpToAnimationEnd();
+      if (this.animationIndex < this.animations.length - 1) {
+        this.animationIndex++;
+        this.animationOffset = 0;
+      }
+      this.clearAndDrawScene();
+    },
+    // THIS DOESN'T WORK AFTER PLAYING
+    stepBackward: function() {
+      this.jumpToAnimationStart();
       if (this.animationIndex > 0) {
-        this.clearAndDrawScene(this.animationIndex - 1, AnimationPosition.START);
-      } else {
+        this.animationIndex--;
+        this.animationOffset = 1;
         this.jumpToAnimationStart();
       }
+      this.clearAndDrawScene();
     },
     onAnimationStep: function(elapsedSeconds) {
       this.animationOffset = elapsedSeconds;
     },
-    handleWidthChange(width, mobjectData) {
-      mobjectData.style.strokeWidth = width;
-      if (
-        (mobjectData.isAtStart && this.animationOffset === 0) ||
-        (!mobjectData.isAtStart && this.animationOffset === 1)
-      ) {
-        mobjectData.mobject.linewidth = width / 100;
-        this.scene.update();
-      } else {
-        this.clearAndDrawScene(this.animationIndex, mobjectData.isAtStart ? AnimationPosition.START : AnimationPosition.END);
-      }
-    },
+    // MOVE THIS INTO MOBJECTPANEL
     handleClassChange(className, mobjectData) {
       mobjectData.className = className;
       if (
@@ -302,10 +338,6 @@ export default {
         this.clearAndDrawScene(this.animationIndex, mobjectData.isAtStart ? AnimationPosition.START : AnimationPosition.END);
       }
     },
-    handlePickerSave(attr, color, mobjectData) {
-      let hexa = color.toHEXA();
-      mobjectData.style[attr + 'Color'] = hexa.toString();
-    },
     handlePickerChange(attr, color, mobjectData) {
       if (
         !(mobjectData.isAtStart && this.animationOffset === 0) ||
@@ -316,21 +348,29 @@ export default {
       mobjectData.mobject[attr] = color.toHEXA().toString();
       this.scene.update();
     },
-    handlePickerHide(mobjectData) {
-      mobjectData.mobject.applyStyle(mobjectData.style);
-      this.scene.update();
-    },
-    handlePositionChange(position, mobjectData) {
-      mobjectData.position = position;
-      if (
-        (mobjectData.isAtStart && this.animationOffset === 0) ||
-        (!mobjectData.isAtStart && this.animationOffset === 1)
-      ) {
-        mobjectData.mobject.moveTo(position);
-        this.scene.update();
+    jumpToMobjectLocation(mobjectData) {
+      let mobjectIsAtStart;
+      let diff = this.currentAnimation.diff;
+      let attr = diff[0];
+      if (attr === null) {
+        mobjectIsAtStart = (diff[1] === mobjectData.name);
       } else {
-        this.clearAndDrawScene(this.animationIndex, mobjectData.isAtStart ? AnimationPosition.START : AnimationPosition.END);
+        mobjectIsAtStart = (_.split(diff[1], '.')[0] === mobjectData.name);
       }
+      if (mobjectIsAtStart) {
+        this.jumpToAnimationStart(/*forceDraw=*/true);
+      } else {
+        this.jumpToAnimationEnd(/*forceDraw=*/true);
+      }
+    },
+    handleMobjectUpdate(data) {
+      let index = _.findIndex(this.mobjects, (o) => {return o.name === data.name});
+      this.$set(this.mobjects, index, data);
+      index = _.findIndex(this.currentMobjects, (o) => {return o.name === data.name});
+      if (index !== -1) {
+        this.currentMobjects[index] = data;
+      }
+      this.jumpToMobjectLocation(data);
     },
     handleNewAnimation() {
       let lastAnimation = this.animations[this.animations.length - 1];

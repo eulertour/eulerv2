@@ -26,8 +26,6 @@
           v-bind:mobject-data="mobjectData"
           v-bind:default="mobjectData.style.strokeColor"
           v-on:change="handlePickerChange"
-          v-on:hide="handlePickerHide"
-          v-on:save="handlePickerSave"
         />
       </div>
     </div>
@@ -39,8 +37,6 @@
           v-bind:mobject-data="mobjectData"
           v-bind:default="mobjectData.style.fillColor"
           v-on:change="handlePickerChange"
-          v-on:hide="handlePickerHide"
-          v-on:save="handlePickerSave"
         />
       </div>
     </div>
@@ -59,6 +55,7 @@
 
 <script>
 import Picker from './Picker.vue'
+import * as _ from 'lodash'
 
 export default {
   name: 'MobjectPanel',
@@ -79,14 +76,10 @@ export default {
     }
   },
   methods: {
-    handlePickerChange(attr, color, mobjectData) {
-      this.$emit('picker-change', attr, color, mobjectData);
-    },
-    handlePickerHide(mobjectData) {
-      this.$emit('picker-hide', mobjectData);
-    },
-    handlePickerSave(attr, color, mobjectData) {
-      this.$emit('picker-save', attr, color, mobjectData);
+    handlePickerChange(attr, color) {
+      let data = _.cloneDeep(this.mobjectData);
+      data.style[attr + "Color"] = color.toHEXA().toString();
+      this.$emit('mobject-update', data);
     },
     positionChange() {
       this.selectingPosition = true;
@@ -106,11 +99,9 @@ export default {
             e.clientX - sceneElement.getBoundingClientRect().left,
             e.clientY - sceneElement.getBoundingClientRect().top,
           ]);
-          this.$emit(
-            'position-change',
-            scenePoint,
-            this.mobjectData,
-          );
+          let data = _.cloneDeep(this.mobjectData);
+          data.position = scenePoint;
+          this.$emit('mobject-update', data);
         }
         this.selectingPosition = false;
         document.removeEventListener('click', handlePositionClick);
@@ -127,13 +118,17 @@ export default {
     chosenClass: function(newClassName, oldClassName) {
       // ignore the initial mount
       if (oldClassName !== null) {
-        this.$emit('class-change', newClassName, this.mobjectData);
+        let data = _.cloneDeep(this.mobjectData);
+        data.className = newClassName;
+        this.$emit('mobject-update', data);
       }
     },
     currentStrokeWidth: function(newWidth, oldWidth) {
       // ignore the initial mount
       if (oldWidth !== null) {
-        this.$emit('width-change', newWidth, this.mobjectData);
+        let data = _.cloneDeep(this.mobjectData);
+        data.style.strokeWidth = newWidth;
+        this.$emit('mobject-update', data);
       }
     }
   }
