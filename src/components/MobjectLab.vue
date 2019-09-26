@@ -109,8 +109,8 @@ export default {
         endMobjects: ["mobject2"],
         diff: [null, "mobject1", "mobject2"],
       }],
-      currentMobjects: [],
-      mobjects: [
+      mobjects: [],
+      initialMobjects: [
         {
           name: "mobject1",
           className: "Circle",
@@ -148,49 +148,42 @@ export default {
     window.languagePluginLoader.then(() => {
       window.pyodide.loadPackage("numpy").then(() => {
         window.pyodide.runPython("import numpy");
-        let name = this.currentAnimation.args[0];
-        let data = _.cloneDeep(_.find(this.mobjects, (o) => {return o.name === name}));
-        let s = new Manim[data.className]();
-        s.translateMobject(data.position);
-        s.applyStyle(data.style);
-        data.mobject = s;
-        this.currentMobjects.push(data);
-        this.clearAndDrawScene();
+        // TODO: method to add mobjects for initial scene
+        this.mobjects.push(_.cloneDeep(_.find(
+          this.initialMobjects,
+          (o) => {return o.name === "mobject1"},
+        )));
+        this.setMobjectInScene("mobject1");
         this.sceneLoaded = true;
       });
     });
   },
   methods: {
-    clearAndDrawScene: function() {
-      if (this.animationOffset !== 0 && this.animationOffset !== 1) {
-        this.scene.clearAnimation();
-      }
-      this.scene.clear();
-
-      for (let data of this.currentMobjects) {
-        let mob = new Manim[data.className]();
-        mob.translateMobject(data.position);
-        mob.applyStyle(data.style);
-        data.mobject = mob;
-        this.scene.add(mob);
-      }
+    setMobjectInScene: function(name) {
+      let data = _.find(this.mobjects, (o) => {return o.name === name});
+      this.scene.remove(data.mobject);
+      let mob = this.setMobjectField(data);
+      this.scene.add(mob); 
       this.scene.update();
+    },
+    setMobjectField(mobjectData) {
+      let s = new Manim[mobjectData.className]();
+      s.translateMobject(mobjectData.position);
+      s.applyStyle(mobjectData.style);
+      mobjectData.mobject = s;
+      return s;
     },
     pause: function() {
       this.scene.pause();
     },
     buildCurrentAnimation: function() {
+      // eslint-disable-next-line
+      console.assert(this.animationOffset === 0);
       let args = [];
       for (let key of this.currentAnimation.args) {
-        let data = _.find(this.currentMobjects, (o) => {return o.name === key});
-        if (data === undefined) {
-          data = _.cloneDeep(_.find(this.mobjects, (o) => {return o.name === key}));
-          let s = new Manim[data.className]();
-          s.translateMobject(data.position);
-          s.applyStyle(data.style);
-          data.mobject = s;
-          this.currentMobjects.push(data);
-        }
+        let data = _.find(this.mobjects, (o) => {return o.name === key});
+        // eslint-disable-next-line
+        console.assert(data.mobject !== null, {key: key, mobjects: this.mobjects});
         args.push(data.mobject);
       }
       return new Manim[this.currentAnimation.className](...args);
@@ -201,7 +194,6 @@ export default {
       }
       this.animationIndex++;
       this.animationOffset = 0;
-      this.clearAndDrawScene();
       this.scene.playAnimation(
         this.buildCurrentAnimation(),
         /*onStep=*/this.onAnimationStep,
@@ -225,7 +217,6 @@ export default {
       this.scene.playAnimation(
         this.buildCurrentAnimation(),
         /*onStep=*/this.onAnimationStep,
-        /*onNextAnimation=*/currentOnly ? this.applyAnimationDiff : this.chainNextAnimation,
         /*onNextAnimation=*/()=>{
           this.applyAnimationDiff();
           if (currentOnly) {
@@ -243,6 +234,7 @@ export default {
       }
       this.play(e, currentOnly);
     },
+    /* Updates the mobjects in this.scene according to the diff. */
     applyDiff: function(diff, reverse=false) {
       let diffCopy = _.cloneDeep(diff);
       if (reverse) {
@@ -251,29 +243,31 @@ export default {
       }
       let attr = diff[0]
       if (attr === null) {
-        // replace mobject
+        // TODO: handle mobject order
+        // This diff adds or removes mobjects.
+        this.scene.remove(
+
+        );
         let startName = diffCopy[1];
         let endName = diffCopy[2];
-        let startIndex = _.findIndex(this.currentMobjects, function(data) {
+        let startData = _.find(this.mobjects, function(data) {
           return data.name === startName;
         });
-        if (startIndex === -1) {
+        let endData = _.find(this.mobjects, function(data) {
+          return data.name === endName;
+        });
+        if (startData === undefined) {
           // eslint-disable-next-line
-          console.log('something\'s wrong');
+          console.assert(false);
           // eslint-disable-next-line
           console.log(startName);
           // eslint-disable-next-line
           console.log(endName);
-        } else {
-          // TODO: all animation args other than the end mobjects should be removed
-          _.remove(this.currentMobjects, (o) => {
-            return o.name === endName;
-          });
-          let endData = _.find(this.mobjects, (o) => {return o.name === endName});
-          this.currentMobjects[startIndex] = endData;
         }
+        this.scene.remove(startData.mobject);
+        this.scene.add(endData.mobject);
       } else {
-        // update property
+        // This diff changes mobject's attribute.
       }
       this.animationOffset = reverse ? 0 : 1;
     },
@@ -364,11 +358,11 @@ export default {
       }
     },
     handleMobjectUpdate(data) {
-      let index = _.findIndex(this.mobjects, (o) => {return o.name === data.name});
-      this.$set(this.mobjects, index, data);
-      index = _.findIndex(this.currentMobjects, (o) => {return o.name === data.name});
+      let index = _.findIndex(this.initialMobjects, (o) => {return o.name === data.name});
+      this.$set(this.initialMobjects, index, data);
+      index = _.findIndex(this.mobjects, (o) => {return o.name === data.name});
       if (index !== -1) {
-        this.currentMobjects[index] = data;
+        this.mobjects[index] = data;
       }
       this.jumpToMobjectLocation(data);
     },
