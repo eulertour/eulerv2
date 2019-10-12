@@ -37,10 +37,6 @@ class Animation {
     }
   }
 
-  finish() {
-    // console.log('finished');
-  }
-
   getFamily() {
     // To be implemented in subclasses
     return [];
@@ -129,11 +125,19 @@ class Transform extends Animation {
   interpolateSubmobject(alpha, submob, start, targetCopy) {
     submob.interpolate(start, targetCopy, alpha);
   }
+
+  getDiff(mobject, targetMobject) {
+    return [null, mobject, targetMobject];
+  }
 }
 
 class Wait extends Animation {
   interpolateSubmobject() {
     // do nothing
+  }
+
+  getDiff() {
+    return null;
   }
 }
 

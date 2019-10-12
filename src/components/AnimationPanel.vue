@@ -17,6 +17,7 @@
     v-on:picker-hide="(mobjectData)=>$emit('picker-hide', mobjectData)"
     v-on:picker-save="(attr, color, mobjectData)=>$emit('picker-save', attr, color, mobjectData)"
     v-on:width-change="(newWidth, mobjectData)=>$emit('width-change', newWidth, mobjectData)"
+    v-on:arg-change="(argNum, arg)=>$emit('arg-change', argNum, arg)"
   />
   <div class="d-flex justify-center pa-0">
     <v-btn fab v-on:click="$emit('jump-to-start')" class="mx-2">
@@ -28,7 +29,7 @@
     <v-btn
       fab
       v-else-if="animationOffset === 1"
-      v-on:click="$emit('replay', $event)"
+      v-on:click="$emit('play', $event)"
       class="mx-4"
     >
       <v-icon color="black" x-large>mdi-replay</v-icon>
@@ -62,7 +63,7 @@ export default {
     animationData: Object,
     animationOffset: Number,
     mobjectClasses: Array,
-    mobjectData: Array,
+    mobjectData: Object,
     scene: Object,
   },
   computed: {

@@ -1,27 +1,51 @@
 <template>
   <div class="d-flex justify-center align-top mt-7">
     <div v-if="sceneLoaded">
-      <v-expansion-panels id="info-panels" class="mr-4" accordion>
+      <v-expansion-panels
+        id="info-panels"
+        class="mr-4"
+        v-model="expandedPanel"
+        multiple
+      >
         <v-expansion-panel>
         <v-expansion-panel-header>Animation</v-expansion-panel-header>
         <v-expansion-panel-content>
           <AnimationPanel
             v-bind:animation-data="currentAnimation"
             v-bind:mobject-data="mobjects"
-            v-bind:mobject-classes="mobjectChoices"
             v-bind:scene="scene"
             v-bind:animation-offset="animationOffset"
             v-on:jump-to-start="jumpToAnimationStart"
             v-on:jump-to-end="jumpToAnimationEnd"
             v-on:pause="pause"
             v-on:play="(e)=>play(e, /*currentOnly=*/true)"
-            v-on:replay="(e)=>replay(e, /*currentOnly=*/true)"
+            v-on:arg-change="handleArgChange"
           />
         </v-expansion-panel-content>
         </v-expansion-panel>
         <v-expansion-panel>
         <v-expansion-panel-header>Mobjects</v-expansion-panel-header>
         <v-expansion-panel-content>
+          <v-expansion-panels class="d-flex flex-column" multiple>
+            <v-expansion-panel v-for="(name, i) in Object.keys(mobjects)" v-bind:key="i">
+              <v-expansion-panel-header>
+                {{ name }}
+                <span class="text--secondary ml-2">
+                  {{ scene.contains(mobjects[name].mobject)
+                     ? "(in scene)" : "" }}
+                </span>
+              </v-expansion-panel-header>
+              <v-expansion-panel-content>
+                <MobjectPanel
+                  v-bind:mobject-classes="mobjectChoices"
+                  v-bind:mobject-data="mobjects[name]"
+                  v-bind:scene="scene"
+                  v-on:mobject-update="handleMobjectUpdate"
+                />
+              </v-expansion-panel-content>
+            </v-expansion-panel>
+          </v-expansion-panels>
+          <!--
           <v-divider/>
           <div
             v-for="(mob, i) in mobjects"
@@ -35,6 +59,7 @@
             />
             <v-divider class="my-6"/>
           </div>
+          -->
         </v-expansion-panel-content>
         </v-expansion-panel>
       </v-expansion-panels>
@@ -58,7 +83,6 @@
         <VideoControls
           v-if="sceneLoaded"
           v-on:play="play($event, /*currentOnly=*/false)"
-          v-on:replay="replay"
           v-on:pause="pause"
           v-on:step-backward="stepBackward"
           v-on:step-forward="stepForward"
@@ -94,6 +118,7 @@ export default {
   },
   data() {
     return {
+      expandedPanel: [0],
       scene: null,
       sceneLoaded: false,
       mobjectChoices: ["Circle", "Square"],
@@ -107,12 +132,11 @@ export default {
         argDescriptions: ["Start Mobject", "End Mobject"],
         startMobjects: ["mobject1"],
         endMobjects: ["mobject2"],
-        diff: [null, "mobject1", "mobject2"],
+        animation: null,
       }],
-      mobjects: [],
-      initialMobjects: [
-        {
-          name: "mobject1",
+      mobjects: {},
+      initialMobjects: {
+        mobject1: {
           className: "Circle",
           params: {},
           position: [-1, 0],
@@ -124,8 +148,7 @@ export default {
           mobject: null,
           isAtStart: true,
         },
-        {
-          name: "mobject2",
+        mobject2: {
           className: "Square",
           params: {},
           position: [1, 0],
@@ -137,7 +160,7 @@ export default {
           mobject: null,
           isAtStart: false,
         },
-      ],
+      },
     }
   },
   mounted() {
@@ -149,24 +172,20 @@ export default {
       window.pyodide.loadPackage("numpy").then(() => {
         window.pyodide.runPython("import numpy");
         // TODO: method to add mobjects for initial scene
-        this.mobjects.push(_.cloneDeep(_.find(
-          this.initialMobjects,
-          (o) => {return o.name === "mobject1"},
-        )));
-        this.setMobjectInScene("mobject1");
+        for (let mobjectName of Object.keys(this.initialMobjects)) {
+          let data = _.cloneDeep(this.initialMobjects[mobjectName]);
+          this.setMobjectField(data);
+          this.mobjects[mobjectName] = data;
+        }
+        this.scene.add(this.mobjects["mobject1"].mobject);
+        this.scene.update();
+        this.currentAnimation.animation = this.buildCurrentAnimation();
         this.sceneLoaded = true;
       });
     });
   },
   methods: {
-    setMobjectInScene: function(name) {
-      let data = _.find(this.mobjects, (o) => {return o.name === name});
-      this.scene.remove(data.mobject);
-      let mob = this.setMobjectField(data);
-      this.scene.add(mob); 
-      this.scene.update();
-    },
-    setMobjectField(mobjectData) {
+    setMobjectField: function(mobjectData) {
       let s = new Manim[mobjectData.className]();
       s.translateMobject(mobjectData.position);
       s.applyStyle(mobjectData.style);
@@ -180,10 +199,12 @@ export default {
       // eslint-disable-next-line
       console.assert(this.animationOffset === 0);
       let args = [];
-      for (let key of this.currentAnimation.args) {
-        let data = _.find(this.mobjects, (o) => {return o.name === key});
+      for (let mobjectName of this.currentAnimation.args) {
+        let data = this.mobjects[mobjectName];
         // eslint-disable-next-line
-        console.assert(data.mobject !== null, {key: key, mobjects: this.mobjects});
+        console.assert(data !== undefined, {name: mobjectName});
+        // eslint-disable-next-line
+        console.assert(data.mobject !== null, {name: mobjectName, mobjects: this.mobjects});
         args.push(data.mobject);
       }
       return new Manim[this.currentAnimation.className](...args);
@@ -192,50 +213,41 @@ export default {
       if (this.animationIndex === this.animations.length - 1) {
         return;
       }
-      this.animationIndex++;
+      this.animationIndex += 1;
       this.animationOffset = 0;
+      this.currentAnimation.animation = this.buildCurrentAnimation();
       this.scene.playAnimation(
-        this.buildCurrentAnimation(),
+        this.currentAnimation.animation,
         /*onStep=*/this.onAnimationStep,
         this.chainNextAnimation,
       );
     },
-    applyAnimationDiff(reverse=false) {
-      this.applyDiff(this.currentAnimation.diff, reverse);
-    },
     play: function(e, currentOnly=true) {
       if (this.animationOffset !== 0 && this.animationOffset !== 1) {
-        this.scene.onNextAnimation = (currentOnly
-            ? this.applyAnimationDiff
-            : this.chainNextAnimation);
         this.scene.play()
         return;
       } else if (this.animationOffset === 1) {
         this.jumpToAnimationStart();
-        this.clearAndDrawScene();
       }
+      this.currentAnimation.animation = this.buildCurrentAnimation();
       this.scene.playAnimation(
-        this.buildCurrentAnimation(),
+        this.currentAnimation.animation,
         /*onStep=*/this.onAnimationStep,
-        /*onNextAnimation=*/()=>{
-          this.applyAnimationDiff();
-          if (currentOnly) {
+        /*onAnimationFinished=*/() => {
+          this.applyDiff(this.currentAnimation.animation.getDiff(...this.currentAnimation.args));
+          if (!currentOnly) {
             this.chainNextAnimation();
           }
         },
       );
     },
-    replay: function(e, currentOnly=true) {
-      if (currentOnly) {
-        this.jumpToAnimationStart();
-      } else {
-        // eslint-disable-next-line
-        console.log('didn\'t implement global replay');
-      }
-      this.play(e, currentOnly);
-    },
-    /* Updates the mobjects in this.scene according to the diff. */
+    /* Updates the mobjects in this.scene according to the diff. Diffs have the
+     * form [attr, start, end] if they change a property and
+     * [null, mobToRemove, mobToAdd] if they add or remove a mobject */
     applyDiff: function(diff, reverse=false) {
+      if (diff === null) {
+        return;
+      }
       let diffCopy = _.cloneDeep(diff);
       if (reverse) {
         diffCopy[1] = diff[2];
@@ -245,52 +257,54 @@ export default {
       if (attr === null) {
         // TODO: handle mobject order
         // This diff adds or removes mobjects.
-        this.scene.remove(
-
-        );
-        let startName = diffCopy[1];
-        let endName = diffCopy[2];
-        let startData = _.find(this.mobjects, function(data) {
-          return data.name === startName;
-        });
-        let endData = _.find(this.mobjects, function(data) {
-          return data.name === endName;
-        });
-        if (startData === undefined) {
-          // eslint-disable-next-line
-          console.assert(false);
-          // eslint-disable-next-line
-          console.log(startName);
-          // eslint-disable-next-line
-          console.log(endName);
-        }
-        this.scene.remove(startData.mobject);
-        this.scene.add(endData.mobject);
+        let mobjectToRemoveName = diffCopy[1];
+        let mobjectToAddName = diffCopy[2];
+        let mobjectToRemoveData = this.mobjects[mobjectToRemoveName];
+        let mobjectToAddData = this.mobjects[mobjectToAddName];
+        this.scene.remove(mobjectToRemoveData.mobject);
+        this.setMobjectField(mobjectToRemoveData);
+        this.setMobjectField(mobjectToAddData);
+        this.scene.add(mobjectToAddData.mobject);
+        this.scene.update();
       } else {
-        // This diff changes mobject's attribute.
+        // This diff changes a mobject's attribute.
+        // eslint-disable-next-line
+        console.assert(false, "not yet implemented for attribute diffs");
       }
       this.animationOffset = reverse ? 0 : 1;
     },
-    jumpToAnimationStart: function(forceDraw=false) {
-      if (this.animationOffset === 0 && forceDraw) {
-        if (forceDraw) {
-          this.clearAndDrawScene();
+    jumpToAnimationStart: function() {
+      if (this.animationOffset === 0) {
+        return;
+      } else if (this.animationOffset < 1) {
+        // Any changes to the animated mobject must be reverted.
+        let diff = this.currentAnimation.animation.getDiff(...this.currentAnimation.args);
+        let mobjectToRevertName;
+        if (diff[0] === null) {
+          // This diff adds or removes mobjects.
+          mobjectToRevertName = diff[1];
+        } else {
+          // This diff changes a mobject's attribute.
+          // eslint-disable-next-line
+          console.assert(false, "not yet implemented for attribute diffs");
         }
+        let mobjectToRevertData = this.mobjects[mobjectToRevertName];
+        this.scene.remove(mobjectToRevertData.mobject);
+        this.scene.clearAnimation();
+        this.setMobjectField(mobjectToRevertData);
+        this.scene.add(mobjectToRevertData.mobject);
+        this.scene.update();
+      } else {
+        this.applyDiff(this.currentAnimation.animation.getDiff(...this.currentAnimation.args), /*reverse=*/true);
+      }
+      this.animationOffset = 0;
+    },
+    jumpToAnimationEnd: function() {
+      if (this.animationOffset === 1) {
         return;
       }
-      this.applyDiff(this.currentAnimation.diff, /*reverse=*/true);
-      this.clearAndDrawScene();
-    },
-    jumpToAnimationEnd: function(forceDraw=false) {
-      if (this.animationOffset === 1) {
-        if (forceDraw) {
-          this.clearAndDrawScene();
-        } else {
-          return;
-        }
-      }
-      this.applyDiff(this.currentAnimation.diff);
-      this.clearAndDrawScene();
+      this.scene.clearAnimation();
+      this.applyDiff(this.currentAnimation.animation.getDiff(...this.currentAnimation.args));
     },
     stepForward: function() {
       this.jumpToAnimationEnd();
@@ -298,17 +312,15 @@ export default {
         this.animationIndex++;
         this.animationOffset = 0;
       }
-      this.clearAndDrawScene();
     },
-    // THIS DOESN'T WORK AFTER PLAYING
     stepBackward: function() {
-      this.jumpToAnimationStart();
-      if (this.animationIndex > 0) {
+      if (this.animationOffset !== 0) {
+        this.jumpToAnimationStart();
+      } else if (this.animationIndex !== 0) {
         this.animationIndex--;
         this.animationOffset = 1;
         this.jumpToAnimationStart();
       }
-      this.clearAndDrawScene();
     },
     onAnimationStep: function(elapsedSeconds) {
       this.animationOffset = elapsedSeconds;
@@ -367,18 +379,22 @@ export default {
       this.jumpToMobjectLocation(data);
     },
     handleNewAnimation() {
-      let lastAnimation = this.animations[this.animations.length - 1];
+      while (this.animationIndex < this.animations.length - 1) {
+        this.stepForward();
+      }
+      this.jumpToAnimationEnd();
       this.animations.push({
         className: "Wait",
         description: "Hold a still frame",
         durationSeconds: 1,
         args: [],
         argDescriptions: [],
-        startMobjects: _.cloneDeep(lastAnimation.endMobjects),
-        endMobjects: _.cloneDeep(lastAnimation.endMobjects),
       });
-      this.animationIndex = 0;
-      this.clearAndDrawScene(this.animations.length - 1, AnimationPosition.START);
+      this.animationIndex += 1;
+      this.animationOffset = 0;
+    },
+    handleArgChange(argNum, arg) {
+      this.currentAnimation.args[argNum] = arg;
     }
   },
 }

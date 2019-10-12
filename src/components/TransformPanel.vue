@@ -1,5 +1,6 @@
 <template>
   <div class="pa-0">
+    <!--
     <MobjectPanel
       v-bind:mobject-classes="mobjectClasses"
       v-bind:mobject-data="getArgData(0)"
@@ -12,7 +13,6 @@
       v-on:picker-save="handlePickerSave"
       v-on:width-change="handleWidthChange"
     />
-    <v-divider class="my-6"/>
     <MobjectPanel
       v-bind:mobject-classes="mobjectClasses"
       v-bind:mobject-data="getArgData(1)"
@@ -25,24 +25,60 @@
       v-on:picker-save="handlePickerSave"
       v-on:width-change="handleWidthChange"
     />
-    <v-divider class="my-6"/>
+    -->
+    <v-select
+      label="Start Mobject"
+      v-bind:items="Object.keys(mobjectData)"
+      v-model="currentStartMobject"
+      hide-details
+      class="mb-2">
+    </v-select>
+    <v-select
+      label="End Mobject"
+      v-bind:items="Object.keys(mobjectData)"
+      v-model="currentEndMobject"
+      hide-details
+      class="mb-2">
+    </v-select>
   </div>
 </template>
 
 <script>
-import MobjectPanel from './MobjectPanel.vue'
 import * as _ from 'lodash'
 
 export default {
   name: 'TransformPanel',
   components: {
-    MobjectPanel,
   },
   props: {
     animationData: Object,
-    mobjectData: Array,
+    mobjectData: Object,
     mobjectClasses: Array,
     scene: Object,
+  },
+  data() {
+    return {
+      currentStartMobject: null,
+      currentEndMobject: null,
+    }
+  },
+  mounted() {
+    this.currentStartMobject = this.animationData.args[0];
+    this.currentEndMobject = this.animationData.args[1];
+  },
+  watch: {
+    currentStartMobject: function(newMobject, oldMobject) {
+      // ignore the initial mount
+      if (oldMobject !== null) {
+        this.$emit('arg-change', 0, newMobject);
+      }
+    },
+    currentEndMobject: function(newMobject, oldMobject) {
+      // ignore the initial mount
+      if (oldMobject !== null) {
+        this.$emit('arg-change', 1, newMobject);
+      }
+    }
   },
   methods: {
     getArgData(argNum) {
