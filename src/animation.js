@@ -88,7 +88,7 @@ class Animation {
   }
 }
 
-class Transform extends Animation {
+class ReplacementTransform extends Animation {
   constructor(mobject, targetMobject) {
     super(mobject);
     this.targetMobject = targetMobject;
@@ -144,5 +144,5 @@ class Wait extends Animation {
 export {
   Animation,
   Wait,
-  Transform,
+  ReplacementTransform,
 }

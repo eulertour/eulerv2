@@ -12,12 +12,14 @@ export default {
     'mobjectData': Object,
     'default': String,
     'attr': String,
+    'disabled': Boolean,
   },
   mounted() {
     Pickr.create({
       el: '#picker',
       default: this.default,
       theme: 'nano',
+      disabled: this.disabled,
       components: {
         // Main components
         preview: true,

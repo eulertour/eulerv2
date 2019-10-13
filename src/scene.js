@@ -12,7 +12,6 @@ class Scene extends Two {
   clearAnimation() {
     this.pause();
     this.unbind('update', this.wrapper);
-    this.lastStoppingFrame = this.frameCount;
   }
 
   beginAnimation(animation) {
@@ -24,6 +23,7 @@ class Scene extends Two {
     this.beginAnimation(animation);
     this.update();
     this.onAnimationFinished = onAnimationFinished;
+    this.lastStoppingFrame = this.frameCount;
     this.wrapper = function(frameCount) {
       animation.interpolate((frameCount - this.lastStoppingFrame) / 60);
       if (onStep !== null) {

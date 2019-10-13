@@ -2,7 +2,7 @@ import * as Two from '../node_modules/two.js/build/two.js';
 import * as consts from './constants.js';
 import * as utils from './utils.js';
 import chroma from 'chroma-js';
-import { Animation, Transform, Wait } from './animation.js';
+import { Animation, ReplacementTransform, Wait } from './animation.js';
 import { Scene } from './scene.js';
 
 const DEFAULT_STYLE = {
@@ -434,7 +434,7 @@ export {
   Rectangle,
   Square,
   Animation,
-  Transform,
+  ReplacementTransform,
   Wait,
   Scene,
 };

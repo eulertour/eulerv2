@@ -8,6 +8,7 @@
   <component
     v-bind:is="animationComponent"
     v-bind:animation-data="animationData"
+    v-bind:animation-offset="animationOffset"
     v-bind:mobject-data="mobjectData"
     v-bind:mobject-classes="mobjectClasses"
     v-bind:scene="scene"
@@ -29,7 +30,7 @@
     <v-btn
       fab
       v-else-if="animationOffset === 1"
-      v-on:click="$emit('play', $event)"
+      v-on:click="$emit('replay', $event)"
       class="mx-4"
     >
       <v-icon color="black" x-large>mdi-replay</v-icon>
@@ -50,13 +51,13 @@
 </template>
 
 <script>
-import TransformPanel from './TransformPanel.vue'
+import ReplacementTransformPanel from './ReplacementTransformPanel.vue'
 import WaitPanel from './WaitPanel.vue'
 
 export default {
   name: 'AnimationPanel',
   components: {
-    TransformPanel,
+    ReplacementTransformPanel,
     WaitPanel,
   },
   props: {

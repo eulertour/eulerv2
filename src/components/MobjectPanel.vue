@@ -5,6 +5,7 @@
       v-bind:items="mobjectClasses"
       v-model="chosenClass"
       hide-details
+      v-bind:readonly="disabled"
       class="mb-2">
     </v-select>
     <div class="title">Position</div>
@@ -13,7 +14,11 @@
         ({{ mobjectData.position[0].toFixed(1) || 0 }},
          {{ mobjectData.position[1].toFixed(1) || 0 }})
       </div>
-      <v-btn v-on:click="positionChange()" class="ml-3">
+      <v-btn
+        v-on:click="positionChange()"
+        v-bind:disabled="disabled"
+        class="ml-3"
+      >
         {{ selectingPosition ? "Click the Scene" : "Set position" }}
       </v-btn>
     </div>
@@ -26,6 +31,7 @@
           v-bind:mobject-data="mobjectData"
           v-bind:default="mobjectData.style.strokeColor"
           v-on:change="handlePickerChange"
+          v-bind:disabled="disabled"
         />
       </div>
     </div>
@@ -37,6 +43,7 @@
           v-bind:mobject-data="mobjectData"
           v-bind:default="mobjectData.style.fillColor"
           v-on:change="handlePickerChange"
+          v-bind:disabled="disabled"
         />
       </div>
     </div>
@@ -48,6 +55,7 @@
         v-bind:min="0"
         v-bind:max="15"
         v-bind:thumb-label="true"
+        v-bind:disabled="disabled"
       />
     </div>
   </div>
@@ -55,7 +63,6 @@
 
 <script>
 import Picker from './Picker.vue'
-import * as _ from 'lodash'
 
 export default {
   name: 'MobjectPanel',
@@ -63,8 +70,10 @@ export default {
     Picker,
   },
   props: {
+    mobjectName: String,
     mobjectData: Object,
     mobjectClasses: Array,
+    disabled: Boolean,
     scene: Object,
     label: String,
   },
@@ -76,10 +85,13 @@ export default {
     }
   },
   methods: {
-    handlePickerChange(attr, color) {
-      let data = _.cloneDeep(this.mobjectData);
-      data.style[attr + "Color"] = color.toHEXA().toString();
-      this.$emit('mobject-update', data);
+    handlePickerChange(strokeOrFill, color) {
+      this.$emit(
+        'mobject-update',
+        this.mobjectName,
+        'style.' + strokeOrFill + 'Color',
+        color.toHEXA().toString(),
+      );
     },
     positionChange() {
       this.selectingPosition = true;
@@ -99,9 +111,7 @@ export default {
             e.clientX - sceneElement.getBoundingClientRect().left,
             e.clientY - sceneElement.getBoundingClientRect().top,
           ]);
-          let data = _.cloneDeep(this.mobjectData);
-          data.position = scenePoint;
-          this.$emit('mobject-update', data);
+          this.$emit('mobject-update', this.mobjectName, 'position', scenePoint);
         }
         this.selectingPosition = false;
         document.removeEventListener('click', handlePositionClick);
@@ -118,17 +128,13 @@ export default {
     chosenClass: function(newClassName, oldClassName) {
       // ignore the initial mount
       if (oldClassName !== null) {
-        let data = _.cloneDeep(this.mobjectData);
-        data.className = newClassName;
-        this.$emit('mobject-update', data);
+        this.$emit('mobject-update', this.mobjectName, 'className', newClassName);
       }
     },
     currentStrokeWidth: function(newWidth, oldWidth) {
       // ignore the initial mount
       if (oldWidth !== null) {
-        let data = _.cloneDeep(this.mobjectData);
-        data.style.strokeWidth = newWidth;
-        this.$emit('mobject-update', data);
+        this.$emit('mobject-update', this.mobjectName, 'style.strokeWidth', newWidth);
       }
     }
   }
