@@ -127,7 +127,10 @@ class ReplacementTransform extends Animation {
   }
 
   getDiff(mobject, targetMobject) {
-    return [null, mobject, targetMobject];
+    return {
+      'add': [targetMobject],
+      'remove': [mobject],
+    };
   }
 }
 
@@ -137,7 +140,7 @@ class Wait extends Animation {
   }
 
   getDiff() {
-    return null;
+    return {};
   }
 }
 

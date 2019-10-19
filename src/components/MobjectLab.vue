@@ -265,35 +265,49 @@ export default {
         },
       );
     },
-    /* Updates the mobjects in this.scene according to the diff. Diffs have the
-     * form [attr, start, end] if they change a property and
-     * [null, mobToRemove, mobToAdd] if they add or remove a mobject */
+    /*  Updates the mobjects in this.scene according to the diff. Diffs are of
+     *  the form:
+     *  {
+     *    'add':    [mobject11, ...],
+     *    'remove': [mobject21, ...],
+     *    'modify': [[mobject31, forwardFunc, backwardFunc], ...],
+     *  }
+     */
     applyDiff: function(diff, reverse=false) {
-      if (diff !== null) {
-        let diffCopy = _.cloneDeep(diff);
-        if (reverse) {
-          diffCopy[1] = diff[2];
-          diffCopy[2] = diff[1];
-        }
-        let attr = diff[0]
-        if (attr === null) {
-          // TODO: handle mobject order
-          // This diff adds or removes mobjects.
-          let mobjectToRemoveName = diffCopy[1];
-          let mobjectToAddName = diffCopy[2];
-          let mobjectToRemoveData = this.mobjects[mobjectToRemoveName];
-          let mobjectToAddData = this.mobjects[mobjectToAddName];
-          this.scene.remove(mobjectToRemoveData.mobject);
-          this.setMobjectField(mobjectToRemoveData);
-          this.setMobjectField(mobjectToAddData);
-          this.scene.add(mobjectToAddData.mobject);
-          this.scene.update();
-        } else {
-          // This diff changes a mobject's attribute.
-          // eslint-disable-next-line
-          console.assert(false, "not yet implemented for attribute diffs");
-        }
+      if (_.isEmpty(diff)) {
+        return;
       }
+      let diffCopy = _.cloneDeep(diff);
+      diffCopy['add'] = diff['add'] || [];
+      diffCopy['remove'] = diff['remove'] || [];
+      diffCopy['modify'] = diff['modify'] || [];
+      if (reverse) {
+        diffCopy['add'] = diff['remove'] || [];
+        diffCopy['remove'] = diff['add'] || [];
+        diffCopy['modify'].forEach((newList, index) => {
+          let oldList = diff['modify'][index];
+          newList[1] = oldList[2];
+          newList[2] = oldList[1];
+        });
+      }
+      for (let mobjectName of diffCopy['add']) {
+        let mobjectData = this.mobjects[mobjectName];
+        this.setMobjectField(mobjectData);
+        this.scene.add(mobjectData.mobject);
+      }
+      for (let mobjectName of diffCopy['remove']) {
+        let mobjectData = this.mobjects[mobjectName];
+        this.scene.remove(mobjectData.mobject);
+        this.setMobjectField(mobjectData);
+      }
+      for (let [mobjectName, modifyFunc] of diffCopy['modify']) {
+        let mobjectData = this.mobjects[mobjectName];
+        // eslint-disable-next-line
+        console.assert(mobjectData.mobject &&
+          this.scene.contains(mobjectData.mobject));
+        modifyFunc(mobjectData.mobject);
+      }
+      this.scene.update();
       this.animationOffset = reverse ? 0 : 1;
     },
     jumpToAnimationStart: function() {

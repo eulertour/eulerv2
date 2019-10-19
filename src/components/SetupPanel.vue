@@ -1,6 +1,5 @@
 <template>
   <div>
-    <div class="title">Add</div>
     <v-combobox
       v-model="setup['add']"
       v-bind:items="Object.keys(mobjects)"
@@ -8,11 +7,8 @@
       chips
       deletable-chips
       hide-selected
-      label="Add Mobjects to the Scene"
+      label="Add Mobjects"
     ></v-combobox>
-    <div class="title">
-      Remove
-    </div>
     <div v-for="(mobjectName, index) in setup['remove']" v-bind:key="index">
       {{ mobjectName }}
     </div>
