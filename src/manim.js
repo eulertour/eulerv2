@@ -410,7 +410,7 @@ class RegularPolygon extends Polygon {
       }
       vertices.push([np.sin(angle), np.cos(angle)]);
     }
-    let halfway = Math.trunc(numSides / 2);
+    let halfway = np.trunc(numSides / 2);
     let oldHeight = np.abs(vertices[0][1] - vertices[halfway][1]);
     vertices.forEach(function(vertex) {
       vertex[0] *= height/oldHeight;
@@ -438,6 +438,7 @@ class Pentagon extends RegularPolygon {
 
 class Hexagon extends RegularPolygon {
   constructor(
+    height=2,
     style={strokeColor: consts.GREEN}) {
     super(6, height, style);
   }
