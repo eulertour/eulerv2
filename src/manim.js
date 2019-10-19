@@ -416,6 +416,10 @@ class RegularPolygon extends Polygon {
       vertex[0] *= height/oldHeight;
       vertex[1] *= height/oldHeight;
     });
+    let shiftDist = height / 2 - vertices[0][1];
+    vertices.forEach(function(vertex) {
+      vertex[1] += shiftDist;
+    });
     super(vertices, style);
   }
 }
