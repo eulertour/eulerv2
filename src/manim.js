@@ -405,6 +405,9 @@ class RegularPolygon extends Polygon {
     let angle;
     for (let i = 0; i < numSides; i++) {
       angle = 2*np.pi * i/numSides;
+      if (numSides % 2 == 0) {
+        angle -= np.pi / numSides;
+      }
       vertices.push([radius*np.sin(angle), radius*np.cos(angle)]);
     }
     super(vertices, style);
@@ -424,6 +427,22 @@ class Pentagon extends RegularPolygon {
     radius=1,
     style={strokeColor: consts.GREEN}) {
     super(5, radius, style);
+  }
+}
+
+class Hexagon extends RegularPolygon {
+  constructor(
+    radius=1,
+    style={strokeColor: consts.GREEN}) {
+    super(6, radius, style);
+  }
+}
+
+class Octagon extends RegularPolygon {
+  constructor(
+    radius=1,
+    style={strokeColor: consts.GREEN}) {
+    super(8, radius, style);
   }
 }
 
@@ -448,13 +467,11 @@ class Rectangle extends Polygon {
   }
 }
 
-class Square extends Rectangle {
+class Square extends RegularPolygon {
   constructor(
-    sideLength=2,
-    style={},
-  ) {
-    super(sideLength, sideLength, style);
-    this.sideLength=sideLength
+    radius=1,
+    style={strokeColor: consts.GREEN}) {
+    super(4, radius, style);
   }
 }
 
@@ -467,6 +484,8 @@ export {
   RegularPolygon,
   Triangle,
   Pentagon,
+  Hexagon,
+  Octagon,
   Rectangle,
   Square,
   Animation,
