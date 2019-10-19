@@ -394,6 +394,39 @@ class Polygon extends Mobject {
   }
 }
 
+class RegularPolygon extends Polygon {
+  constructor(
+    numSides=3,
+    radius=1,
+    style={},
+  ) {
+    let np = window.pyodide.pyimport("numpy");
+    let vertices = [];
+    let angle;
+    for (let i = 0; i < numSides; i++) {
+      angle = 2*np.pi * i/numSides;
+      vertices.push([radius*np.sin(angle), radius*np.cos(angle)]);
+    }
+    super(vertices, style);
+  }
+}
+
+class Triangle extends RegularPolygon {
+  constructor(
+    radius=1,
+    style={strokeColor: consts.GREEN}) {
+    super(3, radius, style);
+  }
+}
+
+class Pentagon extends RegularPolygon {
+  constructor(
+    radius=1,
+    style={strokeColor: consts.GREEN}) {
+    super(5, radius, style);
+  }
+}
+
 class Rectangle extends Polygon {
   constructor(
     width=4.0,
@@ -431,6 +464,9 @@ export {
   Arc,
   Circle,
   Polygon,
+  RegularPolygon,
+  Triangle,
+  Pentagon,
   Rectangle,
   Square,
   Animation,

@@ -81,7 +81,7 @@ export default {
     return {
       scene: null,
       sceneLoaded: false,
-      mobjectChoices: ["Circle", "Square"],
+      mobjectChoices: ["Circle", "Square", "Triangle", "Pentagon"],
       animationIndex: 0,
       animationOffset: 0,
       animations: [{
