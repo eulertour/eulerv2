@@ -397,7 +397,7 @@ class Polygon extends Mobject {
 class RegularPolygon extends Polygon {
   constructor(
     numSides=3,
-    radius=1,
+    radius=1.5,
     style={},
   ) {
     let np = window.pyodide.pyimport("numpy");
@@ -416,7 +416,7 @@ class RegularPolygon extends Polygon {
 
 class Triangle extends RegularPolygon {
   constructor(
-    radius=1,
+    radius=1.5,
     style={strokeColor: consts.GREEN}) {
     super(3, radius, style);
   }
@@ -424,7 +424,7 @@ class Triangle extends RegularPolygon {
 
 class Pentagon extends RegularPolygon {
   constructor(
-    radius=1,
+    radius=1.5,
     style={strokeColor: consts.GREEN}) {
     super(5, radius, style);
   }
@@ -432,7 +432,7 @@ class Pentagon extends RegularPolygon {
 
 class Hexagon extends RegularPolygon {
   constructor(
-    radius=1,
+    radius=1.5,
     style={strokeColor: consts.GREEN}) {
     super(6, radius, style);
   }
@@ -440,7 +440,7 @@ class Hexagon extends RegularPolygon {
 
 class Octagon extends RegularPolygon {
   constructor(
-    radius=1,
+    radius=1.5,
     style={strokeColor: consts.GREEN}) {
     super(8, radius, style);
   }
@@ -469,7 +469,7 @@ class Rectangle extends Polygon {
 
 class Square extends RegularPolygon {
   constructor(
-    radius=1,
+    radius=1.5,
     style={strokeColor: consts.GREEN}) {
     super(4, radius, style);
   }
