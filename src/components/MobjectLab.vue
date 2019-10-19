@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex justify-center align-top mt-7">
+  <div class="d-flex justify-center align-top mt-7 mb-5">
     <div v-if="sceneLoaded">
       <v-expansion-panels
         id="info-panels"
@@ -10,6 +10,7 @@
         <v-expansion-panel>
         <v-expansion-panel-header>Animation</v-expansion-panel-header>
         <v-expansion-panel-content>
+          <SetupPanel v-bind:setup="currentSetup" v-bind:mobjects="mobjects"/>
           <AnimationPanel
             v-bind:animation-data="currentAnimation"
             v-bind:mobject-data="mobjects"
@@ -48,6 +49,11 @@
               </v-expansion-panel-content>
             </v-expansion-panel>
           </v-expansion-panels>
+          <div class="d-flex justify-space-around mt-4">
+            <v-btn fab v-on:click="newMobject">
+              <v-icon color="black" x-large>mdi-plus</v-icon>
+            </v-btn>
+          </div>
         </v-expansion-panel-content>
         </v-expansion-panel>
       </v-expansion-panels>
@@ -85,23 +91,28 @@
 
 <script>
 import * as _ from 'lodash'
-import * as Manim from '../manim.js';
+import * as Manim from '../manim.js'
 import AnimationPanel from './AnimationPanel.vue'
 import MobjectPanel from './MobjectPanel.vue'
+import SetupPanel from './SetupPanel.vue'
 import Timeline from './Timeline.vue'
 import VideoControls from './VideoControls.vue'
 
 export default {
   name: 'MobjectLab',
   components: {
-    Timeline,
-    VideoControls,
     AnimationPanel,
     MobjectPanel,
+    SetupPanel,
+    Timeline,
+    VideoControls,
   },
   computed: {
     currentAnimation() {
       return this.animations[this.animationIndex];
+    },
+    currentSetup() {
+      return this.setupDiffs[this.animationIndex];
     },
     animating() {
       return this.animationOffset !== 0 && this.animationOffset !== 1;
@@ -120,11 +131,20 @@ export default {
         className: "ReplacementTransform",
         shortName: "RTransform",
         description: "Morph one Mobject into another",
-        durationSeconds: 1,
         args: ["mobject1", "mobject2"],
         argDescriptions: ["Start Mobject", "End Mobject"],
+        durationSeconds: 1,
         animation: null,
       }],
+      setupDiffs: [
+        // diffs are of the form:
+        // {
+        //   'add':    [mobject11, ...],
+        //   'remove': [mobject21, ...],
+        //   'modify': [[mobject31, forwardFunc, backwardFunc], ...],
+        // }
+        {'add': ['mobject1']},
+      ],
       mobjects: {},
       initialMobjects: {
         mobject1: {
@@ -137,7 +157,6 @@ export default {
             strokeWidth: 4,
           },
           mobject: null,
-          isAtStart: true,
         },
         mobject2: {
           className: "Square",
@@ -149,7 +168,6 @@ export default {
             strokeWidth: 4,
           },
           mobject: null,
-          isAtStart: false,
         },
       },
     }
@@ -223,7 +241,7 @@ export default {
     },
     play: function(e, singleAnimationOnly=true) {
       this.playingSingleAnimation = singleAnimationOnly;
-      if (this.animationOffset !== 0 && this.animationOffset !== 1) {
+      if (this.animating) {
         this.scene.play()
         return;
       }
@@ -379,11 +397,31 @@ export default {
         args: [],
         argDescriptions: [],
       });
+      this.setupDiffs.push({});
       this.stepForward();
     },
     handleArgChange(argNum, arg) {
       this.currentAnimation.args[argNum] = arg;
-    }
+    },
+    newMobject() {
+      let newMobjectData = {
+        className: "Circle",
+        params: {},
+        position: [-1, 0],
+        style: {
+          strokeColor: "#fc6255ff",
+          fillColor: "#00000000",
+          strokeWidth: 4,
+        },
+        mobject: null,
+      };
+      this.setMobjectField(newMobjectData);
+      this.$set(
+        this.mobjects,
+        'mobject' + (Object.keys(this.mobjects).length + 1),
+        newMobjectData,
+      );
+    },
   },
 }
 </script>

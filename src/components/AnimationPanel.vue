@@ -3,8 +3,7 @@
   <div class="pa-0">
     <div class="display-1">{{ animationData.className }}</div>
   </div>
-  <div class="subtitle-1">{{ animationData.description }}</div>
-  <v-divider class="my-6"/>
+  <div class="subtitle-1 mb-6">{{ animationData.description }}</div>
   <component
     v-bind:is="animationComponent"
     v-bind:animation-data="animationData"
@@ -20,7 +19,7 @@
     v-on:width-change="(newWidth, mobjectData)=>$emit('width-change', newWidth, mobjectData)"
     v-on:arg-change="(argNum, arg)=>$emit('arg-change', argNum, arg)"
   />
-  <div class="d-flex justify-center pa-0">
+  <div class="d-flex justify-center pa-0 mt-7">
     <v-btn fab v-on:click="$emit('jump-to-start')" class="mx-2">
       <v-icon color="black" x-large>mdi-skip-previous</v-icon>
     </v-btn>
