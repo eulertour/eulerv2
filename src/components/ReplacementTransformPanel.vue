@@ -3,6 +3,7 @@
     <v-select
       label="Start Mobject"
       v-bind:items="startMobjectChoices"
+      v-bind:readonly="animating"
       v-model="currentStartMobject"
       hide-details
       class="mb-5">
@@ -10,6 +11,7 @@
     <v-select
       label="End Mobject"
       v-bind:items="endMobjectChoices"
+      v-bind:readonly="animating"
       v-model="currentEndMobject"
       hide-details
       class="mb-5">
@@ -32,6 +34,8 @@ export default {
     endMobjects: Array,
     mobjectClasses: Array,
     scene: Object,
+    animating: Boolean,
+    setup: Object,
   },
   computed: {
     firstArg() {
@@ -41,38 +45,22 @@ export default {
       return this.animationData.args[1];
     },
     startMobjectChoices() {
-      if (this.animationOffset < 1) {
-        // everything in the scene
-        return Object.keys(this.mobjectData).filter(
-          name => this.scene.contains(this.mobjectData[name].mobject)
-        );
-      } else {
-        // everything in the scene including the first arg
-        // excluding the second arg
-        let choices = Object.keys(this.mobjectData).filter(
-          name => this.scene.contains(this.mobjectData[name].mobject)
-        );
-        choices = _.concat(choices, this.firstArg);
-        _.remove(choices, name => name === this.secondArg);
-        return choices;
-      }
+      // Every mobject in the scene or added in setup can be animated.
+      let choices = Object.keys(this.mobjectData).filter(
+        name => this.scene.contains(this.mobjectData[name].mobject)
+      );
+      choices = _.concat(choices, this.setup['add'] || []);
+      choices.filter((item, index) => choices.indexOf(item) === index);
+      return choices;
     },
     endMobjectChoices() {
-      if (this.animationOffset < 1) {
-        // everything not in the scene
-        return Object.keys(this.mobjectData).filter(
-          name => !this.scene.contains(this.mobjectData[name].mobject)
-        );
-      } else {
-        // everything not in the scene including the second arg
-        // excluding the first arg
-        let choices = Object.keys(this.mobjectData).filter(
-          name => !this.scene.contains(this.mobjectData[name].mobject)
-        );
-        choices = _.concat(choices, this.secondArg);
-        _.remove(choices, name => name === this.firstArg);
-        return choices;
-      }
+      // Every mobject which isn't in the scene or was removed in setup can be
+      // transformed into.
+      let choices = Object.keys(this.mobjectData).filter(
+        name => !this.scene.contains(this.mobjectData[name].mobject)
+      );
+      _.concat(choices, this.setup['remove'] || []);
+      return choices;
     },
   },
   data() {

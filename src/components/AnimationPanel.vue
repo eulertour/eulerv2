@@ -11,6 +11,8 @@
     v-bind:mobject-data="mobjectData"
     v-bind:mobject-classes="mobjectClasses"
     v-bind:scene="scene"
+    v-bind:animating="animating"
+    v-bind:setup="setup"
     v-on:class-change="(className, mobjectData)=>$emit('class-change', className, mobjectData)"
     v-on:position-change="(scenePoint, mobjectData)=>$emit('position-change', scenePoint, mobjectData)"
     v-on:picker-change="(attr, color, mobjectData)=>$emit('picker-change', attr, color, mobjectData)"
@@ -19,7 +21,30 @@
     v-on:width-change="(newWidth, mobjectData)=>$emit('width-change', newWidth, mobjectData)"
     v-on:arg-change="(argNum, arg)=>$emit('arg-change', argNum, arg)"
   />
-  <div class="d-flex justify-center pa-0 mt-7">
+  <div class="mb-2">
+    <span class="font-weight-light mr-2">Added by Animation:</span>
+    <span v-for="mobjectName in addedByAnimation" v-bind:key="mobjectName">
+      <v-chip class="mr-2">
+        <v-avatar left color="red">
+          <v-icon color="white">mdi-plus</v-icon>
+        </v-avatar>
+        {{ mobjectName }}
+      </v-chip>
+    </span>
+  </div>
+  <div>
+    <span class="font-weight-light mr-2">Removed by Animation:</span>
+    <span v-for="mobjectName in removedByAnimation" v-bind:key="mobjectName">
+      <v-chip class="mr-2">
+        <v-avatar left color="blue">
+          <v-icon color="white">mdi-minus</v-icon>
+        </v-avatar>
+        {{ mobjectName }}
+      </v-chip>
+    </span>
+  </div>
+  <v-divider class="my-7"></v-divider>
+  <div class="d-flex justify-center pa-0">
     <v-btn fab v-on:click="$emit('jump-to-start')" class="mx-2">
       <v-icon color="black" x-large>mdi-skip-previous</v-icon>
     </v-btn>
@@ -65,11 +90,23 @@ export default {
     mobjectClasses: Array,
     mobjectData: Object,
     scene: Object,
+    animating: Boolean,
+    setup: Object,
   },
   computed: {
     animationComponent: function() {
       return this.animationData.className + "Panel";
-    }
+    },
+    addedByAnimation() {
+      return this.animationData.animation.getDiff(
+        ...this.animationData.args
+      )['add'];
+    },
+    removedByAnimation() {
+      return this.animationData.animation.getDiff(
+        ...this.animationData.args
+      )['remove'];
+    },
   },
 }
 </script>

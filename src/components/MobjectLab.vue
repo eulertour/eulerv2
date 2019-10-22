@@ -10,12 +10,22 @@
         <v-expansion-panel>
         <v-expansion-panel-header>Animation</v-expansion-panel-header>
         <v-expansion-panel-content>
-          <SetupPanel v-bind:setup="currentSetup" v-bind:mobjects="mobjects"/>
+          <SetupPanel
+            v-bind:setup="currentSetup"
+            v-bind:animationData="currentAnimation"
+            v-bind:mobjects="mobjects"
+            v-bind:scene="scene"
+            v-bind:animating="animating"
+            v-on:update-setup="(action, newSelection)=>updateSetup(action, newSelection)"
+          />
+          <div class="mb-10 mt-12"></div>
           <AnimationPanel
             v-bind:animation-data="currentAnimation"
             v-bind:mobject-data="mobjects"
             v-bind:scene="scene"
             v-bind:animation-offset="animationOffset"
+            v-bind:animating="animating"
+            v-bind:setup="currentSetup"
             v-on:jump-to-start="jumpToAnimationStart"
             v-on:jump-to-end="jumpToAnimationEnd"
             v-on:pause="pause"
@@ -169,6 +179,17 @@ export default {
           },
           mobject: null,
         },
+        mobject3: {
+          className: "Square",
+          params: {},
+          position: [1, 0],
+          style: {
+            strokeColor: "#00ff00ff",
+            fillColor: "#00000000",
+            strokeWidth: 4,
+          },
+          mobject: null,
+        },
       },
     }
   },
@@ -316,23 +337,12 @@ export default {
       } else if (this.animationOffset < 1) {
         this.scene.clearAnimation();
         // Any changes to the animated mobject must be reverted.
-        let diff = this.currentAnimation.animation.getDiff(...this.currentAnimation.args);
-        if (diff !== null) {
-          let mobjectToRevertName;
-          if (diff[0] === null) {
-            // This diff adds or removes mobjects.
-            mobjectToRevertName = diff[1];
-          } else {
-            // This diff changes a mobject's attribute.
-            // eslint-disable-next-line
-            console.assert(false, "not yet implemented for attribute diffs");
-          }
-          let mobjectToRevertData = this.mobjects[mobjectToRevertName];
-          this.scene.remove(mobjectToRevertData.mobject);
-          this.setMobjectField(mobjectToRevertData);
-          this.scene.add(mobjectToRevertData.mobject);
-          this.scene.update();
-        }
+        let mobjectToRevertName = this.currentAnimation.args[0];
+        let mobjectToRevertData = this.mobjects[mobjectToRevertName];
+        this.scene.remove(mobjectToRevertData.mobject);
+        this.setMobjectField(mobjectToRevertData);
+        this.scene.add(mobjectToRevertData.mobject);
+        this.scene.update();
       } else {
         this.applyDiff(this.currentAnimation.animation.getDiff(...this.currentAnimation.args), /*reverse=*/true);
       }
@@ -415,7 +425,10 @@ export default {
       this.stepForward();
     },
     handleArgChange(argNum, arg) {
-      this.currentAnimation.args[argNum] = arg;
+      // MAKE THIS REACTIVE
+      let newArgs = _.cloneDeep(this.currentAnimation.args);
+      newArgs[argNum] = arg;
+      this.animations[this.animationIndex].args = newArgs
     },
     newMobject() {
       let newMobjectData = {
@@ -436,6 +449,34 @@ export default {
         newMobjectData,
       );
     },
+    updateSetup(action, newSelection) {
+      // REMOVING ALL MOBJECTS TRIGGERS A BUG
+      // Update the scene.
+      let negateAction;
+      let diff;
+      if (!(action in this.currentSetup) || newSelection.length > this.currentSetup[action].length) {
+        negateAction = false;
+        diff = _.difference(newSelection, this.currentSetup['add'] || []);
+      } else {
+        negateAction = true;
+        diff = _.difference(this.currentSetup[action], newSelection);
+      }
+      // eslint-disable-next-line
+      console.assert(diff.length === 1);
+      let mobjectName = diff[0];
+      if ((action === 'add' && !negateAction) ||
+          (action === 'remove' && negateAction) ) {
+        this.scene.add(this.mobjects[mobjectName].mobject);
+      } else {
+        this.scene.remove(this.mobjects[mobjectName].mobject);
+      }
+      this.scene.update();
+
+      // Update currentSetup.
+      let newDiff = _.cloneDeep(this.currentSetup);
+      newDiff[action] = newSelection;
+      this.$set(this.setupDiffs, this.animationIndex, newDiff);
+    }
   },
 }
 </script>

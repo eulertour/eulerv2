@@ -1,19 +1,34 @@
 <template>
   <div>
-    <v-combobox
-      v-model="setup['add']"
-      v-bind:items="Object.keys(mobjects)"
-      multiple
+    <v-select
+      v-model="addSelection"
+      v-bind:items="addChoices"
+      v-bind:readonly="animating"
+      label="Add Mobjects"
+      class="mb-2"
       chips
       deletable-chips
-      hide-selected
-      label="Add Mobjects"
-    ></v-combobox>
-    <div v-for="(mobjectName, index) in setup['remove']" v-bind:key="index">
-      {{ mobjectName }}
-    </div>
+      multiple
+      hide-details
+    >
+    <template v-slot:selection="{ item, index }">
+      <v-chip>
+        <span>{{ item }}</span>
+      </v-chip>
+    </template>
+    </v-select>
+    <v-select
+      v-model="removeSelection"
+      v-bind:items="removeChoices"
+      v-bind:readonly="animating"
+      label="Remove Mobjects"
+      class="mb-2"
+      chips
+      deletable-chips
+      multiple
+      hide-details
+    ></v-select>
     <!-- figure out modify -->
-    <v-divider v-if="setupIsEmpty" class="my-6"/>
   </div>
 </template>
 
@@ -24,23 +39,71 @@ export default {
   name: 'SetupPanel',
   props: {
     setup: Object,
+    animationData: Object,
     mobjects: Object,
+    scene: Object,
+    animating: Boolean,
+  },
+  data() {
+    return {
+      test: [1,2,3],
+    }
+  },
+  mounted() {
+
   },
   computed: {
+    mobjectNames() {
+      return Object.keys(this.mobjects);
+    },
     setupIsEmpty() {
       return !_.isEmpty(this.setup);
     },
     addChoices() {
-      // mobjects - scene - added by animation
-      return null;
+      /*    all mobjects
+       *  - mobjects in scene
+       *  + mobjects added in this setup
+       *  - mobjects removed in this setup
+       */
+      let choices = Object.keys(this.mobjects).filter(
+        mobjectName => !this.scene.contains(this.mobjects[mobjectName].mobject)
+      );
+      choices = _.concat(choices, this.setup['add'] || []);
+      choices = _.difference(choices, this.setup['remove'] || [])
+      return choices;
+    },
+    addSelection: {
+      get() {
+        return this.setup['add'];
+      },
+      set(newSelection) {
+        this.$emit('update-setup', 'add', newSelection);
+      }
     },
     removeChoices() {
-      // scene - removed by animation
-      return null;
-    }
+      /*    mobjects in scene
+       *  + mobjects removed in this setup
+       *  - mobjects added in this setup
+       */
+      let choices = Object.keys(this.mobjects).filter(
+        mobjectName => this.scene.contains(this.mobjects[mobjectName].mobject)
+      );
+      choices = _.concat(choices, this.setup['remove'] || []);
+      choices = _.difference(choices, this.setup['add'] || [])
+      return choices;
+    },
+    removeSelection: {
+      get() {
+        return this.setup['remove'];
+      },
+      set(newSelection) {
+        this.$emit('update-setup', 'remove', newSelection);
+      }
+    },
   },
-  mounted() {
-  }
+  watch: {
+
+  },
 }
 </script>
 
