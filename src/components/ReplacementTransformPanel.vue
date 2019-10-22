@@ -6,7 +6,16 @@
       v-bind:readonly="animating"
       v-model="currentStartMobject"
       hide-details
-      class="mb-5">
+      class="mb-5"
+    >
+      <template v-slot:selection="{ item, index }">
+        <v-chip>
+          <v-avatar left color="blue" v-if="mobjectIsRemoved(item)">
+            <v-icon color="white">mdi-minus</v-icon>
+          </v-avatar>
+          {{ item }}
+        </v-chip>
+      </template>
     </v-select>
     <v-select
       label="End Mobject"
@@ -14,7 +23,16 @@
       v-bind:readonly="animating"
       v-model="currentEndMobject"
       hide-details
-      class="mb-5">
+      class="mb-5"
+    >
+      <template v-slot:selection="{ item, index }">
+        <v-chip>
+          <v-avatar left color="red" v-if="mobjectIsAdded(item)">
+            <v-icon color="white">mdi-plus</v-icon>
+          </v-avatar>
+          {{ item }}
+        </v-chip>
+      </template>
     </v-select>
   </div>
 </template>
@@ -88,6 +106,14 @@ export default {
     }
   },
   methods: {
+    mobjectIsAdded(mobjectName) {
+      let diff = this.animationData.animation.getDiff(...this.animationData.args);
+      return _.indexOf(diff['add'], mobjectName) !== -1;
+    },
+    mobjectIsRemoved(mobjectName) {
+      let diff = this.animationData.animation.getDiff(...this.animationData.args);
+      return _.indexOf(diff['remove'], mobjectName) !== -1;
+    }
   },
 }
 </script>

@@ -3,7 +3,7 @@
   <div class="pa-0">
     <div class="display-1">{{ animationData.className }}</div>
   </div>
-  <div class="subtitle-1 mb-6">{{ animationData.description }}</div>
+  <div class="subtitle-1 mb-2">{{ animationData.description }}</div>
   <component
     v-bind:is="animationComponent"
     v-bind:animation-data="animationData"
@@ -21,29 +21,7 @@
     v-on:width-change="(newWidth, mobjectData)=>$emit('width-change', newWidth, mobjectData)"
     v-on:arg-change="(argNum, arg)=>$emit('arg-change', argNum, arg)"
   />
-  <div class="mb-2">
-    <span class="font-weight-light mr-2">Added by Animation:</span>
-    <span v-for="mobjectName in addedByAnimation" v-bind:key="mobjectName">
-      <v-chip class="mr-2">
-        <v-avatar left color="red">
-          <v-icon color="white">mdi-plus</v-icon>
-        </v-avatar>
-        {{ mobjectName }}
-      </v-chip>
-    </span>
-  </div>
-  <div>
-    <span class="font-weight-light mr-2">Removed by Animation:</span>
-    <span v-for="mobjectName in removedByAnimation" v-bind:key="mobjectName">
-      <v-chip class="mr-2">
-        <v-avatar left color="blue">
-          <v-icon color="white">mdi-minus</v-icon>
-        </v-avatar>
-        {{ mobjectName }}
-      </v-chip>
-    </span>
-  </div>
-  <v-divider class="my-7"></v-divider>
+  <div class="mb-10"></div>
   <div class="d-flex justify-center pa-0">
     <v-btn fab v-on:click="$emit('jump-to-start')" class="mx-2">
       <v-icon color="black" x-large>mdi-skip-previous</v-icon>

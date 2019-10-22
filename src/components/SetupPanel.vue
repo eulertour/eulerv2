@@ -6,16 +6,17 @@
       v-bind:readonly="animating"
       label="Add Mobjects"
       class="mb-2"
-      chips
-      deletable-chips
       multiple
       hide-details
     >
-    <template v-slot:selection="{ item, index }">
-      <v-chip>
-        <span>{{ item }}</span>
-      </v-chip>
-    </template>
+      <template v-slot:selection="{ item, index }">
+        <v-chip>
+          <v-avatar left color="red">
+            <v-icon color="white">mdi-plus</v-icon>
+          </v-avatar>
+          {{ item }}
+        </v-chip>
+      </template>
     </v-select>
     <v-select
       v-model="removeSelection"
@@ -23,11 +24,18 @@
       v-bind:readonly="animating"
       label="Remove Mobjects"
       class="mb-2"
-      chips
-      deletable-chips
       multiple
       hide-details
-    ></v-select>
+    >
+      <template v-slot:selection="{ item, index }">
+        <v-chip>
+          <v-avatar left color="blue">
+            <v-icon color="white">mdi-minus</v-icon>
+          </v-avatar>
+          {{ item }}
+        </v-chip>
+      </template>
+    </v-select>
     <!-- figure out modify -->
   </div>
 </template>
