@@ -72,6 +72,9 @@ export default {
       if (this.animationOffset === 1) {
         choices = _.concat(choices, this.animationData.args[0]);
       }
+      choices = choices.filter(
+        mobjectName => mobjectName !== this.currentEndMobject
+      );
       return choices;
     },
     endMobjectChoices() {
@@ -84,6 +87,9 @@ export default {
       if (this.animationOffset === 1) {
         choices = _.concat(choices, this.animationData.args[1]);
       }
+      choices = choices.filter(
+        mobjectName => mobjectName !== this.currentStartMobject
+      );
       return choices;
     },
   },
