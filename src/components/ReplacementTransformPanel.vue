@@ -63,11 +63,15 @@ export default {
       return this.animationData.args[1];
     },
     startMobjectChoices() {
+      // TODO: this probably requires a mobjectsAtTime
       // Every mobject in the scene or added in setup can be animated.
       let choices = Object.keys(this.mobjectData).filter(
         name => this.scene.contains(this.mobjectData[name].mobject)
       );
       choices = _.concat(choices, this.setup['add'] || []);
+      if (this.animationOffset === 1) {
+        choices = _.concat(choices, this.animationData.args[0]);
+      }
       return choices;
     },
     endMobjectChoices() {
@@ -77,6 +81,9 @@ export default {
         name => !this.scene.contains(this.mobjectData[name].mobject)
       );
       choices = _.concat(choices, this.setup['remove'] || []);
+      if (this.animationOffset === 1) {
+        choices = _.concat(choices, this.animationData.args[1]);
+      }
       return choices;
     },
   },
