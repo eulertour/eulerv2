@@ -141,7 +141,7 @@ export default {
       playingSingleAnimation: null,
       scene: null,
       sceneLoaded: false,
-      mobjectChoices: ["Circle", "Square", "Triangle", "Pentagon", "Hexagon", "Octagon"],
+      mobjectChoices: ["Circle", "Square", "Triangle", "Pentagon", "Star", "Hexagon", "StarOfDavid", "Octagon"],
       animationIndex: 0,
       animationOffset: 0,
       animations: [{

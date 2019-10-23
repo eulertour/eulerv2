@@ -424,6 +424,45 @@ class RegularPolygon extends Polygon {
   }
 }
 
+class Star extends Polygon {
+  constructor(
+    numPoints=5,
+    height=2,
+    ratio=0.5,
+    style={}
+  ) {
+    let np = window.pyodide.pyimport("numpy");
+    let vertices = [];
+    let angle;
+    for (let i = 0; i < numPoints; i++) {
+      angle = 2*np.pi * i/numPoints;
+      vertices.push([np.sin(angle), np.cos(angle)]);
+      angle += np.pi/numPoints;
+      vertices.push([ratio*np.sin(angle), ratio*np.cos(angle)]);
+    }
+    let halfway = 2 * np.trunc(numPoints / 2);
+    let oldHeight = np.abs(vertices[0][1] - vertices[halfway][1]);
+    vertices.forEach(function(vertex) {
+      vertex[0] *= height/oldHeight;
+      vertex[1] *= height/oldHeight;
+    });
+    let shiftDist = height / 2 - vertices[0][1];
+    vertices.forEach(function(vertex) {
+      vertex[1] += shiftDist;
+    });
+    super(vertices, style);
+  }
+}
+
+class StarOfDavid extends Star {
+  constructor(
+    height=2,
+    ratio=1/Math.sqrt(3),
+    style={strokeColor: consts.GREEN}) {
+    super(6, height, ratio, style);
+  }
+}
+
 class Triangle extends RegularPolygon {
   constructor(
     height=2,
@@ -492,6 +531,8 @@ export {
   Circle,
   Polygon,
   RegularPolygon,
+  Star,
+  StarOfDavid,
   Triangle,
   Pentagon,
   Hexagon,
