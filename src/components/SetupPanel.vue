@@ -23,7 +23,7 @@
       v-bind:items="removeChoices"
       v-bind:readonly="animating"
       label="Remove Mobjects"
-      class="mb-2"
+      class="mb-3"
       multiple
       hide-details
     >

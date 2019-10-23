@@ -8,63 +8,67 @@
         multiple
       >
         <v-expansion-panel>
-        <v-expansion-panel-header>Animation</v-expansion-panel-header>
-        <v-expansion-panel-content>
-          <SetupPanel
-            v-bind:setup="currentSetup"
-            v-bind:animationData="currentAnimation"
-            v-bind:mobjects="mobjects"
-            v-bind:scene="scene"
-            v-bind:animating="animating"
-            v-on:update-setup="(action, newSelection)=>updateSetup(action, newSelection)"
-          />
-          <div class="mb-10 mt-12"></div>
-          <AnimationPanel
-            v-bind:animation-data="currentAnimation"
-            v-bind:mobject-data="mobjects"
-            v-bind:scene="scene"
-            v-bind:animation-offset="animationOffset"
-            v-bind:animating="animating"
-            v-bind:setup="currentSetup"
-            v-on:jump-to-start="jumpToAnimationStart"
-            v-on:jump-to-end="jumpToAnimationEnd"
-            v-on:pause="pause"
-            v-on:play="(e)=>play(e)"
-            v-on:replay="(e)=>replay(e)"
-            v-on:arg-change="handleArgChange"
-          />
-        </v-expansion-panel-content>
+          <v-expansion-panel-header>Scene</v-expansion-panel-header>
+          <v-expansion-panel-content>
+            <SetupPanel
+              v-bind:setup="currentSceneDiff"
+              v-bind:animationData="currentAnimation"
+              v-bind:mobjects="mobjects"
+              v-bind:scene="scene"
+              v-bind:animating="animating"
+              v-on:update-setup="(action, newSelection)=>updateSetup(action, newSelection)"
+            />
+          </v-expansion-panel-content>
         </v-expansion-panel>
         <v-expansion-panel>
-        <v-expansion-panel-header>Mobjects</v-expansion-panel-header>
-        <v-expansion-panel-content>
-          <v-expansion-panels class="d-flex flex-column" multiple>
-            <v-expansion-panel v-for="(data, name) in mobjects" v-bind:key="name">
-              <v-expansion-panel-header>
-                {{ name }}
-                <span class="text--secondary ml-2">
-                  {{ !animating && scene.contains(data.mobject)
-                     ? "(in scene)" : "" }}
-                </span>
-              </v-expansion-panel-header>
-              <v-expansion-panel-content>
-                <MobjectPanel
-                  v-bind:mobject-classes="mobjectChoices"
-                  v-bind:mobject-name="name"
-                  v-bind:mobject-data="data"
-                  v-bind:disabled="animating || !scene.contains(data.mobject)"
-                  v-bind:scene="scene"
-                  v-on:mobject-update="(mobjectName, attr, val)=>handleMobjectUpdate(mobjectName, attr, val)"
-                />
-              </v-expansion-panel-content>
-            </v-expansion-panel>
-          </v-expansion-panels>
-          <div class="d-flex justify-space-around mt-4">
-            <v-btn fab v-on:click="newMobject">
-              <v-icon color="black" x-large>mdi-plus</v-icon>
-            </v-btn>
-          </div>
-        </v-expansion-panel-content>
+          <v-expansion-panel-header>Animation</v-expansion-panel-header>
+          <v-expansion-panel-content>
+            <AnimationPanel
+              v-bind:animation-data="currentAnimation"
+              v-bind:mobject-data="mobjects"
+              v-bind:scene="scene"
+              v-bind:animation-offset="animationOffset"
+              v-bind:animating="animating"
+              v-bind:setup="currentSceneDiff"
+              v-on:jump-to-start="jumpToAnimationStart"
+              v-on:jump-to-end="jumpToAnimationEnd"
+              v-on:pause="pause"
+              v-on:play="(e)=>play(e)"
+              v-on:replay="(e)=>replay(e)"
+              v-on:arg-change="handleArgChange"
+            />
+          </v-expansion-panel-content>
+        </v-expansion-panel>
+        <v-expansion-panel>
+          <v-expansion-panel-header>Mobjects</v-expansion-panel-header>
+          <v-expansion-panel-content>
+            <v-expansion-panels class="d-flex flex-column" multiple>
+              <v-expansion-panel v-for="(data, name) in mobjects" v-bind:key="name">
+                <v-expansion-panel-header>
+                  {{ name }}
+                  <span class="text--secondary ml-2">
+                    {{ !animating && scene.contains(data.mobject)
+                       ? "(in scene)" : "" }}
+                  </span>
+                </v-expansion-panel-header>
+                <v-expansion-panel-content>
+                  <MobjectPanel
+                    v-bind:mobject-classes="mobjectChoices"
+                    v-bind:mobject-name="name"
+                    v-bind:mobject-data="data"
+                    v-bind:disabled="animating || !scene.contains(data.mobject)"
+                    v-bind:scene="scene"
+                    v-on:mobject-update="(mobjectName, attr, val)=>handleMobjectUpdate(mobjectName, attr, val)"
+                  />
+                </v-expansion-panel-content>
+              </v-expansion-panel>
+            </v-expansion-panels>
+            <div class="d-flex justify-space-around mt-4">
+              <v-btn fab v-on:click="newMobject">
+                <v-icon color="black" x-large>mdi-plus</v-icon>
+              </v-btn>
+            </div>
+          </v-expansion-panel-content>
         </v-expansion-panel>
       </v-expansion-panels>
     </div>
@@ -121,7 +125,10 @@ export default {
     currentAnimation() {
       return this.animations[this.animationIndex];
     },
-    currentSetup() {
+    currentAnimationDiff() {
+      return this.currentAnimation.animation.getDiff(...this.currentAnimation.args);
+    },
+    currentSceneDiff() {
       return this.setupDiffs[this.animationIndex];
     },
     animating() {
@@ -130,7 +137,7 @@ export default {
   },
   data() {
     return {
-      expandedPanel: [0],
+      expandedPanel: [1],
       playingSingleAnimation: null,
       scene: null,
       sceneLoaded: false,
@@ -201,15 +208,17 @@ export default {
     window.languagePluginLoader.then(() => {
       window.pyodide.loadPackage("numpy").then(() => {
         window.pyodide.runPython("import numpy");
-        // TODO: method to add mobjects for initial scene
         for (let mobjectName of Object.keys(this.initialMobjects)) {
           let data = _.cloneDeep(this.initialMobjects[mobjectName]);
           this.setMobjectField(data);
           this.mobjects[mobjectName] = data;
         }
-        this.scene.add(this.mobjects["mobject1"].mobject);
-        this.scene.update();
         this.currentAnimation.animation = this.buildCurrentAnimation();
+        this.applyDiff(
+          this.currentSceneDiff,
+          /*reverse=*/false,
+          /*moveCursor=*/false,
+        );
         this.sceneLoaded = true;
       });
     });
@@ -243,6 +252,11 @@ export default {
       }
       this.animationIndex += 1;
       this.animationOffset = 0;
+      this.applyDiff(
+        this.currentSceneDiff,
+        /*reverse=*/false,
+        /*moveCursor=*/false,
+      );
       this.currentAnimation.animation = this.buildCurrentAnimation();
       this.scene.playAnimation(
         this.currentAnimation.animation,
@@ -279,7 +293,7 @@ export default {
         this.currentAnimation.animation,
         /*onStep=*/this.onAnimationStep,
         /*onAnimationFinished=*/() => {
-          this.applyDiff(this.currentAnimation.animation.getDiff(...this.currentAnimation.args));
+          this.applyDiff(this.currentAnimationDiff);
           if (!this.playingSingleAnimation) {
             this.chainNextAnimation();
           }
@@ -294,7 +308,10 @@ export default {
      *    'modify': [[mobject31, forwardFunc, backwardFunc], ...],
      *  }
      */
-    applyDiff: function(diff, reverse=false) {
+    applyDiff: function(diff, reverse=false, moveCursor=true) {
+      if (moveCursor) {
+        this.animationOffset = reverse ? 0 : 1;
+      }
       if (_.isEmpty(diff)) {
         return;
       }
@@ -329,7 +346,6 @@ export default {
         modifyFunc(mobjectData.mobject);
       }
       this.scene.update();
-      this.animationOffset = reverse ? 0 : 1;
     },
     jumpToAnimationStart: function() {
       if (this.animationOffset === 0) {
@@ -344,7 +360,11 @@ export default {
         this.scene.add(mobjectToRevertData.mobject);
         this.scene.update();
       } else {
-        this.applyDiff(this.currentAnimation.animation.getDiff(...this.currentAnimation.args), /*reverse=*/true);
+        this.applyDiff(
+          this.currentAnimationDiff,
+          /*reverse=*/true,
+          /*moveCursor=*/true,
+        );
       }
       this.animationOffset = 0;
     },
@@ -354,13 +374,18 @@ export default {
       } else {
         this.jumpToAnimationStart();
       }
-      this.applyDiff(this.currentAnimation.animation.getDiff(...this.currentAnimation.args));
+      this.applyDiff(this.currentAnimationDiff);
     },
     stepForward: function() {
       this.jumpToAnimationEnd();
       if (this.animationIndex < this.animations.length - 1) {
-        this.animationIndex++;
+        this.animationIndex += 1;
         this.animationOffset = 0;
+        this.applyDiff(
+          this.currentSceneDiff,
+          /*reverse=*/false,
+          /*moveCursor=*/false,
+        );
         this.currentAnimation.animation = this.buildCurrentAnimation();
       }
     },
@@ -368,7 +393,12 @@ export default {
       if (this.animationOffset !== 0) {
         this.jumpToAnimationStart();
       } else if (this.animationIndex !== 0) {
-        this.animationIndex--;
+        this.applyDiff(
+          this.currentSceneDiff,
+          /*reverse=*/true,
+          /*moveCursor=*/false,
+        );
+        this.animationIndex -= 1;
         this.animationOffset = 1;
         this.currentAnimation.animation = this.buildCurrentAnimation();
         this.jumpToAnimationStart();
@@ -454,12 +484,12 @@ export default {
       // Update the scene.
       let negateAction;
       let diff;
-      if (!(action in this.currentSetup) || newSelection.length > this.currentSetup[action].length) {
+      if (!(action in this.currentSceneDiff) || newSelection.length > this.currentSceneDiff[action].length) {
         negateAction = false;
-        diff = _.difference(newSelection, this.currentSetup['add'] || []);
+        diff = _.difference(newSelection, this.currentSceneDiff['add'] || []);
       } else {
         negateAction = true;
-        diff = _.difference(this.currentSetup[action], newSelection);
+        diff = _.difference(this.currentSceneDiff[action], newSelection);
       }
       // eslint-disable-next-line
       console.assert(diff.length === 1);
@@ -472,8 +502,8 @@ export default {
       }
       this.scene.update();
 
-      // Update currentSetup.
-      let newDiff = _.cloneDeep(this.currentSetup);
+      // Update currentSceneDiff.
+      let newDiff = _.cloneDeep(this.currentSceneDiff);
       newDiff[action] = newSelection;
       this.$set(this.setupDiffs, this.animationIndex, newDiff);
     }
