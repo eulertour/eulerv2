@@ -5,6 +5,7 @@
       v-bind:items="mobjectClasses"
       v-model="chosenClass"
       hide-details
+      v-bind:readonly="disabled"
       class="mb-2">
     </v-select>
     <div class="title">Position</div>
@@ -13,7 +14,11 @@
         ({{ mobjectData.position[0].toFixed(1) || 0 }},
          {{ mobjectData.position[1].toFixed(1) || 0 }})
       </div>
-      <v-btn v-on:click="positionChange()" class="ml-3">
+      <v-btn
+        v-on:click="positionChange()"
+        v-bind:disabled="disabled"
+        class="ml-3"
+      >
         {{ selectingPosition ? "Click the Scene" : "Set position" }}
       </v-btn>
     </div>
@@ -26,8 +31,7 @@
           v-bind:mobject-data="mobjectData"
           v-bind:default="mobjectData.style.strokeColor"
           v-on:change="handlePickerChange"
-          v-on:hide="handlePickerHide"
-          v-on:save="handlePickerSave"
+          v-bind:disabled="disabled"
         />
       </div>
     </div>
@@ -39,8 +43,7 @@
           v-bind:mobject-data="mobjectData"
           v-bind:default="mobjectData.style.fillColor"
           v-on:change="handlePickerChange"
-          v-on:hide="handlePickerHide"
-          v-on:save="handlePickerSave"
+          v-bind:disabled="disabled"
         />
       </div>
     </div>
@@ -52,6 +55,7 @@
         v-bind:min="0"
         v-bind:max="15"
         v-bind:thumb-label="true"
+        v-bind:disabled="disabled"
       />
     </div>
   </div>
@@ -66,8 +70,10 @@ export default {
     Picker,
   },
   props: {
+    mobjectName: String,
     mobjectData: Object,
     mobjectClasses: Array,
+    disabled: Boolean,
     scene: Object,
     label: String,
   },
@@ -79,14 +85,13 @@ export default {
     }
   },
   methods: {
-    handlePickerChange(attr, color, mobjectData) {
-      this.$emit('picker-change', attr, color, mobjectData);
-    },
-    handlePickerHide(mobjectData) {
-      this.$emit('picker-hide', mobjectData);
-    },
-    handlePickerSave(attr, color, mobjectData) {
-      this.$emit('picker-save', attr, color, mobjectData);
+    handlePickerChange(strokeOrFill, color) {
+      this.$emit(
+        'mobject-update',
+        this.mobjectName,
+        'style.' + strokeOrFill + 'Color',
+        color.toHEXA().toString(),
+      );
     },
     positionChange() {
       this.selectingPosition = true;
@@ -106,11 +111,7 @@ export default {
             e.clientX - sceneElement.getBoundingClientRect().left,
             e.clientY - sceneElement.getBoundingClientRect().top,
           ]);
-          this.$emit(
-            'position-change',
-            scenePoint,
-            this.mobjectData,
-          );
+          this.$emit('mobject-update', this.mobjectName, 'position', scenePoint);
         }
         this.selectingPosition = false;
         document.removeEventListener('click', handlePositionClick);
@@ -127,13 +128,13 @@ export default {
     chosenClass: function(newClassName, oldClassName) {
       // ignore the initial mount
       if (oldClassName !== null) {
-        this.$emit('class-change', newClassName, this.mobjectData);
+        this.$emit('mobject-update', this.mobjectName, 'className', newClassName);
       }
     },
     currentStrokeWidth: function(newWidth, oldWidth) {
       // ignore the initial mount
       if (oldWidth !== null) {
-        this.$emit('width-change', newWidth, this.mobjectData);
+        this.$emit('mobject-update', this.mobjectName, 'style.strokeWidth', newWidth);
       }
     }
   }

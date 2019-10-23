@@ -12,12 +12,14 @@ export default {
     'mobjectData': Object,
     'default': String,
     'attr': String,
+    'disabled': Boolean,
   },
   mounted() {
     Pickr.create({
       el: '#picker',
       default: this.default,
       theme: 'nano',
+      disabled: this.disabled,
       components: {
         // Main components
         preview: true,
@@ -31,12 +33,9 @@ export default {
           save: true
         }
       }
-    }).on('change', (color, /*instance*/) => {
-      this.$emit('change', this.attr, color, this.mobjectData);
-    }).on('hide', (/*instance*/) => {
-      this.$emit('hide', this.mobjectData);
-    }).on('save', (color, /*instance*/) => {
-      this.$emit('save', this.attr, color, this.mobjectData);
+    }).on('change', (color, instance) => {
+      instance.setHSVA(color.h, color.s, color.v, color.a);
+      this.$emit('change', this.attr, color);
     });
   },
 }

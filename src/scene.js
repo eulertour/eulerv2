@@ -5,12 +5,8 @@ class Scene extends Two {
   constructor(conf) {
     super(conf);
     this.lastStoppingFrame = 0;
-    this.lastFrame = 0;
     this.wrapper = null;
-    this.onNextAnimation = null;
-    this.bind('update', (frameCount) => {
-      this.lastFrame = frameCount; 
-    });
+    this.onAnimationFinished = null;
   }
 
   clearAnimation() {
@@ -20,18 +16,14 @@ class Scene extends Two {
 
   beginAnimation(animation) {
     this.add(animation.mobject);
-    this.lastStoppingFrame = this.lastFrame;
     animation.begin();
   }
 
-  finishAnimation(animation) {
-    animation.finish();
-  }
-
-  playAnimation(animation, onStep=null, onNextAnimation=null) {
+  playAnimation(animation, onStep=null, onAnimationFinished=null) {
     this.beginAnimation(animation);
     this.update();
-    this.onNextAnimation = onNextAnimation;
+    this.onAnimationFinished = onAnimationFinished;
+    this.lastStoppingFrame = this.frameCount;
     this.wrapper = function(frameCount) {
       animation.interpolate((frameCount - this.lastStoppingFrame) / 60);
       if (onStep !== null) {
@@ -39,15 +31,20 @@ class Scene extends Two {
       }
       if (animation.isFinished((frameCount - this.lastStoppingFrame) / 60)) {
         this.clearAnimation();
-        this.lastStoppingFrame = frameCount;
-        this.finishAnimation(animation);
-        animation.cleanUpFromScene(this);
-        if (this.onNextAnimation !== null) {
-          this.onNextAnimation();
+        if (this.onAnimationFinished !== null) {
+          this.onAnimationFinished(animation);
         }
       }
     };
     this.bind('update', this.wrapper).play();
+  }
+
+  contains(mobject) {
+    let currentMobject = mobject;
+    while (currentMobject.parent !== undefined) {
+      currentMobject = currentMobject.parent;
+    }
+    return currentMobject.hasOwnProperty("domElement");
   }
 
   normalizePoint(p) {

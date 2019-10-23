@@ -5,9 +5,11 @@
       v-bind:key="index"
       class="d-flex flex-column justify-center keyframe"
     >
-    <v-card-title class="d-flex justify-center headline px-2">
-      {{ animation.className }}
-    </v-card-title>
+      <v-card-title class="d-flex justify-center headline px-2">
+        <div style="text-overflow:ellipsis">
+          {{ animation.shortName || animation.className }}
+        </div>
+      </v-card-title>
     </v-card>
     <v-card class="keyframe d-flex align-center justify-center">
       <v-btn v-on:click="$emit('new-animation')" height="100%" width="100%">
@@ -31,14 +33,16 @@ export default {
   },
   computed: {
     timelineOffset() {
+      let cursorOffset = this.animationWidth * this.index;
+      cursorOffset += this.offset * this.animationWidth;
       return {
-        'left': 135 * (this.index + this.offset) + 'px',
+        'left': cursorOffset + 'px',
       }
     }
   },
   data() {
     return {
-
+      animationWidth: 145,
     }
   },
   methods: {
@@ -52,8 +56,8 @@ export default {
 
 <style scoped>
 .keyframe {
-  height: 135px;
-  width: 135px;
+  height: 145px;
+  width: 145px;
 }
 .timeline {
   position: relative;

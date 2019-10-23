@@ -37,10 +37,6 @@ class Animation {
     }
   }
 
-  finish() {
-    // console.log('finished');
-  }
-
   getFamily() {
     // To be implemented in subclasses
     return [];
@@ -92,7 +88,7 @@ class Animation {
   }
 }
 
-class Transform extends Animation {
+class ReplacementTransform extends Animation {
   constructor(mobject, targetMobject) {
     super(mobject);
     this.targetMobject = targetMobject;
@@ -129,16 +125,27 @@ class Transform extends Animation {
   interpolateSubmobject(alpha, submob, start, targetCopy) {
     submob.interpolate(start, targetCopy, alpha);
   }
+
+  getDiff(mobject, targetMobject) {
+    return {
+      'add': [targetMobject],
+      'remove': [mobject],
+    };
+  }
 }
 
 class Wait extends Animation {
   interpolateSubmobject() {
     // do nothing
   }
+
+  getDiff() {
+    return {};
+  }
 }
 
 export {
   Animation,
   Wait,
-  Transform,
+  ReplacementTransform,
 }

@@ -6,10 +6,10 @@
     <v-btn fab v-if="playing" v-on:click="$emit('pause')" class="mx-4">
       <v-icon color="black" x-large>mdi-pause</v-icon>
     </v-btn>
-    <v-btn fab v-else-if="finished" v-on:click="$emit('replay', $event, /*currentOnly=*/false)" class="mx-4">
+    <v-btn fab v-else-if="finished" v-on:click="$emit('replay', $event)" class="mx-4">
       <v-icon color="black" x-large>mdi-replay</v-icon>
     </v-btn>
-    <v-btn fab v-else v-on:click="$emit('play')" class="mx-4">
+    <v-btn fab v-else v-on:click="$emit('play', $event)" class="mx-4">
       <v-icon color="black" x-large>mdi-play</v-icon>
     </v-btn>
     <v-btn fab v-on:click="$emit('step-forward')" class="mx-2">

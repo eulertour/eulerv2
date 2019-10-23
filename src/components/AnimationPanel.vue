@@ -3,20 +3,25 @@
   <div class="pa-0">
     <div class="display-1">{{ animationData.className }}</div>
   </div>
-  <div class="subtitle-1">{{ animationData.description }}</div>
-  <v-divider class="my-6"/>
+  <div class="subtitle-1 mb-2">{{ animationData.description }}</div>
   <component
     v-bind:is="animationComponent"
     v-bind:animation-data="animationData"
+    v-bind:animation-offset="animationOffset"
+    v-bind:mobject-data="mobjectData"
     v-bind:mobject-classes="mobjectClasses"
     v-bind:scene="scene"
+    v-bind:animating="animating"
+    v-bind:setup="setup"
     v-on:class-change="(className, mobjectData)=>$emit('class-change', className, mobjectData)"
     v-on:position-change="(scenePoint, mobjectData)=>$emit('position-change', scenePoint, mobjectData)"
     v-on:picker-change="(attr, color, mobjectData)=>$emit('picker-change', attr, color, mobjectData)"
     v-on:picker-hide="(mobjectData)=>$emit('picker-hide', mobjectData)"
     v-on:picker-save="(attr, color, mobjectData)=>$emit('picker-save', attr, color, mobjectData)"
     v-on:width-change="(newWidth, mobjectData)=>$emit('width-change', newWidth, mobjectData)"
+    v-on:arg-change="(argNum, arg)=>$emit('arg-change', argNum, arg)"
   />
+  <div class="mb-10"></div>
   <div class="d-flex justify-center pa-0">
     <v-btn fab v-on:click="$emit('jump-to-start')" class="mx-2">
       <v-icon color="black" x-large>mdi-skip-previous</v-icon>
@@ -48,25 +53,38 @@
 </template>
 
 <script>
-import TransformPanel from './TransformPanel.vue'
+import ReplacementTransformPanel from './ReplacementTransformPanel.vue'
 import WaitPanel from './WaitPanel.vue'
 
 export default {
   name: 'AnimationPanel',
   components: {
-    TransformPanel,
+    ReplacementTransformPanel,
     WaitPanel,
   },
   props: {
     animationData: Object,
     animationOffset: Number,
     mobjectClasses: Array,
+    mobjectData: Object,
     scene: Object,
+    animating: Boolean,
+    setup: Object,
   },
   computed: {
     animationComponent: function() {
       return this.animationData.className + "Panel";
-    }
+    },
+    addedByAnimation() {
+      return this.animationData.animation.getDiff(
+        ...this.animationData.args
+      )['add'];
+    },
+    removedByAnimation() {
+      return this.animationData.animation.getDiff(
+        ...this.animationData.args
+      )['remove'];
+    },
   },
 }
 </script>
