@@ -455,10 +455,40 @@ export default {
       this.stepForward();
     },
     handleArgChange(argNum, arg) {
-      // MAKE THIS REACTIVE
-      let newArgs = _.cloneDeep(this.currentAnimation.args);
-      newArgs[argNum] = arg;
-      this.animations[this.animationIndex].args = newArgs
+      // TODO: handle modify somehow
+      // (may require updating more than one animation)
+      if (this.animationIndex === 0) {
+        let jumpToEnd = this.animationOffset === 1;
+        this.jumpToAnimationStart();
+        this.scene.clearAnimation();
+        this.scene.clear();
+        let newArgs = _.cloneDeep(this.currentAnimation.args);
+        newArgs[argNum] = arg;
+        this.animations[this.animationIndex].args = newArgs
+        this.currentAnimation.animation = this.buildCurrentAnimation();
+        this.applyDiff(
+          this.currentSceneDiff,
+          /*reverse=*/false,
+          /*moveCursor=*/false,
+        );
+        if (jumpToEnd) {
+          this.jumpToAnimationEnd();
+        }
+      } else {
+        // TODO: THIS HAS NEVER BEEN TESTED
+        let jumpToEnd = this.animationOffset === 1;
+        let originalAnimationIndex = this.animationIndex;
+        while (this.animationIndex === originalAnimationIndex) {
+          this.stepBackward();
+        }
+        let newArgs = _.cloneDeep(this.animations[originalAnimationIndex].args);
+        newArgs[argNum] = arg;
+        this.animations[originalAnimationIndex].args = newArgs
+        this.stepForward();
+        if (jumpToEnd) {
+          this.jumpToAnimationEnd();
+        }
+      }
     },
     newMobject() {
       let newMobjectData = {
