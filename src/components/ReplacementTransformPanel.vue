@@ -68,7 +68,6 @@ export default {
         name => this.scene.contains(this.mobjectData[name].mobject)
       );
       choices = _.concat(choices, this.setup['add'] || []);
-      choices.filter((item, index) => choices.indexOf(item) === index);
       return choices;
     },
     endMobjectChoices() {
@@ -77,7 +76,7 @@ export default {
       let choices = Object.keys(this.mobjectData).filter(
         name => !this.scene.contains(this.mobjectData[name].mobject)
       );
-      _.concat(choices, this.setup['remove'] || []);
+      choices = _.concat(choices, this.setup['remove'] || []);
       return choices;
     },
   },
