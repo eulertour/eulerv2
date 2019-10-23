@@ -394,6 +394,68 @@ class Polygon extends Mobject {
   }
 }
 
+class RegularPolygon extends Polygon {
+  constructor(
+    numSides=3,
+    height=2,
+    style={},
+  ) {
+    let np = window.pyodide.pyimport("numpy");
+    let vertices = [];
+    let angle;
+    for (let i = 0; i < numSides; i++) {
+      angle = 2*np.pi * i/numSides;
+      if (numSides % 2 == 0) {
+        angle -= np.pi / numSides;
+      }
+      vertices.push([np.sin(angle), np.cos(angle)]);
+    }
+    let halfway = np.trunc(numSides / 2);
+    let oldHeight = np.abs(vertices[0][1] - vertices[halfway][1]);
+    vertices.forEach(function(vertex) {
+      vertex[0] *= height/oldHeight;
+      vertex[1] *= height/oldHeight;
+    });
+    let shiftDist = height / 2 - vertices[0][1];
+    vertices.forEach(function(vertex) {
+      vertex[1] += shiftDist;
+    });
+    super(vertices, style);
+  }
+}
+
+class Triangle extends RegularPolygon {
+  constructor(
+    height=2,
+    style={strokeColor: consts.GREEN}) {
+    super(3, height, style);
+  }
+}
+
+class Pentagon extends RegularPolygon {
+  constructor(
+    height=2,
+    style={strokeColor: consts.GREEN}) {
+    super(5, height, style);
+  }
+}
+
+class Hexagon extends RegularPolygon {
+  constructor(
+    height=2,
+    style={strokeColor: consts.GREEN}) {
+    super(6, height, style);
+  }
+}
+
+class Octagon extends RegularPolygon {
+  constructor(
+    height=2,
+    style={strokeColor: consts.GREEN}) {
+    super(8, height, style);
+  }
+}
+
 class Rectangle extends Polygon {
   constructor(
     width=4.0,
@@ -415,13 +477,11 @@ class Rectangle extends Polygon {
   }
 }
 
-class Square extends Rectangle {
+class Square extends RegularPolygon {
   constructor(
-    sideLength=2,
-    style={},
-  ) {
-    super(sideLength, sideLength, style);
-    this.sideLength=sideLength
+    height=2,
+    style={strokeColor: consts.GREEN}) {
+    super(4, height, style);
   }
 }
 
@@ -431,6 +491,11 @@ export {
   Arc,
   Circle,
   Polygon,
+  RegularPolygon,
+  Triangle,
+  Pentagon,
+  Hexagon,
+  Octagon,
   Rectangle,
   Square,
   Animation,
