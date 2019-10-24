@@ -5,8 +5,9 @@
       v-bind:items="startMobjectChoices"
       v-bind:readonly="animating"
       v-model="currentStartMobject"
-      hide-details
+      v-bind:error-messages="startError"
       class="mb-5"
+      v-bind:hide-details="startError.length === 0"
     >
       <template v-slot:selection="{ item, index }">
         <v-chip>
@@ -22,7 +23,8 @@
       v-bind:items="endMobjectChoices"
       v-bind:readonly="animating"
       v-model="currentEndMobject"
-      hide-details
+      v-bind:error-messages="endError"
+      v-bind:hide-details="endError.length === 0"
       class="mb-5"
     >
       <template v-slot:selection="{ item, index }">
@@ -56,42 +58,32 @@ export default {
     setup: Object,
   },
   computed: {
-    firstArg() {
-      return this.animationData.args[0];
-    },
-    secondArg() {
-      return this.animationData.args[1];
-    },
     startMobjectChoices() {
-      // TODO: this probably requires a mobjectsAtTime
-      // Every mobject in the scene or added in setup can be animated.
-      let choices = Object.keys(this.mobjectData).filter(
-        name => this.scene.contains(this.mobjectData[name].mobject)
-      );
-      choices = _.concat(choices, this.setup['add'] || []);
-      if (this.animationOffset === 1) {
-        choices = _.concat(choices, this.animationData.args[0]);
-      }
-      choices = choices.filter(
-        mobjectName => mobjectName !== this.currentEndMobject
-      );
-      return choices;
+      return this.$store.getters.sceneBeforeAnimation;
     },
     endMobjectChoices() {
-      // Every mobject which isn't in the scene or was removed in setup can be
-      // transformed into.
-      let choices = Object.keys(this.mobjectData).filter(
-        name => !this.scene.contains(this.mobjectData[name].mobject)
+      return _.difference(
+        Object.keys(this.mobjectData),
+        this.$store.getters.sceneBeforeAnimation,
       );
-      choices = _.concat(choices, this.setup['remove'] || []);
-      if (this.animationOffset === 1) {
-        choices = _.concat(choices, this.animationData.args[1]);
-      }
-      choices = choices.filter(
-        mobjectName => mobjectName !== this.currentStartMobject
-      );
-      return choices;
     },
+    startError() {
+      if (!this.startMobjectChoices.includes(this.currentStartMobject)) {
+        return ["Start Mobject is required"];
+      } else {
+        return [];
+      }
+    },
+    endError() {
+      if (!this.endMobjectChoices.includes(this.currentEndMobject)) {
+        return ["End Mobject is required"];
+      } else {
+        return [];
+      }
+    },
+    isValid() {
+      return this.startError.length === 0 && this.endError.length === 0;
+    }
   },
   data() {
     return {
@@ -115,7 +107,7 @@ export default {
       if (oldMobject !== null) {
         this.$emit('arg-change', 1, newMobject);
       }
-    }
+    },
   },
   methods: {
     mobjectIsAdded(mobjectName) {

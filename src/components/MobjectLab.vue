@@ -126,10 +126,10 @@ export default {
       return this.animations[this.animationIndex];
     },
     currentAnimationDiff() {
-      return this.currentAnimation.animation.getDiff(...this.currentAnimation.args);
+      return this.$store.state.animationDiff;
     },
     currentSceneDiff() {
-      return this.setupDiffs[this.animationIndex];
+      return this.$store.state.sceneDiff;
     },
     animating() {
       return this.animationOffset !== 0 && this.animationOffset !== 1;
@@ -214,6 +214,12 @@ export default {
           this.mobjects[mobjectName] = data;
         }
         this.currentAnimation.animation = this.buildCurrentAnimation();
+        this.$store.commit('updateDiffs', {
+          sceneDiff: this.setupDiffs[0],
+          animationDiff: this.currentAnimation.animation.getDiff(
+            ...this.currentAnimation.args
+          ),
+        });
         this.applyDiff(
           this.currentSceneDiff,
           /*reverse=*/false,
@@ -347,6 +353,7 @@ export default {
       }
       this.scene.update();
     },
+    // INTEGRATE VUEX DATA HERE
     jumpToAnimationStart: function() {
       if (this.animationOffset === 0) {
         return;
@@ -454,42 +461,6 @@ export default {
       this.setupDiffs.push({});
       this.stepForward();
     },
-    handleArgChange(argNum, arg) {
-      // TODO: handle modify somehow
-      // (may require updating more than one animation)
-      if (this.animationIndex === 0) {
-        let jumpToEnd = this.animationOffset === 1;
-        this.jumpToAnimationStart();
-        this.scene.clearAnimation();
-        this.scene.clear();
-        let newArgs = _.cloneDeep(this.currentAnimation.args);
-        newArgs[argNum] = arg;
-        this.animations[this.animationIndex].args = newArgs
-        this.currentAnimation.animation = this.buildCurrentAnimation();
-        this.applyDiff(
-          this.currentSceneDiff,
-          /*reverse=*/false,
-          /*moveCursor=*/false,
-        );
-        if (jumpToEnd) {
-          this.jumpToAnimationEnd();
-        }
-      } else {
-        // TODO: THIS HAS NEVER BEEN TESTED
-        let jumpToEnd = this.animationOffset === 1;
-        let originalAnimationIndex = this.animationIndex;
-        while (this.animationIndex === originalAnimationIndex) {
-          this.stepBackward();
-        }
-        let newArgs = _.cloneDeep(this.animations[originalAnimationIndex].args);
-        newArgs[argNum] = arg;
-        this.animations[originalAnimationIndex].args = newArgs
-        this.stepForward();
-        if (jumpToEnd) {
-          this.jumpToAnimationEnd();
-        }
-      }
-    },
     newMobject() {
       let newMobjectData = {
         className: "Circle",
@@ -509,33 +480,55 @@ export default {
         newMobjectData,
       );
     },
+    handleArgChange(argNum, arg) {
+      if (this.animationOffset === 1) {
+        this.applyDiff(
+          this.currentAnimationDiff,
+          /*reverse=*/true,
+          /*moveCursor=*/false,
+        );
+      }
+      let newArgs = _.cloneDeep(this.currentAnimation.args);
+      newArgs[argNum] = arg;
+      this.$store.commit('updateDiffs', {
+        animationDiff: this.currentAnimation.animation.getDiff(...newArgs)
+      });
+      if (this.animationOffset === 1) {
+        this.applyDiff(
+          this.currentAnimationDiff,
+          /*reverse=*/false,
+          /*moveCursor=*/false,
+        );
+      }
+    },
     updateSetup(action, newSelection) {
-      // REMOVING ALL MOBJECTS TRIGGERS A BUG
-      // Update the scene.
-      let negateAction;
-      let diff;
-      if (!(action in this.currentSceneDiff) || newSelection.length > this.currentSceneDiff[action].length) {
-        negateAction = false;
-        diff = _.difference(newSelection, this.currentSceneDiff['add'] || []);
-      } else {
-        negateAction = true;
-        diff = _.difference(this.currentSceneDiff[action], newSelection);
+      if (this.animationOffset === 1 && this.$store.getters.animationIsValid) {
+        this.applyDiff(
+          this.currentAnimationDiff,
+          /*reverse=*/true,
+          /*moveCursor=*/false,
+        );
       }
-      // eslint-disable-next-line
-      console.assert(diff.length === 1);
-      let mobjectName = diff[0];
-      if ((action === 'add' && !negateAction) ||
-          (action === 'remove' && negateAction) ) {
-        this.scene.add(this.mobjects[mobjectName].mobject);
-      } else {
-        this.scene.remove(this.mobjects[mobjectName].mobject);
-      }
-      this.scene.update();
-
-      // Update currentSceneDiff.
+      this.applyDiff(
+        this.currentSceneDiff,
+        /*reverse=*/true,
+        /*moveCursor=*/false,
+      );
       let newDiff = _.cloneDeep(this.currentSceneDiff);
       newDiff[action] = newSelection;
-      this.$set(this.setupDiffs, this.animationIndex, newDiff);
+      this.$store.commit('updateDiffs', {sceneDiff: newDiff});
+      this.applyDiff(
+        this.currentSceneDiff,
+        /*reverse=*/false,
+        /*moveCursor=*/false,
+      );
+      if (this.animationOffset === 1 && this.$store.getters.animationIsValid) {
+        this.applyDiff(
+          this.currentAnimationDiff,
+          /*reverse=*/false,
+          /*moveCursor=*/false,
+        );
+      }
     }
   },
 }
