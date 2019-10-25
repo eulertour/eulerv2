@@ -256,14 +256,7 @@ export default {
       if (this.animationIndex === this.animations.length - 1) {
         return;
       }
-      this.animationIndex += 1;
-      this.animationOffset = 0;
-      this.applyDiff(
-        this.currentSceneDiff,
-        /*reverse=*/false,
-        /*moveCursor=*/false,
-      );
-      this.currentAnimation.animation = this.buildCurrentAnimation();
+      this.stepForward();
       this.scene.playAnimation(
         this.currentAnimation.animation,
         /*onStep=*/this.onAnimationStep,
@@ -353,13 +346,13 @@ export default {
       }
       this.scene.update();
     },
-    // INTEGRATE VUEX DATA HERE
     jumpToAnimationStart: function() {
       if (this.animationOffset === 0) {
         return;
       } else if (this.animationOffset < 1) {
+        // eslint-disable-next-line
+        console.assert(this.$store.getters.animationIsValid);
         this.scene.clearAnimation();
-        // Any changes to the animated mobject must be reverted.
         let mobjectToRevertName = this.currentAnimation.args[0];
         let mobjectToRevertData = this.mobjects[mobjectToRevertName];
         this.scene.remove(mobjectToRevertData.mobject);
@@ -367,33 +360,49 @@ export default {
         this.scene.add(mobjectToRevertData.mobject);
         this.scene.update();
       } else {
-        this.applyDiff(
-          this.currentAnimationDiff,
-          /*reverse=*/true,
-          /*moveCursor=*/true,
-        );
+        if (this.$store.getters.animationIsValid) {
+          this.applyDiff(
+            this.currentAnimationDiff,
+            /*reverse=*/true,
+            /*moveCursor=*/true,
+          );
+        }
       }
       this.animationOffset = 0;
     },
     jumpToAnimationEnd: function() {
       if (this.animationOffset === 1) {
         return;
-      } else {
+      } else if (this.animationOffset < 1) {
         this.jumpToAnimationStart();
       }
-      this.applyDiff(this.currentAnimationDiff);
+      if (this.$store.getters.animationIsValid) {
+        this.applyDiff(this.currentAnimationDiff);
+      }
     },
     stepForward: function() {
       this.jumpToAnimationEnd();
+      if (!this.$store.getters.animationIsValid) {
+        alert("can't advance past an invalid animation");
+        return;
+      }
       if (this.animationIndex < this.animations.length - 1) {
+        this.setupDiffs[this.animationIndex] = this.$store.state.sceneDiff;
+        this.$store.commit('stepForward');
         this.animationIndex += 1;
         this.animationOffset = 0;
+        this.currentAnimation.animation = this.buildCurrentAnimation();
+        this.$store.commit('updateDiffs', {
+          sceneDiff: this.setupDiffs[this.animationIndex],
+          animationDiff: this.currentAnimation.animation.getDiff(
+            ...this.currentAnimation.args
+          ),
+        });
         this.applyDiff(
           this.currentSceneDiff,
           /*reverse=*/false,
           /*moveCursor=*/false,
         );
-        this.currentAnimation.animation = this.buildCurrentAnimation();
       }
     },
     stepBackward: function() {
@@ -405,9 +414,22 @@ export default {
           /*reverse=*/true,
           /*moveCursor=*/false,
         );
+        this.setupDiffs[this.animationIndex] = this.$store.state.sceneDiff;
         this.animationIndex -= 1;
         this.animationOffset = 1;
         this.currentAnimation.animation = this.buildCurrentAnimation();
+        this.$store.commit('stepBackward', {
+          sceneDiff: this.setupDiffs[this.animationIndex],
+          animationDiff: this.currentAnimation.animation.getDiff(
+            ...this.currentAnimation.args
+          ),
+        });
+        this.$store.commit('updateDiffs', {
+          sceneDiff: this.setupDiffs[this.animationIndex],
+          animationDiff: this.currentAnimation.animation.getDiff(
+            ...this.currentAnimation.args
+          ),
+        });
         this.jumpToAnimationStart();
       }
     },
@@ -448,6 +470,10 @@ export default {
       this.scene.update();
     },
     handleNewAnimation() {
+      if (!this.$store.getters.animationIsValid) {
+        alert("can't add to an invalid scene");
+        return;
+      }
       while (this.animationIndex < this.animations.length - 1 || this.animationOffset < 1) {
         this.stepForward();
       }
@@ -490,6 +516,7 @@ export default {
       }
       let newArgs = _.cloneDeep(this.currentAnimation.args);
       newArgs[argNum] = arg;
+      this.currentAnimation.args = newArgs;
       this.$store.commit('updateDiffs', {
         animationDiff: this.currentAnimation.animation.getDiff(...newArgs)
       });

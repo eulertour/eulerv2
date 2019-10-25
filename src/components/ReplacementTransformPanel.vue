@@ -111,11 +111,11 @@ export default {
   },
   methods: {
     mobjectIsAdded(mobjectName) {
-      let diff = this.animationData.animation.getDiff(...this.animationData.args);
+      let diff = this.$store.state.animationDiff;
       return _.indexOf(diff['add'], mobjectName) !== -1;
     },
     mobjectIsRemoved(mobjectName) {
-      let diff = this.animationData.animation.getDiff(...this.animationData.args);
+      let diff = this.$store.state.animationDiff;
       return _.indexOf(diff['remove'], mobjectName) !== -1;
     }
   },

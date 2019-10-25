@@ -25,6 +25,22 @@ const store = new Vuex.Store({
         state.animationDiff = payload.animationDiff;
       }
     },
+    stepForward(state) {
+      let newScene = _.cloneDeep(state.priorScene);
+      newScene = _.concat(newScene, state.sceneDiff['add'] || []);
+      newScene = _.difference(newScene, state.sceneDiff['remove'] || []);
+      newScene = _.concat(newScene, state.animationDiff['add'] || []);
+      newScene = _.difference(newScene, state.animationDiff['remove'] || []);
+      state.priorScene = newScene;
+    },
+    stepBackward(state, payload) {
+      let newScene = _.cloneDeep(state.priorScene);
+      newScene = _.concat(newScene, payload.animationDiff['remove'] || []);
+      newScene = _.difference(newScene, payload.animationDiff['add'] || []);
+      newScene = _.concat(newScene, payload.sceneDiff['remove'] || []);
+      newScene = _.difference(newScene, payload.sceneDiff['add'] || []);
+      state.priorScene = newScene;
+    }
   },
   actions: {
 
