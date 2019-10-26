@@ -8,7 +8,9 @@
         multiple
       >
         <v-expansion-panel>
-          <v-expansion-panel-header>Scene</v-expansion-panel-header>
+          <v-expansion-panel-header>
+            <span v-bind:style="sceneHeaderStyle">Scene</span>
+          </v-expansion-panel-header>
           <v-expansion-panel-content>
             <SetupPanel
               v-bind:setup="currentSceneDiff"
@@ -21,7 +23,9 @@
           </v-expansion-panel-content>
         </v-expansion-panel>
         <v-expansion-panel>
-          <v-expansion-panel-header>Animation</v-expansion-panel-header>
+          <v-expansion-panel-header>
+            <span v-bind:style="animationHeaderStyle">Animation</span>
+          </v-expansion-panel-header>
           <v-expansion-panel-content>
             <AnimationPanel
               v-bind:animation-data="currentAnimation"
@@ -98,6 +102,11 @@
           v-bind:scene="scene"
           v-bind:finished="animationIndex === animations.length - 1 && animationOffset === 1"
         />
+        <!--
+        <div>{{ $store.state.priorScene }}</div>
+        <div>{{ $store.state.sceneDiff }}</div>
+        <div>{{ $store.state.animationDiff }}</div>
+        -->
       </div>
     </div>
   </div>
@@ -134,6 +143,21 @@ export default {
     animating() {
       return this.animationOffset !== 0 && this.animationOffset !== 1;
     },
+    sceneHeaderStyle() {
+      let ret = {};
+      if (!this.$store.getters.sceneIsValid) {
+        ret['color'] = "red";
+      }
+      return ret;
+    },
+    animationHeaderStyle() {
+      let ret = {};
+      if (this.$store.getters.sceneIsValid
+          && !this.$store.getters.animationIsValid) {
+        ret['color'] = "red";
+      }
+      return ret;
+    }
   },
   data() {
     return {
@@ -257,11 +281,14 @@ export default {
         return;
       }
       this.stepForward();
-      this.scene.playAnimation(
-        this.currentAnimation.animation,
-        /*onStep=*/this.onAnimationStep,
-        this.chainNextAnimation,
-      );
+      if (this.$store.getters.animationIsValid &&
+          this.$store.getters.sceneIsValid) {
+        this.scene.playAnimation(
+          this.currentAnimation.animation,
+          /*onStep=*/this.onAnimationStep,
+          this.chainNextAnimation,
+        );
+      }
     },
     replay: function(e, singleAnimationOnly=true) {
       if (singleAnimationOnly) {
@@ -287,17 +314,20 @@ export default {
         );
         this.stepForward();
       }
-      this.currentAnimation.animation = this.buildCurrentAnimation();
-      this.scene.playAnimation(
-        this.currentAnimation.animation,
-        /*onStep=*/this.onAnimationStep,
-        /*onAnimationFinished=*/() => {
-          this.applyDiff(this.currentAnimationDiff);
-          if (!this.playingSingleAnimation) {
-            this.chainNextAnimation();
-          }
-        },
-      );
+      if (this.$store.getters.animationIsValid
+          && this.$store.getters.sceneIsValid) {
+        this.currentAnimation.animation = this.buildCurrentAnimation();
+        this.scene.playAnimation(
+          this.currentAnimation.animation,
+          /*onStep=*/this.onAnimationStep,
+          /*onAnimationFinished=*/() => {
+            this.applyDiff(this.currentAnimationDiff);
+            if (!this.playingSingleAnimation) {
+              this.chainNextAnimation();
+            }
+          },
+        );
+      }
     },
     /*  Updates the mobjects in this.scene according to the diff. Diffs are of
      *  the form:
@@ -353,12 +383,14 @@ export default {
         // eslint-disable-next-line
         console.assert(this.$store.getters.animationIsValid);
         this.scene.clearAnimation();
-        let mobjectToRevertName = this.currentAnimation.args[0];
-        let mobjectToRevertData = this.mobjects[mobjectToRevertName];
-        this.scene.remove(mobjectToRevertData.mobject);
-        this.setMobjectField(mobjectToRevertData);
-        this.scene.add(mobjectToRevertData.mobject);
-        this.scene.update();
+        if (this.currentAnimation.args.length > 0) {
+          let mobjectToRevertName = this.currentAnimation.args[0];
+          let mobjectToRevertData = this.mobjects[mobjectToRevertName];
+          this.scene.remove(mobjectToRevertData.mobject);
+          this.setMobjectField(mobjectToRevertData);
+          this.scene.add(mobjectToRevertData.mobject);
+          this.scene.update();
+        }
       } else {
         if (this.$store.getters.animationIsValid) {
           this.applyDiff(
@@ -376,16 +408,17 @@ export default {
       } else if (this.animationOffset < 1) {
         this.jumpToAnimationStart();
       }
-      if (this.$store.getters.animationIsValid) {
+      if (this.$store.getters.animationIsValid &&
+          this.$store.getters.sceneIsValid) {
         this.applyDiff(this.currentAnimationDiff);
       }
     },
+    // errorcheck scenediffs
     stepForward: function() {
-      this.jumpToAnimationEnd();
-      if (!this.$store.getters.animationIsValid) {
-        alert("can't advance past an invalid animation");
+      if (!this.$store.getters.sceneIsValid || !this.$store.getters.animationIsValid) {
         return;
       }
+      this.jumpToAnimationEnd();
       if (this.animationIndex < this.animations.length - 1) {
         this.setupDiffs[this.animationIndex] = this.$store.state.sceneDiff;
         this.$store.commit('stepForward');
@@ -398,11 +431,13 @@ export default {
             ...this.currentAnimation.args
           ),
         });
-        this.applyDiff(
-          this.currentSceneDiff,
-          /*reverse=*/false,
-          /*moveCursor=*/false,
-        );
+        if (this.$store.getters.sceneIsValid) {
+          this.applyDiff(
+            this.currentSceneDiff,
+            /*reverse=*/false,
+            /*moveCursor=*/false,
+          );
+        }
       }
     },
     stepBackward: function() {
@@ -470,12 +505,14 @@ export default {
       this.scene.update();
     },
     handleNewAnimation() {
-      if (!this.$store.getters.animationIsValid) {
-        alert("can't add to an invalid scene");
-        return;
-      }
-      while (this.animationIndex < this.animations.length - 1 || this.animationOffset < 1) {
+      while (this.animationIndex < this.animations.length - 1
+             || this.animationOffset < 1) {
+        if (this.$store.getters.sceneIsValid
+          && this.$store.getters.animationIsValid) {
         this.stepForward();
+        } else {
+          return
+        }
       }
       this.animations.push({
         className: "Wait",

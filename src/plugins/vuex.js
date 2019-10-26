@@ -65,6 +65,20 @@ const store = new Vuex.Store({
         }
       }
       return true;
+    },
+    sceneIsValid(state) {
+      let priorScene = state.priorScene;
+      for (let mobjectName of (state.sceneDiff['add'] || [])) {
+        if (priorScene.includes(mobjectName)) {
+          return false;
+        }
+      }
+      for (let mobjectName of (state.sceneDiff['remove'] || [])) {
+        if (!priorScene.includes(mobjectName)) {
+          return false;
+        }
+      }
+      return true;
     }
   }
 });
