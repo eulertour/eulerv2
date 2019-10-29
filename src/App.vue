@@ -23,7 +23,7 @@
 </template>
 
 <script>
-import MobjectLab from './components/MobjectLab.vue';
+import MobjectLab from './components/MobjectLab.vue'
 
 export default {
   name: 'App',

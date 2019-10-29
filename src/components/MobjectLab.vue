@@ -1,87 +1,99 @@
 <template>
   <div class="d-flex justify-center align-top mt-7 mb-5">
-    <div v-if="sceneLoaded">
-      <v-expansion-panels
-        id="info-panels"
-        class="mr-4"
-        v-model="expandedPanel"
-        multiple
-      >
-        <v-expansion-panel>
-          <v-expansion-panel-header>
-            <span v-bind:style="sceneHeaderStyle">Scene</span>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content>
-            <SetupPanel
-              v-bind:setup="currentSceneDiff"
-              v-bind:animationData="currentAnimation"
-              v-bind:mobjects="mobjects"
-              v-bind:scene="scene"
-              v-bind:animating="animating"
-              v-on:update-setup="(action, newSelection)=>updateSetup(action, newSelection)"
-            />
-          </v-expansion-panel-content>
-        </v-expansion-panel>
-        <v-expansion-panel>
-          <v-expansion-panel-header>
-            <span v-bind:style="animationHeaderStyle">Animation</span>
-          </v-expansion-panel-header>
-          <v-expansion-panel-content>
-            <AnimationPanel
-              v-bind:animation-data="currentAnimation"
-              v-bind:mobject-data="mobjects"
-              v-bind:scene="scene"
-              v-bind:animation-offset="animationOffset"
-              v-bind:animating="animating"
-              v-bind:setup="currentSceneDiff"
-              v-on:jump-to-start="jumpToAnimationStart"
-              v-on:jump-to-end="jumpToAnimationEnd"
-              v-on:pause="pause"
-              v-on:play="(e)=>play(e)"
-              v-on:replay="(e)=>replay(e)"
-              v-on:arg-change="handleArgChange"
-            />
-          </v-expansion-panel-content>
-        </v-expansion-panel>
-        <v-expansion-panel>
-          <v-expansion-panel-header>Mobjects</v-expansion-panel-header>
-          <v-expansion-panel-content>
-            <v-expansion-panels class="d-flex flex-column" multiple>
-              <v-expansion-panel v-for="(data, name) in mobjects" v-bind:key="name">
-                <v-expansion-panel-header>
-                  {{ name }}
-                  <span class="text--secondary ml-2">
-                    {{ !animating && scene.contains(data.mobject)
-                       ? "(in scene)" : "" }}
-                  </span>
-                </v-expansion-panel-header>
-                <v-expansion-panel-content>
-                  <MobjectPanel
-                    v-bind:mobject-classes="mobjectChoices"
-                    v-bind:mobject-name="name"
-                    v-bind:mobject-data="data"
-                    v-bind:disabled="animating || !scene.contains(data.mobject)"
-                    v-bind:scene="scene"
-                    v-on:mobject-update="(mobjectName, attr, val)=>handleMobjectUpdate(mobjectName, attr, val)"
-                  />
-                </v-expansion-panel-content>
-              </v-expansion-panel>
-            </v-expansion-panels>
-            <div class="d-flex justify-space-around mt-4">
-              <v-btn fab v-on:click="newMobject">
-                <v-icon color="black" x-large>mdi-plus</v-icon>
-              </v-btn>
-            </div>
-          </v-expansion-panel-content>
-        </v-expansion-panel>
-      </v-expansion-panels>
-    </div>
-    <v-card v-else
-      class="d-flex justify-center align-center mr-4"
-      id="spinner-container"
+    <div
+      class="left-side d-flex flex-column justify-start align-center mr-4"
+      v-bind:class="{ 'code-width': displayCode, 'panel-width': !displayCode }"
     >
-      <v-progress-circular indeterminate/>
-    </v-card>
+      <div v-if="sceneLoaded && !displayCode">
+        <v-expansion-panels
+          v-model="expandedPanel"
+          multiple
+        >
+          <v-expansion-panel>
+            <v-expansion-panel-header>
+              <span v-bind:style="sceneHeaderStyle">Scene</span>
+            </v-expansion-panel-header>
+            <v-expansion-panel-content>
+              <SetupPanel
+                v-bind:setup="currentSceneDiff"
+                v-bind:animationData="currentAnimation"
+                v-bind:mobjects="mobjects"
+                v-bind:scene="scene"
+                v-bind:animating="animating"
+                v-on:update-setup="(action, newSelection)=>updateSetup(action, newSelection)"
+              />
+            </v-expansion-panel-content>
+          </v-expansion-panel>
+          <v-expansion-panel>
+            <v-expansion-panel-header>
+              <span v-bind:style="animationHeaderStyle">Animation</span>
+            </v-expansion-panel-header>
+            <v-expansion-panel-content>
+              <AnimationPanel
+                v-bind:animation-data="currentAnimation"
+                v-bind:mobject-data="mobjects"
+                v-bind:scene="scene"
+                v-bind:animation-offset="animationOffset"
+                v-bind:animating="animating"
+                v-bind:setup="currentSceneDiff"
+                v-on:jump-to-start="jumpToAnimationStart"
+                v-on:jump-to-end="jumpToAnimationEnd"
+                v-on:pause="pause"
+                v-on:play="(e)=>play(e)"
+                v-on:replay="(e)=>replay(e)"
+                v-on:arg-change="handleArgChange"
+              />
+            </v-expansion-panel-content>
+          </v-expansion-panel>
+          <v-expansion-panel>
+            <v-expansion-panel-header>Mobjects</v-expansion-panel-header>
+            <v-expansion-panel-content>
+              <v-expansion-panels class="d-flex flex-column" multiple>
+                <v-expansion-panel v-for="(data, name) in mobjects" v-bind:key="name">
+                  <v-expansion-panel-header>
+                    {{ name }}
+                    <span class="text--secondary ml-2">
+                      {{ !animating && scene.contains(data.mobject)
+                         ? "(in scene)" : "" }}
+                    </span>
+                  </v-expansion-panel-header>
+                  <v-expansion-panel-content>
+                    <MobjectPanel
+                      v-bind:mobject-classes="mobjectChoices"
+                      v-bind:mobject-name="name"
+                      v-bind:mobject-data="data"
+                      v-bind:disabled="animating || !scene.contains(data.mobject)"
+                      v-bind:scene="scene"
+                      v-on:mobject-update="(mobjectName, attr, val)=>handleMobjectUpdate(mobjectName, attr, val)"
+                    />
+                  </v-expansion-panel-content>
+                </v-expansion-panel>
+              </v-expansion-panels>
+              <div class="d-flex justify-space-around mt-4">
+                <v-btn fab v-on:click="newMobject">
+                  <v-icon color="black" x-large>mdi-plus</v-icon>
+                </v-btn>
+              </div>
+            </v-expansion-panel-content>
+          </v-expansion-panel>
+        </v-expansion-panels>
+      </div>
+      <CodeMirror
+        v-else-if="sceneLoaded && displayCode"
+        v-bind:initial-code="code"
+      />
+      <v-card v-else
+        class="d-flex justify-center align-center mr-4"
+        height="100%"
+        width="100%"
+      >
+        <v-progress-circular indeterminate/>
+      </v-card>
+      <div class="d-flex justify-start mt-4 mr-auto">
+        <v-btn v-on:click="toggleCode" class="mr-2">{{ displayCode ? "Panel" : "Code" }}</v-btn>
+        <v-btn v-if="displayCode" v-on:click="runManim">Render</v-btn>
+      </div>
+    </div>
     <div id="visualization-placeholder">
       <div id="visualization">
         <div id="manim-background"/>
@@ -102,11 +114,7 @@
           v-bind:scene="scene"
           v-bind:finished="animationIndex === animations.length - 1 && animationOffset === 1"
         />
-        <!--
-        <div>{{ $store.state.priorScene }}</div>
-        <div>{{ $store.state.sceneDiff }}</div>
-        <div>{{ $store.state.animationDiff }}</div>
-        -->
+        <!-- Debug Info -->
       </div>
     </div>
   </div>
@@ -114,12 +122,14 @@
 
 <script>
 import * as _ from 'lodash'
+import * as consts from '../constants.js'
 import * as Manim from '../manim.js'
 import AnimationPanel from './AnimationPanel.vue'
 import MobjectPanel from './MobjectPanel.vue'
 import SetupPanel from './SetupPanel.vue'
 import Timeline from './Timeline.vue'
 import VideoControls from './VideoControls.vue'
+import CodeMirror from './CodeMirror.vue'
 
 export default {
   name: 'MobjectLab',
@@ -129,6 +139,7 @@ export default {
     SetupPanel,
     Timeline,
     VideoControls,
+    CodeMirror,
   },
   computed: {
     currentAnimation() {
@@ -161,6 +172,8 @@ export default {
   },
   data() {
     return {
+      code: consts.EXAMPLE_CODE,
+      displayCode: true,
       expandedPanel: [1],
       playingSingleAnimation: null,
       scene: null,
@@ -230,8 +243,10 @@ export default {
     this.scene.update();
     this.scene.renderer.domElement.id = "manim-scene";
     window.languagePluginLoader.then(() => {
-      window.pyodide.loadPackage("numpy").then(() => {
+      window.pyodide.loadPackage("manimlib").then(() => {
+        window.pyodide.runPython("import manimlib");
         window.pyodide.runPython("import numpy");
+        window.manimlib = window.pyodide.pyimport("manimlib");
         for (let mobjectName of Object.keys(this.initialMobjects)) {
           let data = _.cloneDeep(this.initialMobjects[mobjectName]);
           this.setMobjectField(data);
@@ -254,6 +269,20 @@ export default {
     });
   },
   methods: {
+    runManim: function() {
+      let scene = window.manimlib.get_scene(this.code, ["SquareToCircle"]);
+      scene.render();
+      console.log(scene.scene_list);
+      console.log(scene.render_list);
+      console.log(scene.mobject_dict);
+    },
+    toggleCode() {
+      if (this.displayCode) {
+        this.displayCode = false;
+      } else {
+        this.displayCode = true;
+      }
+    },
     setMobjectField: function(mobjectData) {
       let s = new Manim[mobjectData.className]();
       s.translateMobject(mobjectData.position);
@@ -605,12 +634,25 @@ export default {
   height: 360px;
   background-color: black;
 }
-#info-panels {
+.left-side {
+  height: 560px;
+}
+.panel-width {
   width: 410px;
 }
-#spinner-container {
-  height: 575px;
-  width: 410px;
+.code-width {
+  width: 575px;
+}
+.code-container {
+  height: 100%;
+  width: auto;
+}
+.code-box {
+  overflow: scroll;
+}
+>>> .v-text-field__slot {
+  font-size: 1.1em;
+  font-family: monospace;
 }
 #visualization-placeholder {
   width: 640px;

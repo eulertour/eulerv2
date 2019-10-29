@@ -140,7 +140,17 @@ export const GREEN_SCREEN="#00FF00"
 export const ORANGE="#FF862F"
 
 // MobjectLab
-export const AnimationPosition = {
-  START: 1,
-  END: 2,
-}
+export const EXAMPLE_CODE =
+`from manimlib.imports import *
+
+class SquareToCircle(WebScene):
+    def construct(self):
+        circle = Circle()
+        square = Square()
+        square.flip(RIGHT)
+        square.rotate(-3 * TAU / 8)
+        circle.set_fill(PINK, opacity=0.5)
+
+        self.play(ShowCreation(square))
+        self.play(ReplacementTransform(square, circle))
+        self.play(FadeOut(circle))`;
