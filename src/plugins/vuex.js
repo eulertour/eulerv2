@@ -18,6 +18,9 @@ const store = new Vuex.Store({
   },
   mutations: {
     updateDiffs(state, payload) {
+      if ('priorScene' in payload) {
+        state.priorScene = payload.priorScene;
+      }
       if ('sceneDiff' in payload) {
         state.sceneDiff = payload.sceneDiff;
       }
@@ -40,7 +43,7 @@ const store = new Vuex.Store({
       newScene = _.concat(newScene, payload.sceneDiff['remove'] || []);
       newScene = _.difference(newScene, payload.sceneDiff['add'] || []);
       state.priorScene = newScene;
-    }
+    },
   },
   actions: {
 

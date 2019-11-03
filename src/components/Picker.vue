@@ -14,8 +14,13 @@ export default {
     'attr': String,
     'disabled': Boolean,
   },
+  data() {
+    return {
+      picker: null,
+    }
+  },
   mounted() {
-    Pickr.create({
+    this.picker = Pickr.create({
       el: '#picker',
       default: this.default,
       theme: 'nano',
@@ -38,6 +43,18 @@ export default {
       this.$emit('change', this.attr, color);
     });
   },
+  watch : {
+    disabled: function(newDisabled) {
+      if (!this.picker) {
+        return;
+      }
+      if (newDisabled) {
+        this.picker.disable();
+      } else {
+        this.picker.enable();
+      }
+    }
+  }
 }
 </script>
 

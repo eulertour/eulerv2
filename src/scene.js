@@ -1,4 +1,4 @@
-import * as Two from '../node_modules/two.js/build/two.js';
+import * as Two from 'two.js/build/two.js';
 import * as consts from './constants.js';
 
 class Scene extends Two {
@@ -15,7 +15,13 @@ class Scene extends Two {
   }
 
   beginAnimation(animation) {
-    this.add(animation.mobject);
+    this.removeMobjectUponFinish = !this.contains(animation.mobject);
+    if (this.removeMobjectUponFinish) {
+      // In order to prevent double-adding the mobjet, we will add it now so
+      // that the animation is visible and remove it upon finishing the
+      // animation.
+      this.add(animation.mobject);
+    }
     animation.begin();
   }
 
@@ -30,6 +36,9 @@ class Scene extends Two {
         onStep((frameCount - this.lastStoppingFrame) / 60);
       }
       if (animation.isFinished((frameCount - this.lastStoppingFrame) / 60)) {
+        if (this.removeMobjectUponFinish) {
+          this.remove(animation.mobject);
+        }
         this.clearAnimation();
         if (this.onAnimationFinished !== null) {
           this.onAnimationFinished(animation);

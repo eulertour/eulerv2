@@ -2,7 +2,14 @@ import * as Two from '../node_modules/two.js/build/two.js';
 import * as consts from './constants.js';
 import * as utils from './utils.js';
 import chroma from 'chroma-js';
-import { Animation, ReplacementTransform, Wait } from './animation.js';
+import {
+  Animation,
+  Wait,
+  ReplacementTransform,
+  ShowCreation,
+  FadeOut,
+  FadeIn,
+} from './animation.js';
 import { Scene } from './scene.js';
 
 const DEFAULT_STYLE = {
@@ -541,6 +548,9 @@ export {
   Square,
   Animation,
   ReplacementTransform,
+  ShowCreation,
+  FadeOut,
+  FadeIn,
   Wait,
   Scene,
 };

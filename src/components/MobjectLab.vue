@@ -4,7 +4,7 @@
       class="left-side d-flex flex-column justify-start align-center mr-4"
       v-bind:class="{ 'code-width': displayCode, 'panel-width': !displayCode }"
     >
-      <div v-if="sceneLoaded && !displayCode">
+      <div v-if="sceneLoaded && !displayCode" class="expansion-panel-container">
         <v-expansion-panels
           v-model="expandedPanel"
           multiple
@@ -80,7 +80,8 @@
       </div>
       <CodeMirror
         v-else-if="sceneLoaded && displayCode"
-        v-bind:initial-code="code"
+        v-bind:code="code"
+        v-on:update-code="updateCode"
       />
       <v-card v-else
         class="d-flex justify-center align-center mr-4"
@@ -130,6 +131,7 @@ import SetupPanel from './SetupPanel.vue'
 import Timeline from './Timeline.vue'
 import VideoControls from './VideoControls.vue'
 import CodeMirror from './CodeMirror.vue'
+import chroma from 'chroma-js'
 
 export default {
   name: 'MobjectLab',
@@ -272,9 +274,105 @@ export default {
     runManim: function() {
       let scene = window.manimlib.get_scene(this.code, ["SquareToCircle"]);
       scene.render();
-      console.log(scene.scene_list);
-      console.log(scene.render_list);
-      console.log(scene.mobject_dict);
+
+      let mobjectIdsToNames = {};
+      let mobjectIds = Object.keys(scene.mobject_dict);
+      for (let i = 0; i < mobjectIds.length; i++) {
+        mobjectIdsToNames[mobjectIds[i]] = 'mobject' + (i + 1);
+      }
+
+      scene.scene_list = scene.scene_list.map(
+        idList => idList.map(
+          id => mobjectIdsToNames[id]
+        )
+      );
+
+      let newAnimationList = _.cloneDeep(scene.render_list);
+      for (let i = 0; i < scene.render_list.length; i++) {
+        newAnimationList[i].args = scene.render_list[i].args.map(
+          id => mobjectIdsToNames[id]
+        );
+      }
+
+      let updateSceneWithDiff = (scene, diff) => {
+        scene = _.concat(scene, diff['add'] || []);
+        scene = _.difference(scene, diff['remove'] || []);
+        return scene;
+      };
+
+      let getDiffFromTwoScenes = (beforeScene, afterScene) => {
+        let mobsToAdd = _.difference(afterScene, beforeScene);
+        let mobsToRemove = _.difference(beforeScene, afterScene);
+        let diff = {};
+        if (mobsToAdd.length > 0) {
+          diff['add'] = mobsToAdd.map(id => mobjectIdsToNames[id]);
+        }
+        if (mobsToRemove.length > 0) {
+          diff['remove'] = mobsToRemove.map(id => mobjectIdsToNames[id]);
+        }
+        return diff;
+      };
+
+      let newSceneDiffs = [];
+      let sceneAfterLastAnimation = []
+      for (let i = 0; i < scene.scene_list.length; i++) {
+        newSceneDiffs.push(getDiffFromTwoScenes(
+          sceneAfterLastAnimation,
+          scene.scene_list[i],
+        ));
+
+        sceneAfterLastAnimation = updateSceneWithDiff(
+          scene.scene_list[i],
+          //get the animation diff,
+          new Manim[scene.render_list[i].className]
+            (...scene.render_list[i].args.map(id => mobjectIdsToNames[id]))
+            .getDiff(...scene.render_list[i].args.map(id => mobjectIdsToNames[id])),
+        );
+      }
+
+      let newMobjects = {};
+      for (let id of Object.keys(scene.mobject_dict)) {
+        let mobjectData = scene.mobject_dict[id];
+
+        let strokeColor = mobjectData.style.strokeColor;
+        let strokeOpacity = mobjectData.style.strokeOpacity;
+        mobjectData.style.strokeColor = chroma(strokeColor).alpha(strokeOpacity).hex();
+        delete mobjectData.style.strokeOpacity;
+
+        let fillColor = mobjectData.style.fillColor;
+        let fillOpacity = mobjectData.style.fillOpacity;
+        mobjectData.style.fillColor = chroma(fillColor).alpha(fillOpacity).hex();
+        delete mobjectData.style.fillOpacity;
+
+        newMobjects[mobjectIdsToNames[id]] = mobjectData;
+      }
+      for (let mobjectName of Object.keys(newMobjects)) {
+        let data = newMobjects[mobjectName];
+        this.setMobjectField(data);
+      }
+
+      this.mobjects = newMobjects;
+      this.animations = newAnimationList;
+      this.setupDiffs = newSceneDiffs;
+      this.animationIndex = 0;
+      this.animationOffset = 0;
+
+      this.scene.clear();
+      this.scene.clearAnimation();
+      this.currentAnimation.animation = this.buildCurrentAnimation();
+      this.scene.update();
+      this.$store.commit('updateDiffs', {
+        priorScene: [],
+        sceneDiff: this.setupDiffs[0],
+        animationDiff: this.currentAnimation.animation.getDiff(
+          ...this.currentAnimation.args
+        ),
+      });
+      this.applyDiff(
+        this.currentSceneDiff,
+        /*reverse=*/false,
+        /*moveCursor=*/false,
+      );
     },
     toggleCode() {
       if (this.displayCode) {
@@ -315,7 +413,10 @@ export default {
         this.scene.playAnimation(
           this.currentAnimation.animation,
           /*onStep=*/this.onAnimationStep,
-          this.chainNextAnimation,
+          /*onAnimationFinished=*/() => {
+            this.applyDiff(this.currentAnimationDiff);
+            this.chainNextAnimation();
+          },
         );
       }
     },
@@ -622,6 +723,9 @@ export default {
           /*moveCursor=*/false,
         );
       }
+    },
+    updateCode(newCode) {
+      this.code = newCode;
     }
   },
 }
@@ -641,7 +745,7 @@ export default {
   width: 410px;
 }
 .code-width {
-  width: 575px;
+  width: 720px;
 }
 .code-container {
   height: 100%;
@@ -667,5 +771,8 @@ export default {
 }
 .info-panel {
   height: fit-content;
+}
+.expansion-panel-container {
+  width: 100%;
 }
 </style>

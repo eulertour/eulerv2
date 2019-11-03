@@ -1,5 +1,6 @@
 import * as utils from './utils.js';
 import * as _ from 'lodash';
+import chroma from 'chroma-js';
 
 class Animation {
   constructor(
@@ -31,15 +32,8 @@ class Animation {
     this.interpolate(0);
   }
 
-  cleanUpFromScene(scene) {
-    if (this.removeWhenFinished) {
-      scene.remove(this.mobject);
-    }
-  }
-
   getFamily() {
-    // To be implemented in subclasses
-    return [];
+    return [this.mobject];
   }
 
   interpolate(alpha) {
@@ -109,11 +103,6 @@ class ReplacementTransform extends Animation {
     Animation.prototype.begin.call(this)
   }
 
-  cleanUpFromScene(scene) {
-    scene.remove(this.mobject)
-    scene.add(this.targetMobject)
-  }
-
   createTarget() {
     return this.targetMobject;
   }
@@ -134,6 +123,79 @@ class ReplacementTransform extends Animation {
   }
 }
 
+class ShowCreation extends Animation {
+  constructor(mobject) {
+    super(mobject);
+  }
+
+  getDiff(mobject) {
+    return {
+      'add': [mobject],
+    };
+  }
+}
+
+class FadeIn extends Animation {
+  begin() {
+    // Since the mobject's opacity will change over the course of the animation,
+    // we check the mobject's initial style so that we can determine the range
+    // of interpolation later.
+    let style = this.mobject.getStyleDict();
+    this.finalStrokeOpacity = chroma(style['strokeColor']).alpha();
+    this.finalFillOpacity = chroma(style['fillColor']).alpha();
+  }
+
+  interpolateSubmobject(alpha, submob) {
+    let style = submob.getStyleDict();
+    let strokeOpacity = alpha * this.finalStrokeOpacity;
+    let fillOpacity = alpha * this.finalFillOpacity;
+    style['strokeColor'] = chroma(style['strokeColor']).alpha(strokeOpacity).hex();
+    style['fillColor'] = chroma(style['fillColor']).alpha(fillOpacity).hex();
+    submob.applyStyle(style);
+  }
+
+  createStartingMobject() {
+    let mob = Animation.prototype.createStartingMobject.call(this)
+    let style = mob.getStyleDict();
+    style['strokeOpacity'] = 0;
+    style['fillOpacity'] = 0;
+    return mob.applyStyle(style);
+  }
+
+  getDiff(mobject) {
+    return {
+      'add': [mobject],
+    };
+  }
+}
+
+class FadeOut extends Animation {
+  begin() {
+    // Since the mobject's opacity will change over the course of the animation,
+    // we check the mobject's initial style so that we can determine the range
+    // of interpolation later.
+    let style = this.mobject.getStyleDict();
+    this.initialStrokeOpacity = chroma(style['strokeColor']).alpha();
+    this.initialFillOpacity = chroma(style['fillColor']).alpha();
+  }
+
+
+  interpolateSubmobject(alpha, submob) {
+    let style = submob.getStyleDict();
+    let strokeOpacity = (1 - alpha) * this.initialStrokeOpacity;
+    let fillOpacity = (1 - alpha) * this.initialFillOpacity;
+    style['strokeColor'] = chroma(style['strokeColor']).alpha(strokeOpacity).hex();
+    style['fillColor'] = chroma(style['fillColor']).alpha(fillOpacity).hex();
+    submob.applyStyle(style);
+  }
+
+  getDiff(mobject) {
+    return {
+      'remove': [mobject],
+    };
+  }
+}
+
 class Wait extends Animation {
   interpolateSubmobject() {
     // do nothing
@@ -148,4 +210,7 @@ export {
   Animation,
   Wait,
   ReplacementTransform,
+  ShowCreation,
+  FadeOut,
+  FadeIn,
 }

@@ -17,12 +17,11 @@ import 'codemirror/mode/python/python.js'
 export default {
   name: 'CodeMirror',
   props: {
-    initialCode: String,
+    code: String,
   },
   data() {
     return {
       codeMirror: null,
-      code: "",
       backgroundColor: "",
       containerStyle: {
         backgroundColor: "",
@@ -31,15 +30,14 @@ export default {
   },
   methods: {
     updateCode(cm) {
-      this.code = cm.getValue();
+      this.$emit('update-code', cm.getValue());
     }
   },
   mounted() {
     this.codeMirror = CodeMirror(
       document.getElementById('editor'), {
-        value: this.initialCode,
-        theme: "rubyblue",
-        mode: "python",
+        value: this.code,
+        theme: "rubyblue", mode: "python",
       });
     this.codeMirror.on('change', this.updateCode);
     let cm = document.getElementsByClassName("CodeMirror")[0];

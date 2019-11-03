@@ -55,12 +55,14 @@
 <script>
 import ReplacementTransformPanel from './ReplacementTransformPanel.vue'
 import WaitPanel from './WaitPanel.vue'
+import BlankPanel from './BlankPanel.vue'
 
 export default {
   name: 'AnimationPanel',
   components: {
     ReplacementTransformPanel,
     WaitPanel,
+    BlankPanel,
   },
   props: {
     animationData: Object,
@@ -73,7 +75,12 @@ export default {
   },
   computed: {
     animationComponent: function() {
-      return this.animationData.className + "Panel";
+      let panelName = this.animationData.className + "Panel";
+      if (panelName in this.$options.components) {
+         return panelName;
+      } else {
+        return "BlankPanel";
+      }
     },
     addedByAnimation() {
       return this.animationData.animation.getDiff(
