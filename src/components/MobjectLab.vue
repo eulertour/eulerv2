@@ -4,6 +4,15 @@
       class="left-side d-flex flex-column justify-start align-center mr-4"
       v-bind:class="{ 'code-width': displayCode, 'panel-width': !displayCode }"
     >
+      <v-toolbar width="100%" max-height="64px" class="mb-2">
+        <v-toolbar-title>example_scenes.py</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-btn fab text v-on:click="toggleCode">
+          <v-icon class="headline black--text">
+            {{"mdi-" + (displayCode ? "view-agenda" : "code-braces")}}
+          </v-icon>
+        </v-btn>
+      </v-toolbar>
       <div v-if="sceneLoaded && !displayCode" class="expansion-panel-container">
         <v-expansion-panels
           v-model="expandedPanel"
@@ -84,15 +93,17 @@
         v-on:update-code="updateCode"
       />
       <v-card v-else
-        class="d-flex justify-center align-center mr-4"
+        class="d-flex justify-center align-center"
         height="100%"
         width="100%"
       >
         <v-progress-circular indeterminate/>
       </v-card>
-      <div class="d-flex justify-start mt-4 mr-auto">
-        <v-btn v-on:click="toggleCode" class="mr-2">{{ displayCode ? "Panel" : "Code" }}</v-btn>
-        <v-btn v-if="displayCode" v-on:click="runManim">Render</v-btn>
+      <div class="d-flex justify-start mt-4 ml-auto">
+        <v-btn large v-if="displayCode" v-on:click="runManim">
+          <v-icon class="headline black--text mr-2">mdi-cube-outline</v-icon>
+          <span class="title">Render</span>
+        </v-btn>
       </div>
     </div>
     <div id="visualization-placeholder">
@@ -117,6 +128,33 @@
         />
         <!-- Debug Info -->
       </div>
+    </div>
+    <div class="corner-button-container">
+      <v-dialog v-model="dialog" width="500px">
+        <template v-slot:activator="{ on }">
+          <v-btn v-on="on" fab large>
+            <v-icon large>mdi-information</v-icon>
+          </v-btn>
+        </template>
+        <v-card>
+          <v-card-title class="headline grey lighten-2 mb-3" primary-title>
+            Release Notes
+          </v-card-title>
+
+          <v-card-text class="title">
+            <span v-html="releaseNotes"></span>
+          </v-card-text>
+
+          <v-divider></v-divider>
+
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="primary" text v-on:click="dialog = false">
+              Got it
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
     </div>
   </div>
 </template>
@@ -174,6 +212,8 @@ export default {
   },
   data() {
     return {
+      releaseNotes: consts.RELEASE_NOTES,
+      dialog: false,
       code: consts.EXAMPLE_CODE,
       displayCode: true,
       expandedPanel: [1],
@@ -373,6 +413,7 @@ export default {
         /*reverse=*/false,
         /*moveCursor=*/false,
       );
+      this.play(null, /*singleAnimationOnly=*/false);
     },
     toggleCode() {
       if (this.displayCode) {
@@ -739,7 +780,7 @@ export default {
   background-color: black;
 }
 .left-side {
-  height: 560px;
+  height: auto;
 }
 .panel-width {
   width: 410px;
@@ -774,5 +815,10 @@ export default {
 }
 .expansion-panel-container {
   width: 100%;
+}
+.corner-button-container {
+  position: fixed;
+  right: 25px;
+  bottom: 25px;
 }
 </style>

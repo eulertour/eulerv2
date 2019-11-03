@@ -154,3 +154,13 @@ class SquareToCircle(WebScene):
         self.play(FadeIn(square))
         self.play(ReplacementTransform(square, circle))
         self.play(FadeOut(circle))`;
+
+export const RELEASE_NOTES =
+`This is the first version which allows rendering scenes that are written in
+python and processed by vanilla manim. It only works for scenes whose mobjects
+and animations have web implementations, and only on the data which is exposed
+to javascript in
+<a href="https://github.com/eulertour/manim/blob/master/manimlib/web/utils.py"
+   target="_blank">manimlib.web.utils</a>. At the time of writing, only the
+FadeIn and FadeOut Animations and the Circle and Square Mobjects can be
+processed from manim.`
