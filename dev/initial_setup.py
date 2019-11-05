@@ -45,7 +45,7 @@ verify_command_or_exit("yarn")
 verify_command_or_exit("node")
 if platform.system() == "Linux":
     try:
-        sp.run(["yarn", "info"], check=True)
+        sp.run(["yarn", "info"], check=True, capture_output=True)
     except sp.CalledProcessError as e:
         logging.warning("The first 'yarn' in the path is from the cmdtest "
                         "package. You'll have to uninstall this package or "
