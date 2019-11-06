@@ -164,7 +164,8 @@ class GroupExample(WebScene):
 
         c2 = Circle().shift(RIGHT + 2 * DOWN)
         s2 = Square().shift(LEFT + 2 * DOWN)
-        r2 = Rectangle(height=4, width=2).shift(2 * LEFT + 2 * DOWN)
+        r2 = Rectangle(height=4, width=2) \\
+               .shift(2 * LEFT + 2 * DOWN)
         g2 = Group(r2, s2, c2)
 
         self.play(FadeIn(g1))
