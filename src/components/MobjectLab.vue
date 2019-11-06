@@ -315,18 +315,26 @@ export default {
       let scene = window.manimlib.get_scene(this.code, ["SquareToCircle"]);
       scene.render();
 
+      // Comment if using Groups
+      // console.log(scene.scene_list)
+      // console.log(scene.render_list)
+      // console.log(scene.mobject_dict)
+      // return;
+
       let mobjectIdsToNames = {};
       let mobjectIds = Object.keys(scene.mobject_dict);
       for (let i = 0; i < mobjectIds.length; i++) {
         mobjectIdsToNames[mobjectIds[i]] = 'mobject' + (i + 1);
       }
 
+      // Assign human-readble names to scene list
       scene.scene_list = scene.scene_list.map(
         idList => idList.map(
           id => mobjectIdsToNames[id]
         )
       );
 
+      //  Create animation list with human-readable names
       let newAnimationList = _.cloneDeep(scene.render_list);
       for (let i = 0; i < scene.render_list.length; i++) {
         newAnimationList[i].args = scene.render_list[i].args.map(
