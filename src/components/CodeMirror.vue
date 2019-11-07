@@ -3,6 +3,7 @@
     id="editor-container"
     v-bind:style="containerStyle"
     elevation="4"
+    max-height="700px"
   >
     <div id="editor" />
   </v-sheet>
