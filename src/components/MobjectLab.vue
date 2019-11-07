@@ -225,7 +225,6 @@ export default {
       animationOffset: 0,
       animations: [{
         className: "ReplacementTransform",
-        shortName: "RTransform",
         description: "Morph one Mobject into another",
         args: ["mobject1", "mobject2"],
         argDescriptions: ["Start Mobject", "End Mobject"],
@@ -297,7 +296,7 @@ export default {
         this.currentAnimation.animation = this.buildCurrentAnimation();
         this.$store.commit('updateDiffs', {
           sceneDiff: this.setupDiffs[0],
-          animationDiff: this.currentAnimation.animation.getDiff(
+          animationDiff: Manim[this.currentAnimation.className].getDiff(
             ...this.currentAnimation.args
           ),
         });
@@ -364,8 +363,7 @@ export default {
         sceneAfterLastAnimation = updateSceneWithDiff(
           scene.scene_list[i],
           //get the animation diff,
-          new Manim[scene.render_list[i].className]
-            (...scene.render_list[i].args.map(id => mobjectIdsToNames[id]))
+          Manim[scene.render_list[i].className]
             .getDiff(...scene.render_list[i].args.map(id => mobjectIdsToNames[id])),
         );
       }
@@ -404,7 +402,7 @@ export default {
       this.$store.commit('updateDiffs', {
         priorScene: [],
         sceneDiff: this.setupDiffs[0],
-        animationDiff: this.currentAnimation.animation.getDiff(
+        animationDiff: Manim[this.currentAnimation.className].getDiff(
           ...this.currentAnimation.args
         ),
       });
@@ -598,7 +596,7 @@ export default {
         this.currentAnimation.animation = this.buildCurrentAnimation();
         this.$store.commit('updateDiffs', {
           sceneDiff: this.setupDiffs[this.animationIndex],
-          animationDiff: this.currentAnimation.animation.getDiff(
+          animationDiff: Manim[this.currentAnimation.className].getDiff(
             ...this.currentAnimation.args
           ),
         });
@@ -626,13 +624,13 @@ export default {
         this.currentAnimation.animation = this.buildCurrentAnimation();
         this.$store.commit('stepBackward', {
           sceneDiff: this.setupDiffs[this.animationIndex],
-          animationDiff: this.currentAnimation.animation.getDiff(
+          animationDiff: Manim[this.currentAnimation.className].getDiff(
             ...this.currentAnimation.args
           ),
         });
         this.$store.commit('updateDiffs', {
           sceneDiff: this.setupDiffs[this.animationIndex],
-          animationDiff: this.currentAnimation.animation.getDiff(
+          animationDiff: Manim[this.currentAnimation.className].getDiff(
             ...this.currentAnimation.args
           ),
         });
@@ -726,7 +724,7 @@ export default {
       newArgs[argNum] = arg;
       this.currentAnimation.args = newArgs;
       this.$store.commit('updateDiffs', {
-        animationDiff: this.currentAnimation.animation.getDiff(...newArgs)
+        animationDiff: Manim[this.currentAnimation.className].getDiff(...newArgs)
       });
       if (this.animationOffset === 1) {
         this.applyDiff(

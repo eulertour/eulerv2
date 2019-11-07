@@ -15,7 +15,7 @@ class Scene extends Two {
   }
 
   beginAnimation(animation) {
-    this.removeMobjectUponFinish = !this.contains(animation.mobject);
+    this.removeMobjectUponFinish = animation.mobject && !this.contains(animation.mobject);
     if (this.removeMobjectUponFinish) {
       // In order to prevent double-adding the mobjet, we will add it now so
       // that the animation is visible and remove it upon finishing the

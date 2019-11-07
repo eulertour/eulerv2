@@ -140,6 +140,10 @@ export const GREEN_SCREEN="#00FF00"
 export const ORANGE="#FF862F"
 
 // MobjectLab
+export const SHORT_NAME_MAP = {
+  "ReplacementTransform": "RTransform",
+};
+
 export const EXAMPLE_CODE =
 `from manimlib.imports import *
 
