@@ -312,10 +312,10 @@ export default {
   },
   methods: {
     runManim: function() {
-      let scene = window.manimlib.get_scene(this.code, ["SquareToCircle"]);
+      let scene = window.manimlib.get_scene(this.code, ["GroupExample"]);
       scene.render();
 
-      // Comment if using Groups
+      // // Uncomment if using Groups
       // console.log(scene.scene_list)
       // console.log(scene.render_list)
       // console.log(scene.mobject_dict)
@@ -369,6 +369,7 @@ export default {
           scene.scene_list[i],
         ));
 
+        // TODO: Animation.getDiff() should be static
         sceneAfterLastAnimation = updateSceneWithDiff(
           scene.scene_list[i],
           //get the animation diff,
@@ -381,24 +382,26 @@ export default {
       let newMobjects = {};
       for (let id of Object.keys(scene.mobject_dict)) {
         let mobjectData = scene.mobject_dict[id];
+        if (!["Group", "Mobject"].includes(mobjectData.className)) {
+          let strokeColor = mobjectData.style.strokeColor;
+          let strokeOpacity = mobjectData.style.strokeOpacity;
+          mobjectData.style.strokeColor = chroma(strokeColor).alpha(strokeOpacity).hex();
+          delete mobjectData.style.strokeOpacity;
 
-        let strokeColor = mobjectData.style.strokeColor;
-        let strokeOpacity = mobjectData.style.strokeOpacity;
-        mobjectData.style.strokeColor = chroma(strokeColor).alpha(strokeOpacity).hex();
-        delete mobjectData.style.strokeOpacity;
-
-        let fillColor = mobjectData.style.fillColor;
-        let fillOpacity = mobjectData.style.fillOpacity;
-        mobjectData.style.fillColor = chroma(fillColor).alpha(fillOpacity).hex();
-        delete mobjectData.style.fillOpacity;
-
+          let fillColor = mobjectData.style.fillColor;
+          let fillOpacity = mobjectData.style.fillOpacity;
+          mobjectData.style.fillColor = chroma(fillColor).alpha(fillOpacity).hex();
+          delete mobjectData.style.fillOpacity;
+        }
         newMobjects[mobjectIdsToNames[id]] = mobjectData;
       }
       for (let mobjectName of Object.keys(newMobjects)) {
         let data = newMobjects[mobjectName];
+        if (!["Group", "Mobject"].includes(mobjectData.className))
         this.setMobjectField(data);
       }
 
+      console.log(newMobjects);
       this.mobjects = newMobjects;
       this.animations = newAnimationList;
       this.setupDiffs = newSceneDiffs;
