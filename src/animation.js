@@ -115,7 +115,7 @@ class ReplacementTransform extends Animation {
     submob.interpolate(start, targetCopy, alpha);
   }
 
-  getDiff(mobject, targetMobject) {
+  static getDiff(mobject, targetMobject) {
     return {
       'add': [targetMobject],
       'remove': [mobject],
@@ -128,7 +128,7 @@ class ShowCreation extends Animation {
     super(mobject);
   }
 
-  getDiff(mobject) {
+  static getDiff(mobject) {
     return {
       'add': [mobject],
     };
@@ -162,7 +162,7 @@ class FadeIn extends Animation {
     return mob.applyStyle(style);
   }
 
-  getDiff(mobject) {
+  static getDiff(mobject) {
     return {
       'add': [mobject],
     };
@@ -189,7 +189,7 @@ class FadeOut extends Animation {
     submob.applyStyle(style);
   }
 
-  getDiff(mobject) {
+  static getDiff(mobject) {
     return {
       'remove': [mobject],
     };
@@ -201,7 +201,7 @@ class Wait extends Animation {
     // do nothing
   }
 
-  getDiff() {
+  static getDiff() {
     return {};
   }
 }

@@ -56,6 +56,7 @@
 import ReplacementTransformPanel from './ReplacementTransformPanel.vue'
 import WaitPanel from './WaitPanel.vue'
 import BlankPanel from './BlankPanel.vue'
+import * as Manim from '../manim.js'
 
 export default {
   name: 'AnimationPanel',
@@ -83,12 +84,12 @@ export default {
       }
     },
     addedByAnimation() {
-      return this.animationData.animation.getDiff(
+      return Manim[this.animationData.className].getDiff(
         ...this.animationData.args
       )['add'];
     },
     removedByAnimation() {
-      return this.animationData.animation.getDiff(
+      return Manim[this.animationData.className].getDiff(
         ...this.animationData.args
       )['remove'];
     },

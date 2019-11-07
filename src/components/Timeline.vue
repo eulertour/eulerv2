@@ -7,7 +7,7 @@
     >
       <v-card-title class="d-flex justify-center headline px-2">
         <div style="text-overflow:ellipsis">
-          {{ animation.shortName || animation.className }}
+          {{ shortNameMap[animation.className] || animation.className }}
         </div>
       </v-card-title>
     </v-card>
@@ -21,6 +21,7 @@
 </template>
 
 <script>
+import * as consts from '../constants.js'
 export default {
   name: 'Timeline',
   components: {
@@ -43,6 +44,7 @@ export default {
   data() {
     return {
       animationWidth: 145,
+      shortNameMap: consts.SHORT_NAME_MAP,
     }
   },
   methods: {
