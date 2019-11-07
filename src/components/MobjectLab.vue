@@ -368,7 +368,6 @@ export default {
           scene.scene_list[i],
         ));
 
-        // TODO: Animation.getDiff() should be static
         sceneAfterLastAnimation = updateSceneWithDiff(
           scene.scene_list[i],
           //get the animation diff,
@@ -395,8 +394,9 @@ export default {
       }
       for (let mobjectName of Object.keys(newMobjects)) {
         let data = newMobjects[mobjectName];
-        if (!["Group", "Mobject"].includes(mobjectData.className))
-        this.setMobjectField(data);
+        if (!["Group", "Mobject"].includes(data.className)) {
+          this.setMobjectField(data);
+        }
       }
 
       console.log(newMobjects);

@@ -173,7 +173,7 @@ class GroupExample(WebScene):
         g2 = Group(r2, s2, c2)
 
         self.play(FadeIn(g1))
-        self.play(Transform(g1, g2))`;
+        self.play(ReplacementTransform(g1, g2))`;
 
 export const RELEASE_NOTES =
 `This is the first version which allows rendering scenes that are written in
