@@ -94,7 +94,7 @@
       />
       <v-card v-else
         class="d-flex justify-center align-center"
-        height="100%"
+        height="500px"
         width="100%"
       >
         <v-progress-circular indeterminate/>
@@ -105,6 +105,7 @@
           <span class="title">Render</span>
         </v-btn>
       </div>
+      <DebugPanel v-bind:visible="debug"/>
     </div>
     <div id="visualization-placeholder">
       <div id="visualization">
@@ -126,11 +127,13 @@
           v-bind:scene="scene"
           v-bind:finished="animationIndex === animations.length - 1 && animationOffset === 1"
         />
-        <!-- Debug Info -->
       </div>
     </div>
     <div class="corner-button-container">
-      <v-dialog v-model="dialog" width="500px">
+      <v-btn class="mr-4" v-on:click="()=>{debug = !debug}" fab large>
+        <v-icon large>mdi-bug</v-icon>
+      </v-btn>
+      <v-dialog v-model="releaseNotesDialog" width="500px">
         <template v-slot:activator="{ on }">
           <v-btn v-on="on" fab large>
             <v-icon large>mdi-information</v-icon>
@@ -140,13 +143,10 @@
           <v-card-title class="headline grey lighten-2 mb-3" primary-title>
             Release Notes
           </v-card-title>
-
           <v-card-text class="title">
             <span v-html="releaseNotes"></span>
           </v-card-text>
-
           <v-divider></v-divider>
-
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn color="primary" text v-on:click="dialog = false">
@@ -170,6 +170,7 @@ import Timeline from './Timeline.vue'
 import VideoControls from './VideoControls.vue'
 import CodeMirror from './CodeMirror.vue'
 import chroma from 'chroma-js'
+import DebugPanel from './DebugPanel.vue'
 
 export default {
   name: 'MobjectLab',
@@ -180,6 +181,7 @@ export default {
     Timeline,
     VideoControls,
     CodeMirror,
+    DebugPanel,
   },
   computed: {
     currentAnimation() {
@@ -213,7 +215,8 @@ export default {
   data() {
     return {
       releaseNotes: consts.RELEASE_NOTES,
-      dialog: false,
+      releaseNotesDialog: false,
+      debug: true,
       code: consts.EXAMPLE_CODE,
       displayCode: true,
       expandedPanel: [1],
@@ -311,7 +314,7 @@ export default {
   },
   methods: {
     runManim: function() {
-      let scene = window.manimlib.get_scene(this.code, ["GroupExample"]);
+      let scene = window.manimlib.get_scene(this.code, ["SquareToCircle"]);
       scene.render();
 
       // // Uncomment if using Groups

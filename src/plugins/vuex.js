@@ -55,20 +55,6 @@ const store = new Vuex.Store({
       ret = _.difference(ret, state.sceneDiff.remove);
       return ret;
     },
-    animationIsValid(state, getters) {
-      let sceneBeforeAnimation = getters.sceneBeforeAnimation;
-      for (let mobjectName of (state.animationDiff['add'] || [])) {
-        if (sceneBeforeAnimation.includes(mobjectName)) {
-          return false;
-        }
-      }
-      for (let mobjectName of (state.animationDiff['remove'] || [])) {
-        if (!sceneBeforeAnimation.includes(mobjectName)) {
-          return false;
-        }
-      }
-      return true;
-    },
     sceneIsValid(state) {
       let priorScene = state.priorScene;
       for (let mobjectName of (state.sceneDiff['add'] || [])) {
@@ -78,6 +64,20 @@ const store = new Vuex.Store({
       }
       for (let mobjectName of (state.sceneDiff['remove'] || [])) {
         if (!priorScene.includes(mobjectName)) {
+          return false;
+        }
+      }
+      return true;
+    },
+    animationIsValid(state, getters) {
+      let sceneBeforeAnimation = getters.sceneBeforeAnimation;
+      for (let mobjectName of (state.animationDiff['add'] || [])) {
+        if (sceneBeforeAnimation.includes(mobjectName)) {
+          return false;
+        }
+      }
+      for (let mobjectName of (state.animationDiff['remove'] || [])) {
+        if (!sceneBeforeAnimation.includes(mobjectName)) {
           return false;
         }
       }
