@@ -113,7 +113,7 @@
           <span class="title">Render</span>
         </v-btn>
       </div>
-      <DebugPanel v-bind:visible="debug"/>
+      <DebugPanel v-bind:visible="debug" v-bind:mobjects="mobjects"/>
     </div>
     <div id="visualization-placeholder">
       <div id="visualization">
@@ -304,7 +304,7 @@ export default {
         for (let mobjectName of Object.keys(this.initialMobjects)) {
           let data = _.cloneDeep(this.initialMobjects[mobjectName]);
           this.setMobjectField(data);
-          this.mobjects[mobjectName] = data;
+          this.$set(this.mobjects, mobjectName, data);
         }
         this.currentAnimation.animation = this.buildCurrentAnimation();
         this.$store.commit('updateDiffs', {
@@ -325,19 +325,19 @@ export default {
   },
   methods: {
     runManim: function() {
-      let scene = window.manimlib.get_scene(this.code, [this.chosenScene]);
+      let scene = window.manimlib.get_scene(this.code, ["GroupExample"]);
       scene.render();
-
-      // // Uncomment if using Groups
-      // console.log(scene.scene_list)
-      // console.log(scene.render_list)
-      // console.log(scene.mobject_dict)
-      // return;
 
       let mobjectIdsToNames = {};
       let mobjectIds = Object.keys(scene.mobject_dict);
       for (let i = 0; i < mobjectIds.length; i++) {
-        mobjectIdsToNames[mobjectIds[i]] = 'mobject' + (i + 1);
+        let id = mobjectIds[i];
+        let mobjectData = scene.mobject_dict[id];
+        if (!["Group", "Mobject"].includes(mobjectData.className)) {
+          mobjectIdsToNames[id] = 'mobject' + (i + 1);
+        } else {
+          mobjectIdsToNames[id] = 'group' + (i + 1);
+        }
       }
 
       // Assign human-readble names to scene list
@@ -403,14 +403,13 @@ export default {
           let fillOpacity = mobjectData.style.fillOpacity;
           mobjectData.style.fillColor = chroma(fillColor).alpha(fillOpacity).hex();
           delete mobjectData.style.fillOpacity;
+        } else {
+          let newSumbojects = mobjectData.submobjects.map(
+            id => mobjectIdsToNames[id]
+          );
+          mobjectData.submobjects = newSumbojects;
         }
         newMobjects[mobjectIdsToNames[id]] = mobjectData;
-      }
-      for (let mobjectName of Object.keys(newMobjects)) {
-        let data = newMobjects[mobjectName];
-        if (!["Group", "Mobject"].includes(data.className)) {
-          this.setMobjectField(data);
-        }
       }
 
       this.mobjects = newMobjects;
@@ -418,9 +417,26 @@ export default {
       this.setupDiffs = newSceneDiffs;
       this.animationIndex = 0;
       this.animationOffset = 0;
-
       this.scene.clear();
       this.scene.clearAnimation();
+
+      // Initialize mobjects
+      let groupNames = [];
+      for (let mobjectName of Object.keys(newMobjects)) {
+        let data = newMobjects[mobjectName];
+        if (!["Group", "Mobject"].includes(data.className)) {
+          this.setMobjectField(data);
+        } else {
+          groupNames.push(mobjectName);
+        }
+      }
+
+      // Initialize groups
+      for (let groupName of groupNames) {
+        let data = newMobjects[groupName];
+        this.setGroupField(data);
+      }
+
       this.currentAnimation.animation = this.buildCurrentAnimation();
       this.scene.update();
       this.$store.commit('updateDiffs', {
@@ -444,12 +460,19 @@ export default {
         this.displayCode = true;
       }
     },
-    setMobjectField: function(mobjectData) {
+    setMobjectField(mobjectData) {
       let s = new Manim[mobjectData.className]();
       s.translateMobject(mobjectData.position);
       s.applyStyle(mobjectData.style);
       mobjectData.mobject = s;
       return s;
+    },
+    setGroupField(groupData) {
+      let mobs = groupData.submobjects.map(
+        mobjectName => this.mobjects[mobjectName].mobject
+      );
+      let g = new Manim["Group"](mobs);
+      groupData.mobject = g;
     },
     pause: function() {
       this.scene.pause();

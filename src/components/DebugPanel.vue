@@ -1,23 +1,31 @@
 <template>
-  <div id="debug-container" class="title mt-5 pa-4" v-if="visible">
-    <div class="headline">Prior Scene</div>
-    <div id="prior-scene-container" class="mb-4"/>
+  <div id="debug-container" class="title d-flex mt-5 pa-4" v-if="visible">
+    <div class="mr-8">
+      <div class="headline">Prior Scene</div>
+      <div id="prior-scene-container" class="mb-4"/>
 
-    <div class="headline">
-      Scene Diff
-      <v-icon v-if="!$store.getters.sceneIsValid" color="red">
-        mdi-alert-circle
-      </v-icon>
-    </div>
-    <div id="scene-diff-container" class="mb-4"/>
+      <div class="headline">
+        Scene Diff
+        <v-icon v-if="!$store.getters.sceneIsValid" color="red">
+          mdi-alert-circle
+        </v-icon>
+      </div>
+      <div id="scene-diff-container" class="mb-4"/>
 
-    <div class="headline">
-      Animation Diff
-      <v-icon v-if="!$store.getters.animationIsValid" color="red">
-        mdi-alert-circle
-      </v-icon>
+      <div class="headline">
+        Animation Diff
+        <v-icon v-if="!$store.getters.animationIsValid" color="red">
+          mdi-alert-circle
+        </v-icon>
+      </div>
+      <div id="animation-diff-container"/>
     </div>
-    <div id="animation-diff-container"/>
+    <div>
+      <div class="headline">
+        Mobjects
+      </div>
+      <div id="mobject-container"/>
+    </div>
   </div>
 </template>
 
@@ -29,6 +37,7 @@ export default {
   name: 'DebugPanel',
   props: {
     visible: Boolean, 
+    mobjects: Object,
   },
   data() {
     return {
@@ -46,6 +55,7 @@ export default {
     this.updateJson("prior-scene-container", this.priorScene);
     this.updateJson("scene-diff-container", this.sceneDiff);
     this.updateJson("animation-diff-container", this.animationDiff);
+    this.updateJson("mobject-container", this.mobjects);
   },
   watch: {
     priorScene(newPriorScene) {
@@ -57,6 +67,9 @@ export default {
     animationDiff(newAnimationDiff) {
       this.updateJson("animation-diff-container", newAnimationDiff);
     },
+    mobjects(newMobjects) {
+      this.updateJson("mobject-container", newMobjects);
+    },
     visible(newlyVisible) {
       this.needsJsonUpdate = newlyVisible;
     }
@@ -66,6 +79,7 @@ export default {
       this.updateJson("prior-scene-container", this.priorScene);
       this.updateJson("scene-diff-container", this.sceneDiff);
       this.updateJson("animation-diff-container", this.animationDiff);
+      this.updateJson("mobject-container", this.mobjects);
       this.needsJsonUpdate = false;
     }
   },
