@@ -99,7 +99,15 @@
       >
         <v-progress-circular indeterminate/>
       </v-card>
-      <div class="d-flex justify-start mt-4 ml-auto">
+      <div class="d-flex justify-space-between mt-4" style="width:100%">
+        <div style="width:70%">
+          <v-select
+            v-bind:items="sceneChoices"
+            v-model="chosenScene"
+            label="Scene"
+            solo
+          ></v-select>
+        </div>
         <v-btn large v-if="displayCode" v-on:click="runManim">
           <v-icon class="headline black--text mr-2">mdi-cube-outline</v-icon>
           <span class="title">Render</span>
@@ -221,6 +229,8 @@ export default {
       displayCode: true,
       expandedPanel: [1],
       playingSingleAnimation: null,
+      sceneChoices: [],
+      chosenScene: "",
       scene: null,
       sceneLoaded: false,
       mobjectChoices: ["Circle", "Square", "Triangle", "Pentagon", "Star", "Hexagon", "StarOfDavid", "Octagon"],
@@ -308,13 +318,14 @@ export default {
           /*reverse=*/false,
           /*moveCursor=*/false,
         );
+        this.refreshSceneChoices();
         this.sceneLoaded = true;
       });
     });
   },
   methods: {
     runManim: function() {
-      let scene = window.manimlib.get_scene(this.code, ["SquareToCircle"]);
+      let scene = window.manimlib.get_scene(this.code, [this.chosenScene]);
       scene.render();
 
       // // Uncomment if using Groups
@@ -402,7 +413,6 @@ export default {
         }
       }
 
-      console.log(newMobjects);
       this.mobjects = newMobjects;
       this.animations = newAnimationList;
       this.setupDiffs = newSceneDiffs;
@@ -779,6 +789,9 @@ export default {
     },
     updateCode(newCode) {
       this.code = newCode;
+    },
+    refreshSceneChoices() {
+      this.sceneChoices = window.manimlib.get_scene_choices(this.code);
     }
   },
 }
