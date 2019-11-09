@@ -434,7 +434,7 @@ export default {
       // Initialize groups
       for (let groupName of groupNames) {
         let data = newMobjects[groupName];
-        this.setGroupField(data);
+        this.setMobjectField(data);
       }
 
       this.currentAnimation.animation = this.buildCurrentAnimation();
@@ -451,7 +451,7 @@ export default {
         /*reverse=*/false,
         /*moveCursor=*/false,
       );
-      this.play(null, /*singleAnimationOnly=*/false);
+      // this.play(null, /*singleAnimationOnly=*/false);
     },
     toggleCode() {
       if (this.displayCode) {
@@ -461,18 +461,19 @@ export default {
       }
     },
     setMobjectField(mobjectData) {
-      let s = new Manim[mobjectData.className]();
-      s.translateMobject(mobjectData.position);
-      s.applyStyle(mobjectData.style);
-      mobjectData.mobject = s;
-      return s;
-    },
-    setGroupField(groupData) {
-      let mobs = groupData.submobjects.map(
-        mobjectName => this.mobjects[mobjectName].mobject
-      );
-      let g = new Manim["Group"](mobs);
-      groupData.mobject = g;
+      if (!["Group", "Mobject"].includes(mobjectData.className)) {
+        let s = new Manim[mobjectData.className](mobjectData.params);
+        s.translateMobject(mobjectData.position);
+        s.applyStyle(mobjectData.style);
+        mobjectData.mobject = s;
+        return s;
+      } else {
+        let mobs = mobjectData.submobjects.map(
+          mobjectName => this.mobjects[mobjectName].mobject
+        );
+        let g = new Manim["Group"](mobs);
+        mobjectData.mobject = g;
+      }
     },
     pause: function() {
       this.scene.pause();

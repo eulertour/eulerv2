@@ -1,7 +1,8 @@
-import * as Two from '../node_modules/two.js/build/two.js';
-import * as consts from './constants.js';
-import * as utils from './utils.js';
-import chroma from 'chroma-js';
+import * as Two from 'two.js/build/two.js'
+import * as consts from './constants.js'
+import * as utils from './utils.js'
+import chroma from 'chroma-js'
+import * as _ from 'lodash'
 import {
   Animation,
   Wait,
@@ -61,12 +62,62 @@ class Group extends Two.Group {
   alignData(other) {
     this.nullPointAlign(other);
     this.alignSubmobjects(other);
-    this.alignPoints(other);
+    // this.alignPoints(other);
+    // this.submobjects().forEach(
+    //   (mob, i) => mob.alignData(other.submobjects()[i])
+    // );
   }
 
   nullPointAlign(/*other*/) {
     // eslint-disable-next-line
     console.log('Mobject.nullPointAlign not implemented');
+  }
+
+  applyStyle(style) {
+    let combinedStyle = this.getFullStyle(style);
+    this.stroke = combinedStyle.strokeColor;
+    this.fill = combinedStyle.fillColor;
+    this.linewidth = combinedStyle.strokeWidth / 100;
+    return this;
+  }
+
+  getFullStyle(style) {
+    return Object.assign(Object.assign({}, DEFAULT_STYLE), style);
+  }
+
+  getStyleDict() {
+    return {
+      strokeColor: chroma(this.stroke).hex(),
+      fillColor: chroma(this.fill).hex(),
+      strokeWidth: this.linewidth * 100,
+    };
+  }
+
+  normalizeToCanvas(
+    canvasWidth=640,
+    canvasHeight=360,
+    /*sceneWidth=consts.FRAME_WIDTH,*/
+    sceneHeight=consts.FRAME_HEIGHT,
+  ) {
+    this.children[0].matrix.manual = true;
+    this.children[0].matrix.identity()
+                    .translate(canvasWidth / 2, canvasHeight / 2)
+                    .scale(canvasHeight / sceneHeight)
+                    .multiply(
+                      1,  0, 0, /* reflect over +x axis */
+                      0, -1, 0,
+                      0,  0, 1,
+                    );
+  }
+
+  suspendUpdating(recursive=true) {
+    this.updatingSuspended = true;
+    if (recursive) {
+      for (let submob of this.children.slice(1)) {
+        submob.suspendUpdating(recursive);
+      }
+    }
+    return this;
   }
 
   alignPoints(other) {
@@ -190,9 +241,59 @@ class Group extends Two.Group {
     );
   }
 
-  addSubmobjects(/*numSubmobjects*/) {
-    // eslint-disable-next-line
-    console.log('Mobject.addSubmobjects not implemented');
+  addSubmobjects(n) {
+    let np = window.pyodide.pyimport("numpy");
+    let currentNumSubmobjects = this.submobjects().length;
+    if (currentNumSubmobjects === 0) {
+      // If empty, simply add n point mobjects
+      for (let i = 0; i < n; i++) {
+        this.add(this.getPointMobject());
+      }
+    }
+    let target = currentNumSubmobjects + n;
+    let repeatIndices = np.arange(target).map(
+      x => Math.floor(x * currentNumSubmobjects / target)
+    );
+    let splitFactors = [];
+    for (let i = 0; i < currentNumSubmobjects; i++) {
+      splitFactors.push(repeatIndices.filter(x => x === i).length);
+    }
+    let newSubmobjects = [];
+    for (let i = 0; i < this.submobjects().length; i++) {
+
+      // Find a way to clone mobjects
+      console.log(this.submobjects()[i].getStyleDict());
+      console.log(this.submobjects()[i].clone().getStyleDict());
+
+      let submob = this.submobjects()[i].clone();
+      let sf = splitFactors[i];
+      newSubmobjects.push(submob);
+      for (let j = 1; j < sf; j++) {
+        let copy = _.cloneDeep(submob);
+        // don't do this
+        // copy.opacity = 0;
+        let oldStyle = copy.getStyleDict();
+        copy.applyStyle({
+          strokeColor: chroma(oldStyle.strokeColor).alpha(0).hex(),
+          fillColor: chroma(oldStyle.fillColor).alpha(0).hex(),
+        });
+        newSubmobjects.push(copy);
+      }
+    }
+    // This causes the mobject to vanish
+    // this.children = _.concat([this.children[0]], newSubmobjects);
+    this.add(newSubmobjects[0]);
+    this.add(newSubmobjects[1]);
+    // console.log(newSubmobjects[0].getStyleDict());
+    // console.log(newSubmobjects[1].getStyleDict());
+    // console.log(this.submobjects());
+    // console.log(newSubmobjects[0].opacity);
+    // console.log(newSubmobjects[1].opacity);
+  }
+
+  getPointMobject() {
+    let center = this.getPointCenter();
+    return utils.pathFromAnchors([center], [center], [center]);
   }
 
   submobjects() {
@@ -211,11 +312,13 @@ class Group extends Two.Group {
         xMax = -Infinity,
         yMin =  Infinity,
         yMax = -Infinity;
-    this.points().forEach(p => {
-      xMin = Math.min(xMin, p.x);
-      xMax = Math.max(xMax, p.x);
-      yMin = Math.min(yMin, p.y);
-      yMax = Math.max(yMax, p.y);
+    this.getMobjectHeirarchy().forEach(submob => {
+      submob.points().forEach(p => {
+        xMin = Math.min(xMin, p.x);
+        xMax = Math.max(xMax, p.x);
+        yMin = Math.min(yMin, p.y);
+        yMax = Math.max(yMax, p.y);
+      });
     });
     return [(xMax + xMin) / 2, (yMax + yMin) / 2];
   }
@@ -239,12 +342,12 @@ class Group extends Two.Group {
     return ret;
   }
 
-  getFamily() {
-    // A family is a mobject together with all of its submobjects, recursively
-    // def get_family(self):
-    //     sub_families = list(map(Mobject.get_family, self.submobjects))
-    //     all_mobjects = [self] + list(it.chain(*sub_families))
-    //     return remove_list_redundancies(all_mobjects)
+  getMobjectHeirarchy() {
+    let ret = [this];
+    this.submobjects().forEach(submob =>
+      ret.push(...submob.getMobjectHeirarchy())
+    );
+    return utils.removeListRedundancies(ret);
   }
 
   interpolate(mobject1, mobject2, alpha) {
@@ -262,11 +365,11 @@ class Group extends Two.Group {
     let style = {};
     let style1 = mobject1.getStyleDict();
     let style2 = mobject2.getStyleDict();
+
     style['strokeColor']   = chroma.scale([style1.strokeColor, style2.strokeColor])(alpha);
-    style['strokeOpacity'] = utils.interpolate(style1.strokeOpacity, style2.strokeOpacity, alpha);
     style['strokeWidth']   = utils.interpolate(style1.strokeWidth, style2.strokeWidth, alpha);
     style['fillColor']     = chroma.scale([style1.fillColor, style2.fillColor])(alpha);
-    style['fillOpacity']   = utils.interpolate(style1.fillOpacity, style2.fillOpacity, alpha);
+
     this.applyStyle(style);
   }
 }
@@ -281,63 +384,16 @@ class Mobject extends Group {
     this.normalizeToCanvas();
     this.applyStyle(style);
   }
-
-  applyStyle(style) {
-    let combinedStyle = this.getFullStyle(style);
-    this.stroke = combinedStyle.strokeColor;
-    this.fill = combinedStyle.fillColor;
-    this.linewidth = combinedStyle.strokeWidth / 100;
-    return this;
-  }
-
-  getFullStyle(style) {
-    return Object.assign(Object.assign({}, DEFAULT_STYLE), style);
-  }
-
-  getStyleDict() {
-    return {
-      strokeColor: this.stroke,
-      fillColor: this.fill,
-      strokeWidth: this.linewidth * 100,
-    };
-  }
-
-  normalizeToCanvas(
-    canvasWidth=640,
-    canvasHeight=360,
-    /*sceneWidth=consts.FRAME_WIDTH,*/
-    sceneHeight=consts.FRAME_HEIGHT,
-  ) {
-    this.children[0].matrix.manual = true;
-    this.children[0].matrix.identity()
-                    .translate(canvasWidth / 2, canvasHeight / 2)
-                    .scale(canvasHeight / sceneHeight)
-                    .multiply(
-                      1,  0, 0, /* reflect over +x axis */
-                      0, -1, 0,
-                      0,  0, 1,
-                    );
-  }
-
-  suspendUpdating(recursive=true) {
-    this.updatingSuspended = true;
-    if (recursive) {
-      for (let submob of this.children.slice(1)) {
-        submob.suspendUpdating(recursive);
-      }
-    }
-    return this;
-  }
 }
 
 class Arc extends Mobject {
-  constructor(
+  constructor({
     startAngle=0,
     angle=consts.TAU / 4,
     radius=1.0,
     numComponents=9,
     style={},
-  ) {
+  }={}) {
     let np = window.pyodide.pyimport("numpy");
     let anchors = Array.from(np.linspace(
       startAngle,
@@ -382,12 +438,19 @@ class Arc extends Mobject {
 }
 
 class Circle extends Arc {
-  constructor(
+  constructor({
     radius=1.0,
     style={strokeColor: consts.RED}
-  ) {
-    super(0, consts.TAU, radius, /*numComponents=*/9, style);
+  }={}) {
+    super({
+      startAngle: 0,
+      angle: consts.TAU,
+      radius: radius,
+      numComponents: 9,
+      style: style,
+    });
     this.radius=radius;
+    this.style=style;
   }
 }
 
@@ -402,11 +465,11 @@ class Polygon extends Mobject {
 }
 
 class RegularPolygon extends Polygon {
-  constructor(
+  constructor({
     numSides=3,
     height=2,
     style={},
-  ) {
+  }={}) {
     let np = window.pyodide.pyimport("numpy");
     let vertices = [];
     let angle;
@@ -432,12 +495,12 @@ class RegularPolygon extends Polygon {
 }
 
 class Star extends Polygon {
-  constructor(
+  constructor({
     numPoints=5,
     height=2,
     ratio=0.5,
     style={}
-  ) {
+  }={}) {
     let np = window.pyodide.pyimport("numpy");
     let vertices = [];
     let angle;
@@ -462,52 +525,78 @@ class Star extends Polygon {
 }
 
 class StarOfDavid extends Star {
-  constructor(
+  constructor({
     height=2,
     ratio=1/Math.sqrt(3),
-    style={strokeColor: consts.GREEN}) {
-    super(6, height, ratio, style);
+    style={strokeColor: consts.GREEN}
+  }={}) {
+    super({
+      numPoints: 6,
+      height: height,
+      ratio: ratio,
+      style: style,
+    });
   }
 }
 
 class Triangle extends RegularPolygon {
-  constructor(
+  constructor({
     height=2,
-    style={strokeColor: consts.GREEN}) {
-    super(3, height, style);
+    style={strokeColor: consts.GREEN}
+  }={}) {
+    super({
+      numSides:3,
+      height:height,
+      style:style,
+    });
   }
 }
 
 class Pentagon extends RegularPolygon {
-  constructor(
+  constructor({
     height=2,
-    style={strokeColor: consts.GREEN}) {
-    super(5, height, style);
+    style={strokeColor: consts.GREEN}
+  }={}) {
+    super({
+      numSides:5,
+      height:height,
+      style:style,
+    });
   }
 }
 
 class Hexagon extends RegularPolygon {
-  constructor(
+  constructor({
     height=2,
-    style={strokeColor: consts.GREEN}) {
-    super(6, height, style);
+    style={strokeColor: consts.GREEN}
+  }={}) {
+    super({
+      numSides:6,
+      height:height,
+      style:style,
+    });
   }
 }
 
 class Octagon extends RegularPolygon {
-  constructor(
+  constructor({
     height=2,
-    style={strokeColor: consts.GREEN}) {
-    super(8, height, style);
+    style={strokeColor: consts.GREEN}
+  }={}) {
+    super({
+      numSides:8,
+      height:height,
+      style:style,
+    });
   }
 }
 
 class Rectangle extends Polygon {
-  constructor(
-    width=4.0,
+  constructor({
     height=2.0,
+    width=4.0,
     style={strokeColor: consts.WHITE}
-  ) {
+  }={}) {
     let halfWidth = width / 2;
     let halfHeight = height / 2;
     super(
@@ -524,10 +613,11 @@ class Rectangle extends Polygon {
 }
 
 class Square extends RegularPolygon {
-  constructor(
-    height=2,
-    style={strokeColor: consts.GREEN}) {
-    super(4, height, style);
+  constructor({
+    sideLength=2.0,
+    style={strokeColor: consts.GREEN}
+  }={}) {
+    super({numSides:4, height:sideLength, style:style});
   }
 }
 

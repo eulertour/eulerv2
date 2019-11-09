@@ -184,3 +184,7 @@ export function smooth(t, inflection=10) {
     1,
   );
 }
+
+export function removeListRedundancies(l) {
+  return l;
+}

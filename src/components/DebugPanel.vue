@@ -1,5 +1,5 @@
 <template>
-  <div id="debug-container" class="title d-flex mt-5 pa-4" v-if="visible">
+  <div id="debug-container" class="title d-flex align-self-end mt-5 pa-4" v-if="visible">
     <div class="mr-8">
       <div class="headline">Prior Scene</div>
       <div id="prior-scene-container" class="mb-4"/>
@@ -97,7 +97,7 @@ export default {
 
 <style>
 #debug-container {
-  width: 100%;
+  width: 700px;
   border: 1px solid black;
 }
 </style>

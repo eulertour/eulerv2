@@ -1,24 +1,22 @@
 import * as utils from './utils.js';
 import * as _ from 'lodash';
-import chroma from 'chroma-js';
 
 class Animation {
   constructor(
     mobject,
     rateFunc=utils.smooth,
-    removeWhenFinished=false,
     /* suspendMobjectUpdating=true, */
   ) {
     this.mobject = mobject;
     this.rateFunc = rateFunc;
-    this.removeWhenFinished = removeWhenFinished;
   }
 
+  /* This is called right as an animation is being
+   * played.  As much initialization as possible,
+   * especially any mobject copying, should live in
+   * this method.
+   */
   begin() {
-    // This is called right as an animation is being
-    // played.  As much initialization as possible,
-    // especially any mobject copying, should live in
-    // this method
     this.startingMobject = this.createStartingMobject();
     if (this.suspendMobjectUpdating) {
       // All calls to self.mobject's internal updaters
@@ -32,7 +30,15 @@ class Animation {
     this.interpolate(0);
   }
 
-  getFamily() {
+  /* On each frame of the Animation, each Mobject in the top-level Mobject's
+   * heirarchy will be passed to interpolateSubmobject. Depending on the
+   * Animation, the Mobjects may be passed together with some other Mobjects
+   * which will serve to parameterize the interpolation. For each parameterizing
+   * Mobject, the Animation must provide a "copy" Mobject with whose heirarchy
+   * is one-to-one with that of its input Mobject. These copies will be
+   * decomposed into the arguments to interpolateSubmobject.
+   */
+  getCopiesForInterpolation() {
     return [this.mobject];
   }
 
@@ -46,31 +52,41 @@ class Animation {
   }
 
   interpolateMobject(alpha) {
-    // let families = this.getAllFamiliesZipped();
-    // this.interpolateSubmobject
-    // this.mobject.translateMobject([0.1, 0]);
-    let family = this.getFamily();
-    this.interpolateSubmobject(alpha, ...family);
-  }
-
-  // for each submobject in the animation, return a list
-  // [submob, starting_sumobject, [target_submobject ...]]
-  getAllFamiliesZipped() {
-    let familiesList = [];
-    let allMobjects = this.getAllMobjects();
-    for (let i = 0; i < allMobjects.length; i++) {
-      familiesList.push(allMobjects[i].familyMembersWithPoints());
+    /* A list of arguments to interpolateSubmobject() for each Mobject in the
+     * heirarchy which contains a top-level path (i.e. those that don't function
+     * only as Groups).
+     */
+    let interpolateSubmobjectArgs = this.getAllArgsToInterpolateSubmobject();
+    for (let args of interpolateSubmobjectArgs) {
+      this.interpolateSubmobject(alpha, ...args);
     }
-    /* zip familiesList and return it */
-    // return zip(*[
-    //     mob.family_members_with_points()
-    //     for mob in self.get_all_mobjects()
-    // ])
   }
 
-  getAllMobjects() {
-    // Ordering must match the ording of arguments to interpolateSubmobject
-    return [this.mobject, this.startingMobject];
+  /* For each Mobject which is in the heirarchy of the one being animated and
+   * has points, returns a list containing the Mobject along with any
+   * parameterizing Mobjects necessary to interpolate it. Each of these lists
+   * will have their Mobjects passed to interpolateSubmobject. For Transforms
+   * this will be
+   * [
+   *   [submob1, starting_sumobject1, target_submobject1],
+   *   [submob2, starting_sumobject2, target_submobject2],
+   *   [submob3, starting_sumobject3, target_submobject3],
+   * ]
+   */
+  getAllArgsToInterpolateSubmobject() {
+    let mobjectHeirarchies = [];
+    for (let mobjectCopy of this.getCopiesForInterpolation()) {
+      let heirarchy = mobjectCopy.getMobjectHeirarchy();
+      let heirarchyMembersWithPoints = heirarchy.filter(
+        submob => submob.points().length > 0
+      );
+      mobjectHeirarchies.push(heirarchyMembersWithPoints);
+    }
+    let argsList = [];
+    for (let i = 0; i < mobjectHeirarchies[0].length; i++) {
+      argsList.push(mobjectHeirarchies.map(h => h[i]));
+    }
+    return argsList;
   }
 
   isFinished(alpha) {
@@ -92,27 +108,20 @@ class ReplacementTransform extends Animation {
     // Use a copy of target_mobject for the align_data
     // call so that the actual target_mobject stays
     // preserved.
-    this.targetMobject = this.createTarget();
     this.targetCopy = _.cloneDeep(this.targetMobject);
     // Note, this potentially changes the structure
     // of both mobject and target_mobject
-
-    // this should be printing 32 points (take out the last path)
     this.mobject.alignData(this.targetCopy);
-
     Animation.prototype.begin.call(this)
   }
 
-  createTarget() {
-    return this.targetMobject;
-  }
-
-  getFamily() {
+  getCopiesForInterpolation() {
     return [this.mobject, this.startingMobject, this.targetCopy];
   }
 
   interpolateSubmobject(alpha, submob, start, targetCopy) {
-    submob.interpolate(start, targetCopy, alpha);
+    // Mobjects duplicated in begin() have vanished at this point
+    // submob.interpolate(start, targetCopy, alpha);
   }
 
   static getDiff(mobject, targetMobject) {
@@ -136,30 +145,8 @@ class ShowCreation extends Animation {
 }
 
 class FadeIn extends Animation {
-  begin() {
-    // Since the mobject's opacity will change over the course of the animation,
-    // we check the mobject's initial style so that we can determine the range
-    // of interpolation later.
-    let style = this.mobject.getStyleDict();
-    this.finalStrokeOpacity = chroma(style['strokeColor']).alpha();
-    this.finalFillOpacity = chroma(style['fillColor']).alpha();
-  }
-
-  interpolateSubmobject(alpha, submob) {
-    let style = submob.getStyleDict();
-    let strokeOpacity = alpha * this.finalStrokeOpacity;
-    let fillOpacity = alpha * this.finalFillOpacity;
-    style['strokeColor'] = chroma(style['strokeColor']).alpha(strokeOpacity).hex();
-    style['fillColor'] = chroma(style['fillColor']).alpha(fillOpacity).hex();
-    submob.applyStyle(style);
-  }
-
-  createStartingMobject() {
-    let mob = Animation.prototype.createStartingMobject.call(this)
-    let style = mob.getStyleDict();
-    style['strokeOpacity'] = 0;
-    style['fillOpacity'] = 0;
-    return mob.applyStyle(style);
+  interpolateMobject(alpha) {
+    this.mobject.opacity = alpha;
   }
 
   static getDiff(mobject) {
@@ -170,23 +157,8 @@ class FadeIn extends Animation {
 }
 
 class FadeOut extends Animation {
-  begin() {
-    // Since the mobject's opacity will change over the course of the animation,
-    // we check the mobject's initial style so that we can determine the range
-    // of interpolation later.
-    let style = this.mobject.getStyleDict();
-    this.initialStrokeOpacity = chroma(style['strokeColor']).alpha();
-    this.initialFillOpacity = chroma(style['fillColor']).alpha();
-  }
-
-
-  interpolateSubmobject(alpha, submob) {
-    let style = submob.getStyleDict();
-    let strokeOpacity = (1 - alpha) * this.initialStrokeOpacity;
-    let fillOpacity = (1 - alpha) * this.initialFillOpacity;
-    style['strokeColor'] = chroma(style['strokeColor']).alpha(strokeOpacity).hex();
-    style['fillColor'] = chroma(style['fillColor']).alpha(fillOpacity).hex();
-    submob.applyStyle(style);
+  interpolateMobject(alpha) {
+    this.mobject.opacity = 1 - alpha;
   }
 
   static getDiff(mobject) {
@@ -197,9 +169,7 @@ class FadeOut extends Animation {
 }
 
 class Wait extends Animation {
-  interpolateSubmobject() {
-    // do nothing
-  }
+  interpolateMobject() {}
 
   static getDiff() {
     return {};
