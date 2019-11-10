@@ -73,6 +73,95 @@ class Group extends Two.Group {
     console.log('Mobject.nullPointAlign not implemented');
   }
 
+  alignSubmobjects(other) {
+    if (this.submobjects().length === other.submobjects().length) {
+      return;
+    }
+
+    let fewer, more;
+    if (this.submobjects().length < other.submobjects().length) {
+      fewer = this;
+      more = other;
+    } else {
+      fewer = other;
+      more = this;
+    }
+    fewer.addSubmobjects(
+      more.submobjects().length - fewer.submobjects().length
+    );
+  }
+
+  addSubmobjects(n) {
+    let np = window.pyodide.pyimport("numpy");
+    let currentNumSubmobjects = this.submobjects().length;
+    if (currentNumSubmobjects === 0) {
+      // TODO: this is probably buggy
+      // If empty, simply add n point mobjects
+      for (let i = 0; i < n; i++) {
+        this.add(this.getPointMobject());
+      }
+      return;
+    }
+    let target = currentNumSubmobjects + n;
+    let repeatIndices = np.arange(target).map(
+      x => Math.floor(x * currentNumSubmobjects / target)
+    );
+    let splitFactors = [];
+    for (let i = 0; i < currentNumSubmobjects; i++) {
+      splitFactors.push(repeatIndices.filter(x => x === i).length);
+    }
+    let newSubmobjects = [];
+    for (let i = 0; i < this.submobjects().length; i++) {
+      let sf = splitFactors[i];
+      let submob = this.submobjects()[i].clone();
+      newSubmobjects.push(submob);
+      for (let j = 0; j < sf - 1; j++) {
+        let submob = this.submobjects()[i].clone();
+        let oldStyle = this.submobjects()[i].getStyleDict();
+        submob.applyStyle({
+          strokeColor: chroma(oldStyle.strokeColor).alpha(0).hex(),
+          fillColor: chroma(oldStyle.fillColor).alpha(0).hex(),
+        });
+        newSubmobjects.push(submob);
+      }
+    }
+    this.children = _.concat([this.children[0]], newSubmobjects);
+  }
+
+  alignPoints(other) {
+    if (this.points().length === other.points().length) {
+      return;
+    }
+
+    for (let mob of [this, other]) {
+      // If there are no points, add one to
+      // wherever the "center" is
+      if (mob.points().length === 0) {
+        let center = this.getPixelCenter();
+        mob.points().push(new Two.Anchor(
+          center[0], center[1],
+          center[0], center[1],
+          center[0], center[1],
+          'C',
+        ));
+      }
+    }
+
+    let fewer, more;
+    if (this.points().length < other.points().length) {
+      fewer = this;
+      more = other;
+    } else {
+      fewer = other;
+      more = this;
+    }
+    let newPoints = fewer.addPoints(
+      more.points().length - fewer.points().length
+    );
+
+    fewer.setAnchorsFromPoints(newPoints);
+  }
+
   applyStyle(style) {
     let combinedStyle = this.getFullStyle(style);
     this.stroke = combinedStyle.strokeColor;
@@ -118,40 +207,6 @@ class Group extends Two.Group {
       }
     }
     return this;
-  }
-
-  alignPoints(other) {
-    if (this.points().length === other.points().length) {
-      return;
-    }
-
-    for (let mob of [this, other]) {
-      // If there are no points, add one to
-      // wherever the "center" is
-      if (mob.points().length === 0) {
-        let center = this.getPixelCenter();
-        mob.points().push(new Two.Anchor(
-          center[0], center[1],
-          center[0], center[1],
-          center[0], center[1],
-          'C',
-        ));
-      }
-    }
-
-    let fewer, more;
-    if (this.points().length < other.points().length) {
-      fewer = this;
-      more = other;
-    } else {
-      fewer = other;
-      more = this;
-    }
-    let newPoints = fewer.addPoints(
-      more.points().length - fewer.points().length
-    );
-
-    fewer.setAnchorsFromPoints(newPoints);
   }
 
   setAnchorsFromPoints(points) {
@@ -223,74 +278,13 @@ class Group extends Two.Group {
     return newPoints;
   }
 
-  alignSubmobjects(other) {
-    if (this.submobjects().length === other.submobjects().length) {
-      return;
-    }
-
-    let fewer, more;
-    if (this.submobjects().length < other.submobjects().length) {
-      fewer = this;
-      more = other;
-    } else {
-      fewer = other;
-      more = this;
-    }
-    fewer.addSubmobjects(
-      more.submobjects().length - fewer.submobjects().length
-    );
-  }
-
-  addSubmobjects(n) {
-    let np = window.pyodide.pyimport("numpy");
-    let currentNumSubmobjects = this.submobjects().length;
-    if (currentNumSubmobjects === 0) {
-      // TODO: this is probably buggy
-      // If empty, simply add n point mobjects
-      for (let i = 0; i < n; i++) {
-        this.add(this.getPointMobject());
-      }
-      return;
-    }
-    let target = currentNumSubmobjects + n;
-    let repeatIndices = np.arange(target).map(
-      x => Math.floor(x * currentNumSubmobjects / target)
-    );
-    let splitFactors = [];
-    for (let i = 0; i < currentNumSubmobjects; i++) {
-      splitFactors.push(repeatIndices.filter(x => x === i).length);
-    }
-    let newSubmobjects = [];
-    for (let i = 0; i < this.submobjects().length; i++) {
-
-      // Find a way to clone mobjects
-      console.log(this.submobjects()[i].getStyleDict());
-      console.log(this.submobjects()[i].clone().getStyleDict());
-
-      let submob = this.submobjects()[i].clone();
-      let sf = splitFactors[i];
-      newSubmobjects.push(submob);
-      for (let j = 1; j < sf; j++) {
-        let copy = _.cloneDeep(submob);
-        // don't do this
-        // copy.opacity = 0;
-        let oldStyle = copy.getStyleDict();
-        copy.applyStyle({
-          strokeColor: chroma(oldStyle.strokeColor).alpha(0).hex(),
-          fillColor: chroma(oldStyle.fillColor).alpha(0).hex(),
-        });
-        newSubmobjects.push(copy);
-      }
-    }
-    // This causes the mobject to vanish
-    // this.children = _.concat([this.children[0]], newSubmobjects);
-    this.add(newSubmobjects[0]);
-    this.add(newSubmobjects[1]);
-  }
-
   getPointMobject() {
     let center = this.getPointCenter();
     return new Mobject(utils.pathFromAnchors([center], [center], [center]));
+  }
+
+  path() {
+    return this.children[0];
   }
 
   submobjects() {
@@ -446,8 +440,14 @@ class Circle extends Arc {
       numComponents: 9,
       style: style,
     });
-    this.radius=radius;
-    this.style=style;
+    this.radius = radius;
+  }
+
+  clone() {
+    let ret = new Circle();
+    ret.children[0] = this.path().clone();
+    ret.radius = this.radius;
+    return ret;
   }
 }
 
@@ -590,9 +590,9 @@ class Octagon extends RegularPolygon {
 
 class Rectangle extends Polygon {
   constructor({
-    height=2.0,
-    width=4.0,
-    style={strokeColor: consts.WHITE}
+    height = 2.0,
+    width = 4.0,
+    style = {strokeColor: consts.WHITE}
   }={}) {
     let halfWidth = width / 2;
     let halfHeight = height / 2;
@@ -604,8 +604,8 @@ class Rectangle extends Polygon {
       style,
     );
 
-    this.width=width;
-    this.height=height;
+    this.width = width;
+    this.height = height;
   }
 }
 
@@ -614,7 +614,19 @@ class Square extends RegularPolygon {
     sideLength=2.0,
     style={strokeColor: consts.GREEN}
   }={}) {
-    super({numSides:4, height:sideLength, style:style});
+    super({
+      numSides: 4,
+      height: sideLength,
+      style: style,
+    });
+    this.sideLength = sideLength;
+  }
+
+  clone() {
+    let ret = new Square();
+    ret.children[0] = this.path().clone();
+    ret.sideLength = this.sideLength;
+    return ret;
   }
 }
 

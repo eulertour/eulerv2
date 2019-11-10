@@ -105,12 +105,12 @@ class ReplacementTransform extends Animation {
   }
 
   begin() {
-    // Use a copy of target_mobject for the align_data
-    // call so that the actual target_mobject stays
+    // Use a copy of targetMobject for the alignData
+    // call so that the actual targetMobject is
     // preserved.
     this.targetCopy = _.cloneDeep(this.targetMobject);
     // Note, this potentially changes the structure
-    // of both mobject and target_mobject
+    // of both this.mobject and this.targetMobject
     this.mobject.alignData(this.targetCopy);
     Animation.prototype.begin.call(this)
   }
