@@ -99,7 +99,7 @@
       >
         <v-progress-circular indeterminate/>
       </v-card>
-      <div class="d-flex justify-space-between mt-4" style="width:100%">
+      <div v-if="displayCode" class="d-flex justify-space-between mt-4" style="width:100%">
         <div style="width:70%">
           <v-select
             v-bind:items="sceneChoices"
@@ -108,7 +108,7 @@
             solo
           ></v-select>
         </div>
-        <v-btn large v-if="displayCode" v-on:click="runManim">
+        <v-btn large v-on:click="runManim">
           <v-icon class="headline black--text mr-2">mdi-cube-outline</v-icon>
           <span class="title">Render</span>
         </v-btn>
@@ -230,7 +230,7 @@ export default {
       expandedPanel: [1],
       playingSingleAnimation: null,
       sceneChoices: [],
-      chosenScene: "",
+      chosenScene: "SquareToCircle",
       scene: null,
       sceneLoaded: false,
       mobjectChoices: ["Circle", "Square", "Triangle", "Pentagon", "Star", "Hexagon", "StarOfDavid", "Octagon"],
@@ -325,7 +325,7 @@ export default {
   },
   methods: {
     runManim: function() {
-      let scene = window.manimlib.get_scene(this.code, ["GroupExample"]);
+      let scene = window.manimlib.get_scene(this.code, [this.chosenScene]);
       scene.render();
 
       let mobjectIdsToNames = {};

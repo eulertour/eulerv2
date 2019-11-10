@@ -62,10 +62,10 @@ class Group extends Two.Group {
   alignData(other) {
     this.nullPointAlign(other);
     this.alignSubmobjects(other);
-    // this.alignPoints(other);
-    // this.submobjects().forEach(
-    //   (mob, i) => mob.alignData(other.submobjects()[i])
-    // );
+    this.alignPoints(other);
+    this.submobjects().forEach(
+      (mob, i) => mob.alignData(other.submobjects()[i])
+    );
   }
 
   nullPointAlign(/*other*/) {
@@ -245,10 +245,12 @@ class Group extends Two.Group {
     let np = window.pyodide.pyimport("numpy");
     let currentNumSubmobjects = this.submobjects().length;
     if (currentNumSubmobjects === 0) {
+      // TODO: this is probably buggy
       // If empty, simply add n point mobjects
       for (let i = 0; i < n; i++) {
         this.add(this.getPointMobject());
       }
+      return;
     }
     let target = currentNumSubmobjects + n;
     let repeatIndices = np.arange(target).map(
@@ -284,16 +286,11 @@ class Group extends Two.Group {
     // this.children = _.concat([this.children[0]], newSubmobjects);
     this.add(newSubmobjects[0]);
     this.add(newSubmobjects[1]);
-    // console.log(newSubmobjects[0].getStyleDict());
-    // console.log(newSubmobjects[1].getStyleDict());
-    // console.log(this.submobjects());
-    // console.log(newSubmobjects[0].opacity);
-    // console.log(newSubmobjects[1].opacity);
   }
 
   getPointMobject() {
     let center = this.getPointCenter();
-    return utils.pathFromAnchors([center], [center], [center]);
+    return new Mobject(utils.pathFromAnchors([center], [center], [center]));
   }
 
   submobjects() {
