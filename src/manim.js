@@ -125,7 +125,8 @@ class Group extends Two.Group {
         newSubmobjects.push(submob);
       }
     }
-    this.children = _.concat([this.children[0]], newSubmobjects);
+    this.remove(this.submobjects());
+    this.add(newSubmobjects);
   }
 
   alignPoints(other) {
@@ -446,6 +447,7 @@ class Circle extends Arc {
   clone() {
     let ret = new Circle();
     ret.children[0] = this.path().clone();
+    ret.children[0].matrix = _.cloneDeep(this.path().matrix);
     ret.radius = this.radius;
     return ret;
   }
@@ -625,6 +627,7 @@ class Square extends RegularPolygon {
   clone() {
     let ret = new Square();
     ret.children[0] = this.path().clone();
+    ret.children[0].matrix = _.cloneDeep(this.path().matrix);
     ret.sideLength = this.sideLength;
     return ret;
   }
