@@ -2,7 +2,6 @@ import * as Two from 'two.js/build/two.js'
 import * as consts from './constants.js'
 import * as utils from './utils.js'
 import chroma from 'chroma-js'
-import * as _ from 'lodash'
 import {
   Animation,
   Wait,
@@ -444,13 +443,39 @@ class Circle extends Arc {
     this.radius = radius;
   }
 
-  clone() {
-    let ret = new Circle({
+  clone(parent) {
+    let clone = new Circle({
       radius: this.radius,
       style: this.getStyleDict(),
     });
-    ret.children[0] = this.path().clone();
-    return ret;
+
+    let children = Two.Utils.map(this.children, function(child) {
+      return child.clone();
+    });
+
+    clone.remove(clone.children);
+    clone.add(children);
+
+    clone.opacity = this.opacity;
+
+    if (this.mask) {
+      clone.mask = this.mask;
+    }
+
+    clone.translation.copy(this.translation);
+    clone.rotation = this.rotation;
+    clone.scale = this.scale;
+    clone.className = this.className;
+
+    if (this.matrix.manual) {
+      clone.matrix.copy(this.matrix);
+    }
+
+    if (parent) {
+      parent.add(clone);
+    }
+
+    return clone._update();
   }
 }
 
@@ -625,13 +650,39 @@ class Square extends RegularPolygon {
     this.sideLength = sideLength;
   }
 
-  clone() {
-    let ret = new Square({
+  clone(parent) {
+    let clone = new Square({
       sideLength: this.sideLength,
       style: this.getStyleDict(),
     });
-    ret.children[0] = this.path().clone();
-    return ret;
+
+    let children = Two.Utils.map(this.children, function(child) {
+      return child.clone();
+    });
+
+    clone.remove(clone.children);
+    clone.add(children);
+
+    clone.opacity = this.opacity;
+
+    if (this.mask) {
+      clone.mask = this.mask;
+    }
+
+    clone.translation.copy(this.translation);
+    clone.rotation = this.rotation;
+    clone.scale = this.scale;
+    clone.className = this.className;
+
+    if (this.matrix.manual) {
+      clone.matrix.copy(this.matrix);
+    }
+
+    if (parent) {
+      parent.add(clone);
+    }
+
+    return clone._update();
   }
 }
 

@@ -16,19 +16,12 @@ class Scene extends Two {
 
   beginAnimation(animation) {
     // If the Mobject isn't contained in the Scene, we have to add it here so
-    // that it will be visible. In order to prevent double-adding the Mobject
-    // when the diff is applied, we will remove it upon finishing the animation.
+    // that it will be visible during the animation. In order to prevent
+    // double-adding the Mobject when the diff is applied, we will remove it
+    // upon finishing the animation.
     this.removeMobjectUponFinish = animation.mobject && !this.contains(animation.mobject);
-    // If the Mobject is contained in the Scene, the call to begin() may
-    // restructure it. In order to ensure the restructured version is still
-    // contained in the Scene, we will remove it here and add it again after
-    // calling begin().
-    let removeAndReplaceMobject = animation.mobject && this.contains(animation.mobject);
-    if (removeAndReplaceMobject) {
-      this.remove(animation.mobject);
-    }
     animation.begin();
-    if (removeAndReplaceMobject || this.removeMobjectUponFinish) {
+    if (this.removeMobjectUponFinish) {
       this.add(animation.mobject);
     }
   }
