@@ -445,10 +445,11 @@ class Circle extends Arc {
   }
 
   clone() {
-    let ret = new Circle();
+    let ret = new Circle({
+      radius: this.radius,
+      style: this.getStyleDict(),
+    });
     ret.children[0] = this.path().clone();
-    ret.children[0].matrix = _.cloneDeep(this.path().matrix);
-    ret.radius = this.radius;
     return ret;
   }
 }
@@ -625,10 +626,11 @@ class Square extends RegularPolygon {
   }
 
   clone() {
-    let ret = new Square();
+    let ret = new Square({
+      sideLength: this.sideLength,
+      style: this.getStyleDict(),
+    });
     ret.children[0] = this.path().clone();
-    ret.children[0].matrix = _.cloneDeep(this.path().matrix);
-    ret.sideLength = this.sideLength;
     return ret;
   }
 }
