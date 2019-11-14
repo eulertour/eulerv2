@@ -1,168 +1,172 @@
 <template>
-  <div class="d-flex justify-center align-top mt-7 mb-5">
-    <div
-      class="left-side d-flex flex-column justify-start align-center mr-4"
-      v-bind:class="{ 'code-width': displayCode, 'panel-width': !displayCode }"
-    >
-      <v-toolbar width="100%" max-height="64px" class="mb-2">
-        <v-toolbar-title>example_scenes.py</v-toolbar-title>
-        <v-spacer></v-spacer>
-        <v-btn fab text v-on:click="toggleCode">
-          <v-icon class="headline black--text">
-            {{"mdi-" + (displayCode ? "view-agenda" : "code-braces")}}
-          </v-icon>
-        </v-btn>
-      </v-toolbar>
-      <div v-if="sceneLoaded && !displayCode" class="expansion-panel-container">
-        <v-expansion-panels
-          v-model="expandedPanel"
-          multiple
-        >
-          <v-expansion-panel>
-            <v-expansion-panel-header>
-              <span v-bind:style="sceneHeaderStyle">Scene</span>
-            </v-expansion-panel-header>
-            <v-expansion-panel-content>
-              <SetupPanel
-                v-bind:setup="currentSceneDiff"
-                v-bind:animationData="currentAnimation"
-                v-bind:mobjects="mobjects"
-                v-bind:scene="scene"
-                v-bind:animating="animating"
-                v-on:update-setup="(action, newSelection)=>updateSetup(action, newSelection)"
-              />
-            </v-expansion-panel-content>
-          </v-expansion-panel>
-          <v-expansion-panel>
-            <v-expansion-panel-header>
-              <span v-bind:style="animationHeaderStyle">Animation</span>
-            </v-expansion-panel-header>
-            <v-expansion-panel-content>
-              <AnimationPanel
-                v-bind:animation-data="currentAnimation"
-                v-bind:mobject-data="mobjects"
-                v-bind:scene="scene"
-                v-bind:animation-offset="animationOffset"
-                v-bind:animating="animating"
-                v-bind:setup="currentSceneDiff"
-                v-on:jump-to-start="jumpToAnimationStart"
-                v-on:jump-to-end="jumpToAnimationEnd"
-                v-on:pause="pause"
-                v-on:play="(e)=>play(e)"
-                v-on:replay="(e)=>replay(e)"
-                v-on:arg-change="handleArgChange"
-              />
-            </v-expansion-panel-content>
-          </v-expansion-panel>
-          <v-expansion-panel>
-            <v-expansion-panel-header>Mobjects</v-expansion-panel-header>
-            <v-expansion-panel-content>
-              <v-expansion-panels class="d-flex flex-column" multiple>
-                <v-expansion-panel v-for="(data, name) in mobjects" v-bind:key="name">
-                  <v-expansion-panel-header>
-                    {{ name }}
-                    <span class="text--secondary ml-2">
-                      {{ !animating && scene.contains(data.mobject)
-                         ? "(in scene)" : "" }}
-                    </span>
-                  </v-expansion-panel-header>
-                  <v-expansion-panel-content>
-                    <MobjectPanel
-                      v-bind:mobject-classes="mobjectChoices"
-                      v-bind:mobject-name="name"
-                      v-bind:mobject-data="data"
-                      v-bind:disabled="animating || !scene.contains(data.mobject)"
-                      v-bind:scene="scene"
-                      v-on:mobject-update="(mobjectName, attr, val)=>handleMobjectUpdate(mobjectName, attr, val)"
-                    />
-                  </v-expansion-panel-content>
-                </v-expansion-panel>
-              </v-expansion-panels>
-              <div class="d-flex justify-space-around mt-4">
-                <v-btn fab v-on:click="newMobject">
-                  <v-icon color="black" x-large>mdi-plus</v-icon>
-                </v-btn>
-              </div>
-            </v-expansion-panel-content>
-          </v-expansion-panel>
-        </v-expansion-panels>
-      </div>
-      <CodeMirror
-        v-else-if="sceneLoaded && displayCode"
-        v-bind:code="code"
-        v-on:update-code="updateCode"
-      />
-      <v-card v-else
-        class="d-flex justify-center align-center"
-        height="500px"
-        width="100%"
+  <div>
+    <div class="d-flex justify-center align-top mt-7 mb-5">
+      <div
+        class="left-side d-flex flex-column justify-start align-center mr-4"
+        v-bind:class="{ 'code-width': displayCode, 'panel-width': !displayCode }"
       >
-        <v-progress-circular indeterminate/>
-      </v-card>
-      <div v-if="displayCode" class="d-flex justify-space-between mt-4" style="width:100%">
-        <div style="width:70%">
-          <v-select
-            v-bind:items="sceneChoices"
-            v-model="chosenScene"
-            label="Scene"
-            solo
-          ></v-select>
-        </div>
-        <v-btn large v-on:click="runManim">
-          <v-icon class="headline black--text mr-2">mdi-cube-outline</v-icon>
-          <span class="title">Render</span>
-        </v-btn>
-      </div>
-      <DebugPanel v-bind:visible="debug" v-bind:mobjects="mobjects"/>
-    </div>
-    <div id="visualization-placeholder">
-      <div id="visualization">
-        <div id="manim-background"/>
-        <Timeline
-          class="mt-2"
-          v-bind:animations="animations"
-          v-bind:index="animationIndex"
-          v-bind:offset="animationOffset"
-          v-on:new-animation="handleNewAnimation"
-        />
-        <VideoControls
-          v-if="sceneLoaded"
-          v-on:play="e=>play(e, /*singleAnimationOnly=*/false)"
-          v-on:replay="e=>replay(e, /*singleAnimationOnly=*/false)"
-          v-on:pause="pause"
-          v-on:step-backward="stepBackward"
-          v-on:step-forward="stepForward"
-          v-bind:scene="scene"
-          v-bind:finished="animationIndex === animations.length - 1 && animationOffset === 1"
-        />
-      </div>
-    </div>
-    <div class="corner-button-container">
-      <v-btn class="mr-4" v-on:click="()=>{debug = !debug}" fab large>
-        <v-icon large>mdi-bug</v-icon>
-      </v-btn>
-      <v-dialog v-model="releaseNotesDialog" width="500px">
-        <template v-slot:activator="{ on }">
-          <v-btn v-on="on" fab large>
-            <v-icon large>mdi-information</v-icon>
+        <v-toolbar width="100%" max-height="64px" class="mb-2">
+          <v-toolbar-title>example_scenes.py</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-btn fab text v-on:click="toggleCode">
+            <v-icon class="headline black--text">
+              {{"mdi-" + (displayCode ? "view-agenda" : "code-braces")}}
+            </v-icon>
           </v-btn>
-        </template>
-        <v-card>
-          <v-card-title class="headline grey lighten-2 mb-3" primary-title>
-            Release Notes
-          </v-card-title>
-          <v-card-text class="title">
-            <span v-html="releaseNotes"></span>
-          </v-card-text>
-          <v-divider></v-divider>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="primary" text v-on:click="dialog = false">
-              Got it
-            </v-btn>
-          </v-card-actions>
+        </v-toolbar>
+        <div v-if="sceneLoaded && !displayCode" class="expansion-panel-container">
+          <v-expansion-panels
+            v-model="expandedPanel"
+            multiple
+          >
+            <v-expansion-panel>
+              <v-expansion-panel-header>
+                <span v-bind:style="sceneHeaderStyle">Scene</span>
+              </v-expansion-panel-header>
+              <v-expansion-panel-content>
+                <SetupPanel
+                  v-bind:setup="currentSceneDiff"
+                  v-bind:animationData="currentAnimation"
+                  v-bind:mobjects="mobjects"
+                  v-bind:scene="scene"
+                  v-bind:animating="animating"
+                  v-on:update-setup="(action, newSelection)=>updateSetup(action, newSelection)"
+                />
+              </v-expansion-panel-content>
+            </v-expansion-panel>
+            <v-expansion-panel>
+              <v-expansion-panel-header>
+                <span v-bind:style="animationHeaderStyle">Animation</span>
+              </v-expansion-panel-header>
+              <v-expansion-panel-content>
+                <AnimationPanel
+                  v-bind:animation-data="currentAnimation"
+                  v-bind:mobject-data="mobjects"
+                  v-bind:scene="scene"
+                  v-bind:animation-offset="animationOffset"
+                  v-bind:animating="animating"
+                  v-bind:setup="currentSceneDiff"
+                  v-on:jump-to-start="jumpToAnimationStart"
+                  v-on:jump-to-end="jumpToAnimationEnd"
+                  v-on:pause="pause"
+                  v-on:play="(e)=>play(e)"
+                  v-on:replay="(e)=>replay(e)"
+                  v-on:arg-change="handleArgChange"
+                />
+              </v-expansion-panel-content>
+            </v-expansion-panel>
+            <v-expansion-panel>
+              <v-expansion-panel-header>Mobjects</v-expansion-panel-header>
+              <v-expansion-panel-content>
+                <v-expansion-panels class="d-flex flex-column" multiple>
+                  <v-expansion-panel v-for="(data, name) in mobjects" v-bind:key="name">
+                    <v-expansion-panel-header>
+                      {{ name }}
+                      <span class="text--secondary ml-2">
+                        {{ !animating && scene.contains(data.mobject)
+                           ? "(in scene)" : "" }}
+                      </span>
+                    </v-expansion-panel-header>
+                    <v-expansion-panel-content>
+                      <MobjectPanel
+                        v-bind:mobject-classes="mobjectChoices"
+                        v-bind:mobject-name="name"
+                        v-bind:mobject-data="data"
+                        v-bind:disabled="animating || !scene.contains(data.mobject)"
+                        v-bind:scene="scene"
+                        v-on:mobject-update="(mobjectName, attr, val)=>handleMobjectUpdate(mobjectName, attr, val)"
+                      />
+                    </v-expansion-panel-content>
+                  </v-expansion-panel>
+                </v-expansion-panels>
+                <div class="d-flex justify-space-around mt-4">
+                  <v-btn fab v-on:click="newMobject">
+                    <v-icon color="black" x-large>mdi-plus</v-icon>
+                  </v-btn>
+                </div>
+              </v-expansion-panel-content>
+            </v-expansion-panel>
+          </v-expansion-panels>
+        </div>
+        <CodeMirror
+          v-else-if="sceneLoaded && displayCode"
+          v-bind:code="code"
+          v-on:update-code="updateCode"
+        />
+        <v-card v-else
+          class="d-flex justify-center align-center"
+          height="500px"
+          width="100%"
+        >
+          <v-progress-circular indeterminate/>
         </v-card>
-      </v-dialog>
+        <div v-if="displayCode" class="d-flex justify-space-between mt-4" style="width:100%">
+          <div style="width:70%">
+            <v-select
+              v-bind:items="sceneChoices"
+              v-model="chosenScene"
+              label="Scene"
+              solo
+            ></v-select>
+          </div>
+          <v-btn large v-on:click="runManim">
+            <v-icon class="headline black--text mr-2">mdi-cube-outline</v-icon>
+            <span class="title">Render</span>
+          </v-btn>
+        </div>
+      </div>
+      <div id="visualization-placeholder">
+        <div id="visualization">
+          <div id="manim-background"/>
+          <Timeline
+            class="mt-2"
+            v-bind:animations="animations"
+            v-bind:index="animationIndex"
+            v-bind:offset="animationOffset"
+            v-on:new-animation="handleNewAnimation"
+          />
+          <VideoControls
+            v-if="sceneLoaded"
+            v-on:play="e=>play(e, /*singleAnimationOnly=*/false)"
+            v-on:replay="e=>replay(e, /*singleAnimationOnly=*/false)"
+            v-on:pause="pause"
+            v-on:step-backward="stepBackward"
+            v-on:step-forward="stepForward"
+            v-bind:scene="scene"
+            v-bind:finished="animationIndex === animations.length - 1 && animationOffset === 1"
+          />
+        </div>
+      </div>
+      <div class="corner-button-container">
+        <v-btn class="mr-4" v-on:click="()=>{debug = !debug}" fab large>
+          <v-icon large>mdi-bug</v-icon>
+        </v-btn>
+        <v-dialog v-model="releaseNotesDialog" width="500px">
+          <template v-slot:activator="{ on }">
+            <v-btn v-on="on" fab large>
+              <v-icon large>mdi-information</v-icon>
+            </v-btn>
+          </template>
+          <v-card>
+            <v-card-title class="headline grey lighten-2 mb-3" primary-title>
+              Release Notes
+            </v-card-title>
+            <v-card-text class="title">
+              <span v-html="releaseNotes"></span>
+            </v-card-text>
+            <v-divider></v-divider>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="primary" text v-on:click="dialog = false">
+                Got it
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+      </div>
+    </div>
+    <div class="d-flex justify-center">
+      <DebugPanel v-bind:visible="debug" v-bind:mobjects="mobjects"/>
     </div>
   </div>
 </template>
