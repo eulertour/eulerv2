@@ -704,13 +704,17 @@ export default {
       }
     },
     handleMobjectUpdate(mobjectName, attr, val) {
-      // how to jump to mobject location? get it from the animation panel?
+      // How could this jump to a Mobjects location? Get it from the animation
+      // panel?
       // eslint-disable-next-line
       console.assert(
         this.scene.contains(this.mobjects[mobjectName].mobject),
         "modified mobject that isn't in the scene",
       );
-      this.scene.remove(this.mobjects[mobjectName].mobject);
+      let oldMobject = this.mobjects[mobjectName].mobject;
+      let parent = oldMobject.parent;
+      let oldMobjectIndex = parent.children.indexOf(oldMobject);
+      parent.remove(oldMobject);
       let split = attr.split('.');
       if (split[0] === "style") {
         this.$set(this.mobjects[mobjectName].style, split[1], val);
@@ -718,7 +722,7 @@ export default {
         this.$set(this.mobjects[mobjectName], attr, val);
       }
       this.setMobjectField(this.mobjects[mobjectName]);
-      this.scene.add(this.mobjects[mobjectName].mobject);
+      parent.children.splice(oldMobjectIndex, 0, this.mobjects[mobjectName].mobject);
       this.scene.update();
     },
     handleNewAnimation() {
