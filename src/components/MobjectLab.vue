@@ -188,6 +188,7 @@ import VideoControls from './VideoControls.vue'
 import CodeMirror from './CodeMirror.vue'
 import chroma from 'chroma-js'
 import DebugPanel from './DebugPanel.vue'
+import * as utils from '../utils.js'
 
 export default {
   name: 'MobjectLab',
@@ -230,32 +231,12 @@ export default {
     sceneIsValid() {
       let priorScene = this.$store.state.priorScene;
       let sceneDiff = this.$store.state.sceneDiff;
-      for (let mobjectName of (sceneDiff['add'] || [])) {
-        if (priorScene.includes(mobjectName)) {
-          return false;
-        }
-      }
-      for (let mobjectName of (sceneDiff['remove'] || [])) {
-        if (!priorScene.includes(mobjectName)) {
-          return false;
-        }
-      }
-      return true;
+      return this.diffIsValidForScene(sceneDiff, priorScene);
     },
     animationIsValid() {
       let sceneBeforeAnimation = this.$store.getters.sceneBeforeAnimation;
       let animationDiff = this.$store.state.animationDiff;
-      for (let mobjectName of (animationDiff['add'] || [])) {
-        if (sceneBeforeAnimation.includes(mobjectName)) {
-          return false;
-        }
-      }
-      for (let mobjectName of (animationDiff['remove'] || [])) {
-        if (!sceneBeforeAnimation.includes(mobjectName)) {
-          return false;
-        }
-      }
-      return true;
+      return this.diffIsValidForScene(animationDiff, sceneBeforeAnimation);
     },
   },
   data() {
@@ -371,7 +352,7 @@ export default {
       for (let i = 0; i < mobjectIds.length; i++) {
         let id = mobjectIds[i];
         let mobjectData = scene.mobject_dict[id];
-        if (!["Group", "Mobject"].includes(mobjectData.className)) {
+        if (!utils.isGroupData(mobjectData)) {
           mobjectIdsToNames[id] = 'mobject' + (i + 1);
         } else {
           mobjectIdsToNames[id] = 'group' + (i + 1);
@@ -431,7 +412,7 @@ export default {
       let newMobjects = {};
       for (let id of Object.keys(scene.mobject_dict)) {
         let mobjectData = scene.mobject_dict[id];
-        if (!["Group", "Mobject"].includes(mobjectData.className)) {
+        if (!utils.isGroupData(mobjectData)) {
           let strokeColor = mobjectData.style.strokeColor;
           let strokeOpacity = mobjectData.style.strokeOpacity;
           mobjectData.style.strokeColor = chroma(strokeColor).alpha(strokeOpacity).hex();
@@ -462,7 +443,7 @@ export default {
       let groupNames = [];
       for (let mobjectName of Object.keys(newMobjects)) {
         let data = newMobjects[mobjectName];
-        if (!["Group", "Mobject"].includes(data.className)) {
+        if (!utils.isGroupData(data)) {
           this.setMobjectField(data);
         } else {
           groupNames.push(mobjectName);
@@ -499,7 +480,7 @@ export default {
       }
     },
     setMobjectField(mobjectData) {
-      if (!["Group", "Mobject"].includes(mobjectData.className)) {
+      if (!utils.isGroupData(mobjectData)) {
         let s = new Manim[mobjectData.className](mobjectData.params);
         s.translateMobject(mobjectData.position);
         s.applyStyle(mobjectData.style);
@@ -854,7 +835,20 @@ export default {
     },
     refreshSceneChoices() {
       this.sceneChoices = window.manimlib.get_scene_choices(this.code);
-    }
+    },
+    diffIsValidForScene(diff, scene) {
+      for (let mobjectName of (diff['add'] || [])) {
+        if (scene.includes(mobjectName)) {
+          return false;
+        }
+      }
+      for (let mobjectName of (diff['remove'] || [])) {
+        if (!scene.includes(mobjectName)) {
+          return false;
+        }
+      }
+      return true;
+    },
   },
 }
 </script>

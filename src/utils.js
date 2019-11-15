@@ -1,4 +1,4 @@
-import * as Two from '../node_modules/two.js/build/two.js';
+import * as Two from 'two.js/build/two.js'
 
 export function pathFromAnchors(anchors, leftHandles, rightHandles) {
   // TODO: errorcheck lengths
@@ -95,6 +95,10 @@ export function getManimPoints(mobject) {
     ret.push([nextV.x, nextV.y]);
   }
   return ret;
+}
+
+export function isGroupData(mobjectData) {
+  return ["Group", "Mobject"].includes(mobjectData.className);
 }
 
 let CHOOSE_CACHE = [[1]];
