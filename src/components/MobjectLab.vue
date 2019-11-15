@@ -9,16 +9,13 @@
           <v-toolbar-title>example_scenes.py</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-btn fab text v-on:click="toggleCode">
-            <v-icon class="headline black--text">
-              {{"mdi-" + (displayCode ? "view-agenda" : "code-braces")}}
-            </v-icon>
+            <v-icon
+              class="headline black--text"
+            >{{"mdi-" + (displayCode ? "view-agenda" : "code-braces")}}</v-icon>
           </v-btn>
         </v-toolbar>
         <div v-if="sceneLoaded && !displayCode" class="expansion-panel-container">
-          <v-expansion-panels
-            v-model="expandedPanel"
-            multiple
-          >
+          <v-expansion-panels v-model="expandedPanel" multiple>
             <v-expansion-panel>
               <v-expansion-panel-header>
                 <span v-bind:style="sceneHeaderStyle">Scene</span>
@@ -64,7 +61,7 @@
                       {{ name }}
                       <span class="text--secondary ml-2">
                         {{ !animating && scene.contains(data.mobject)
-                           ? "(in scene)" : "" }}
+                        ? "(in scene)" : "" }}
                       </span>
                     </v-expansion-panel-header>
                     <v-expansion-panel-content>
@@ -93,21 +90,12 @@
           v-bind:code="code"
           v-on:update-code="updateCode"
         />
-        <v-card v-else
-          class="d-flex justify-center align-center"
-          height="500px"
-          width="100%"
-        >
-          <v-progress-circular indeterminate/>
+        <v-card v-else class="d-flex justify-center align-center" height="500px" width="100%">
+          <v-progress-circular indeterminate />
         </v-card>
         <div v-if="displayCode" class="d-flex justify-space-between mt-4" style="width:100%">
           <div style="width:70%">
-            <v-select
-              v-bind:items="sceneChoices"
-              v-model="chosenScene"
-              label="Scene"
-              solo
-            ></v-select>
+            <v-select v-bind:items="sceneChoices" v-model="chosenScene" label="Scene" solo></v-select>
           </div>
           <v-btn large v-on:click="runManim">
             <v-icon class="headline black--text mr-2">mdi-cube-outline</v-icon>
@@ -117,7 +105,7 @@
       </div>
       <div id="visualization-placeholder">
         <div id="visualization">
-          <div id="manim-background"/>
+          <div id="manim-background" />
           <Timeline
             class="mt-2"
             v-bind:animations="animations"
@@ -148,18 +136,14 @@
             </v-btn>
           </template>
           <v-card>
-            <v-card-title class="headline grey lighten-2 mb-3" primary-title>
-              Release Notes
-            </v-card-title>
+            <v-card-title class="headline grey lighten-2 mb-3" primary-title>Release Notes</v-card-title>
             <v-card-text class="title">
               <span v-html="releaseNotes"></span>
             </v-card-text>
             <v-divider></v-divider>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn color="primary" text v-on:click="dialog = false">
-                Got it
-              </v-btn>
+              <v-btn color="primary" text v-on:click="dialog = false">Got it</v-btn>
             </v-card-actions>
           </v-card>
         </v-dialog>
@@ -177,21 +161,21 @@
 </template>
 
 <script>
-import * as _ from 'lodash'
-import * as consts from '../constants.js'
-import * as Manim from '../manim.js'
-import AnimationPanel from './AnimationPanel.vue'
-import MobjectPanel from './MobjectPanel.vue'
-import SetupPanel from './SetupPanel.vue'
-import Timeline from './Timeline.vue'
-import VideoControls from './VideoControls.vue'
-import CodeMirror from './CodeMirror.vue'
-import chroma from 'chroma-js'
-import DebugPanel from './DebugPanel.vue'
-import * as utils from '../utils.js'
+import * as _ from "lodash";
+import * as consts from "../constants.js";
+import * as Manim from "../manim.js";
+import AnimationPanel from "./AnimationPanel.vue";
+import MobjectPanel from "./MobjectPanel.vue";
+import SetupPanel from "./SetupPanel.vue";
+import Timeline from "./Timeline.vue";
+import VideoControls from "./VideoControls.vue";
+import CodeMirror from "./CodeMirror.vue";
+import chroma from "chroma-js";
+import DebugPanel from "./DebugPanel.vue";
+import * as utils from "../utils.js";
 
 export default {
-  name: 'MobjectLab',
+  name: "MobjectLab",
   components: {
     AnimationPanel,
     MobjectPanel,
@@ -199,7 +183,7 @@ export default {
     Timeline,
     VideoControls,
     CodeMirror,
-    DebugPanel,
+    DebugPanel
   },
   computed: {
     currentAnimation() {
@@ -217,14 +201,14 @@ export default {
     sceneHeaderStyle() {
       let ret = {};
       if (!this.sceneIsValid) {
-        ret['color'] = "red";
+        ret["color"] = "red";
       }
       return ret;
     },
     animationHeaderStyle() {
       let ret = {};
       if (this.sceneIsValid && !this.animationIsValid) {
-        ret['color'] = "red";
+        ret["color"] = "red";
       }
       return ret;
     },
@@ -237,7 +221,7 @@ export default {
       let sceneBeforeAnimation = this.$store.getters.sceneBeforeAnimation;
       let animationDiff = this.$store.state.animationDiff;
       return this.diffIsValidForScene(animationDiff, sceneBeforeAnimation);
-    },
+    }
   },
   data() {
     return {
@@ -252,17 +236,28 @@ export default {
       chosenScene: "SquareToCircle",
       scene: null,
       sceneLoaded: false,
-      mobjectChoices: ["Circle", "Square", "Triangle", "Pentagon", "Star", "Hexagon", "StarOfDavid", "Octagon"],
+      mobjectChoices: [
+        "Circle",
+        "Square",
+        "Triangle",
+        "Pentagon",
+        "Star",
+        "Hexagon",
+        "StarOfDavid",
+        "Octagon"
+      ],
       animationIndex: 0,
       animationOffset: 0,
-      animations: [{
-        className: "ReplacementTransform",
-        description: "Morph one Mobject into another",
-        args: ["mobject1", "mobject2"],
-        argDescriptions: ["Start Mobject", "End Mobject"],
-        durationSeconds: 1,
-        animation: null,
-      }],
+      animations: [
+        {
+          className: "ReplacementTransform",
+          description: "Morph one Mobject into another",
+          args: ["mobject1", "mobject2"],
+          argDescriptions: ["Start Mobject", "End Mobject"],
+          durationSeconds: 1,
+          animation: null
+        }
+      ],
       setupDiffs: [
         // diffs are of the form:
         // {
@@ -270,7 +265,7 @@ export default {
         //   'remove': [mobject21, ...],
         //   'modify': [[mobject31, forwardFunc, backwardFunc], ...],
         // }
-        {'add': ['mobject1']},
+        { add: ["mobject1"] }
       ],
       mobjects: {},
       initialMobjects: {
@@ -281,9 +276,9 @@ export default {
           style: {
             strokeColor: "#fc6255ff",
             fillColor: "#00000000",
-            strokeWidth: 4,
+            strokeWidth: 4
           },
-          mobject: null,
+          mobject: null
         },
         mobject2: {
           className: "Square",
@@ -292,9 +287,9 @@ export default {
           style: {
             strokeColor: "#ffffffff",
             fillColor: "#00000000",
-            strokeWidth: 4,
+            strokeWidth: 4
           },
-          mobject: null,
+          mobject: null
         },
         mobject3: {
           className: "Square",
@@ -303,12 +298,12 @@ export default {
           style: {
             strokeColor: "#00ff00ff",
             fillColor: "#00000000",
-            strokeWidth: 4,
+            strokeWidth: 4
           },
-          mobject: null,
-        },
-      },
-    }
+          mobject: null
+        }
+      }
+    };
   },
   mounted() {
     this.scene = new Manim.Scene({ width: 640, height: 360 });
@@ -326,16 +321,16 @@ export default {
           this.$set(this.mobjects, mobjectName, data);
         }
         this.currentAnimation.animation = this.buildCurrentAnimation();
-        this.$store.commit('updateDiffs', {
+        this.$store.commit("updateDiffs", {
           sceneDiff: this.setupDiffs[0],
           animationDiff: Manim[this.currentAnimation.className].getDiff(
             ...this.currentAnimation.args
-          ),
+          )
         });
         this.applyDiff(
           this.currentSceneDiff,
-          /*reverse=*/false,
-          /*moveCursor=*/false,
+          /*reverse=*/ false,
+          /*moveCursor=*/ false
         );
         this.refreshSceneChoices();
         this.sceneLoaded = true;
@@ -353,17 +348,15 @@ export default {
         let id = mobjectIds[i];
         let mobjectData = scene.mobject_dict[id];
         if (!utils.isGroupData(mobjectData)) {
-          mobjectIdsToNames[id] = 'mobject' + (i + 1);
+          mobjectIdsToNames[id] = "mobject" + (i + 1);
         } else {
-          mobjectIdsToNames[id] = 'group' + (i + 1);
+          mobjectIdsToNames[id] = "group" + (i + 1);
         }
       }
 
       // Assign human-readble names to scene list
-      scene.scene_list = scene.scene_list.map(
-        idList => idList.map(
-          id => mobjectIdsToNames[id]
-        )
+      scene.scene_list = scene.scene_list.map(idList =>
+        idList.map(id => mobjectIdsToNames[id])
       );
 
       //  Create animation list with human-readable names
@@ -375,8 +368,8 @@ export default {
       }
 
       let updateSceneWithDiff = (scene, diff) => {
-        scene = _.concat(scene, diff['add'] || []);
-        scene = _.difference(scene, diff['remove'] || []);
+        scene = _.concat(scene, diff["add"] || []);
+        scene = _.difference(scene, diff["remove"] || []);
         return scene;
       };
 
@@ -385,27 +378,27 @@ export default {
         let mobsToRemove = _.difference(beforeScene, afterScene);
         let diff = {};
         if (mobsToAdd.length > 0) {
-          diff['add'] = mobsToAdd.map(id => mobjectIdsToNames[id]);
+          diff["add"] = mobsToAdd.map(id => mobjectIdsToNames[id]);
         }
         if (mobsToRemove.length > 0) {
-          diff['remove'] = mobsToRemove.map(id => mobjectIdsToNames[id]);
+          diff["remove"] = mobsToRemove.map(id => mobjectIdsToNames[id]);
         }
         return diff;
       };
 
       let newSceneDiffs = [];
-      let sceneAfterLastAnimation = []
+      let sceneAfterLastAnimation = [];
       for (let i = 0; i < scene.scene_list.length; i++) {
-        newSceneDiffs.push(getDiffFromTwoScenes(
-          sceneAfterLastAnimation,
-          scene.scene_list[i],
-        ));
+        newSceneDiffs.push(
+          getDiffFromTwoScenes(sceneAfterLastAnimation, scene.scene_list[i])
+        );
 
         sceneAfterLastAnimation = updateSceneWithDiff(
           scene.scene_list[i],
           //get the animation diff,
-          Manim[scene.render_list[i].className]
-            .getDiff(...scene.render_list[i].args.map(id => mobjectIdsToNames[id])),
+          Manim[scene.render_list[i].className].getDiff(
+            ...scene.render_list[i].args.map(id => mobjectIdsToNames[id])
+          )
         );
       }
 
@@ -415,12 +408,16 @@ export default {
         if (!utils.isGroupData(mobjectData)) {
           let strokeColor = mobjectData.style.strokeColor;
           let strokeOpacity = mobjectData.style.strokeOpacity;
-          mobjectData.style.strokeColor = chroma(strokeColor).alpha(strokeOpacity).hex();
+          mobjectData.style.strokeColor = chroma(strokeColor)
+            .alpha(strokeOpacity)
+            .hex();
           delete mobjectData.style.strokeOpacity;
 
           let fillColor = mobjectData.style.fillColor;
           let fillOpacity = mobjectData.style.fillOpacity;
-          mobjectData.style.fillColor = chroma(fillColor).alpha(fillOpacity).hex();
+          mobjectData.style.fillColor = chroma(fillColor)
+            .alpha(fillOpacity)
+            .hex();
           delete mobjectData.style.fillOpacity;
         } else {
           let newSumbojects = mobjectData.submobjects.map(
@@ -458,17 +455,17 @@ export default {
 
       this.currentAnimation.animation = this.buildCurrentAnimation();
       this.scene.update();
-      this.$store.commit('updateDiffs', {
+      this.$store.commit("updateDiffs", {
         priorScene: [],
         sceneDiff: this.setupDiffs[0],
         animationDiff: Manim[this.currentAnimation.className].getDiff(
           ...this.currentAnimation.args
-        ),
+        )
       });
       this.applyDiff(
         this.currentSceneDiff,
-        /*reverse=*/false,
-        /*moveCursor=*/false,
+        /*reverse=*/ false,
+        /*moveCursor=*/ false
       );
       // this.play(null, /*singleAnimationOnly=*/false);
     },
@@ -502,9 +499,12 @@ export default {
       for (let mobjectName of this.currentAnimation.args) {
         let data = this.mobjects[mobjectName];
         // eslint-disable-next-line
-        console.assert(data !== undefined, {name: mobjectName});
+        console.assert(data !== undefined, { name: mobjectName });
         // eslint-disable-next-line
-        console.assert(data.mobject !== null, {name: mobjectName, mobjects: this.mobjects});
+        console.assert(data.mobject !== null, {
+          name: mobjectName,
+          mobjects: this.mobjects
+        });
         args.push(data.mobject);
       }
       return new Manim[this.currentAnimation.className](...args);
@@ -517,15 +517,15 @@ export default {
       if (this.animationIsValid && this.sceneIsValid) {
         this.scene.playAnimation(
           this.currentAnimation.animation,
-          /*onStep=*/this.onAnimationStep,
-          /*onAnimationFinished=*/() => {
+          /*onStep=*/ this.onAnimationStep,
+          /*onAnimationFinished=*/ () => {
             this.applyDiff(this.currentAnimationDiff);
             this.chainNextAnimation();
-          },
+          }
         );
       }
     },
-    replay: function(e, singleAnimationOnly=true) {
+    replay: function(e, singleAnimationOnly = true) {
       if (singleAnimationOnly) {
         this.jumpToAnimationStart();
       } else {
@@ -535,17 +535,17 @@ export default {
       }
       this.play(e, singleAnimationOnly);
     },
-    play: function(e, singleAnimationOnly=true) {
+    play: function(e, singleAnimationOnly = true) {
       this.playingSingleAnimation = singleAnimationOnly;
       if (this.animating) {
-        this.scene.play()
+        this.scene.play();
         return;
       }
       if (this.animationOffset === 1) {
         // eslint-disable-next-line
         console.assert(
           singleAnimationOnly === false &&
-          this.animationIndex !== this.animations.length - 1
+            this.animationIndex !== this.animations.length - 1
         );
         this.stepForward();
       }
@@ -553,13 +553,13 @@ export default {
         this.currentAnimation.animation = this.buildCurrentAnimation();
         this.scene.playAnimation(
           this.currentAnimation.animation,
-          /*onStep=*/this.onAnimationStep,
-          /*onAnimationFinished=*/() => {
+          /*onStep=*/ this.onAnimationStep,
+          /*onAnimationFinished=*/ () => {
             this.applyDiff(this.currentAnimationDiff);
             if (!this.playingSingleAnimation) {
               this.chainNextAnimation();
             }
-          },
+          }
         );
       }
     },
@@ -571,7 +571,7 @@ export default {
      *    'modify': [[mobject31, forwardFunc, backwardFunc], ...],
      *  }
      */
-    applyDiff: function(diff, reverse=false, moveCursor=true) {
+    applyDiff: function(diff, reverse = false, moveCursor = true) {
       if (moveCursor) {
         this.animationOffset = reverse ? 0 : 1;
       }
@@ -579,33 +579,34 @@ export default {
         return;
       }
       let diffCopy = _.cloneDeep(diff);
-      diffCopy['add'] = diff['add'] || [];
-      diffCopy['remove'] = diff['remove'] || [];
-      diffCopy['modify'] = diff['modify'] || [];
+      diffCopy["add"] = diff["add"] || [];
+      diffCopy["remove"] = diff["remove"] || [];
+      diffCopy["modify"] = diff["modify"] || [];
       if (reverse) {
-        diffCopy['add'] = diff['remove'] || [];
-        diffCopy['remove'] = diff['add'] || [];
-        diffCopy['modify'].forEach((newList, index) => {
-          let oldList = diff['modify'][index];
+        diffCopy["add"] = diff["remove"] || [];
+        diffCopy["remove"] = diff["add"] || [];
+        diffCopy["modify"].forEach((newList, index) => {
+          let oldList = diff["modify"][index];
           newList[1] = oldList[2];
           newList[2] = oldList[1];
         });
       }
-      for (let mobjectName of diffCopy['add']) {
+      for (let mobjectName of diffCopy["add"]) {
         let mobjectData = this.mobjects[mobjectName];
         this.setMobjectField(mobjectData);
         this.scene.add(mobjectData.mobject);
       }
-      for (let mobjectName of diffCopy['remove']) {
+      for (let mobjectName of diffCopy["remove"]) {
         let mobjectData = this.mobjects[mobjectName];
         this.scene.remove(mobjectData.mobject);
         this.setMobjectField(mobjectData);
       }
-      for (let [mobjectName, modifyFunc] of diffCopy['modify']) {
+      for (let [mobjectName, modifyFunc] of diffCopy["modify"]) {
         let mobjectData = this.mobjects[mobjectName];
         // eslint-disable-next-line
-        console.assert(mobjectData.mobject &&
-          this.scene.contains(mobjectData.mobject));
+        console.assert(
+          mobjectData.mobject && this.scene.contains(mobjectData.mobject)
+        );
         modifyFunc(mobjectData.mobject);
       }
       this.scene.update();
@@ -629,8 +630,8 @@ export default {
         if (this.animationIsValid) {
           this.applyDiff(
             this.currentAnimationDiff,
-            /*reverse=*/true,
-            /*moveCursor=*/true,
+            /*reverse=*/ true,
+            /*moveCursor=*/ true
           );
         }
       }
@@ -654,21 +655,21 @@ export default {
       this.jumpToAnimationEnd();
       if (this.animationIndex < this.animations.length - 1) {
         this.setupDiffs[this.animationIndex] = this.$store.state.sceneDiff;
-        this.$store.commit('stepForward');
+        this.$store.commit("stepForward");
         this.animationIndex += 1;
         this.animationOffset = 0;
         this.currentAnimation.animation = this.buildCurrentAnimation();
-        this.$store.commit('updateDiffs', {
+        this.$store.commit("updateDiffs", {
           sceneDiff: this.setupDiffs[this.animationIndex],
           animationDiff: Manim[this.currentAnimation.className].getDiff(
             ...this.currentAnimation.args
-          ),
+          )
         });
         if (this.sceneIsValid) {
           this.applyDiff(
             this.currentSceneDiff,
-            /*reverse=*/false,
-            /*moveCursor=*/false,
+            /*reverse=*/ false,
+            /*moveCursor=*/ false
           );
         }
       }
@@ -679,24 +680,24 @@ export default {
       } else if (this.animationIndex !== 0) {
         this.applyDiff(
           this.currentSceneDiff,
-          /*reverse=*/true,
-          /*moveCursor=*/false,
+          /*reverse=*/ true,
+          /*moveCursor=*/ false
         );
         this.setupDiffs[this.animationIndex] = this.$store.state.sceneDiff;
         this.animationIndex -= 1;
         this.animationOffset = 1;
         this.currentAnimation.animation = this.buildCurrentAnimation();
-        this.$store.commit('stepBackward', {
+        this.$store.commit("stepBackward", {
           sceneDiff: this.setupDiffs[this.animationIndex],
           animationDiff: Manim[this.currentAnimation.className].getDiff(
             ...this.currentAnimation.args
-          ),
+          )
         });
-        this.$store.commit('updateDiffs', {
+        this.$store.commit("updateDiffs", {
           sceneDiff: this.setupDiffs[this.animationIndex],
           animationDiff: Manim[this.currentAnimation.className].getDiff(
             ...this.currentAnimation.args
-          ),
+          )
         });
         this.jumpToAnimationStart();
       }
@@ -709,14 +710,14 @@ export default {
       let diff = this.currentAnimation.diff;
       let attr = diff[0];
       if (attr === null) {
-        mobjectIsAtStart = (diff[1] === mobjectData.name);
+        mobjectIsAtStart = diff[1] === mobjectData.name;
       } else {
-        mobjectIsAtStart = (_.split(diff[1], '.')[0] === mobjectData.name);
+        mobjectIsAtStart = _.split(diff[1], ".")[0] === mobjectData.name;
       }
       if (mobjectIsAtStart) {
-        this.jumpToAnimationStart(/*forceDraw=*/true);
+        this.jumpToAnimationStart(/*forceDraw=*/ true);
       } else {
-        this.jumpToAnimationEnd(/*forceDraw=*/true);
+        this.jumpToAnimationEnd(/*forceDraw=*/ true);
       }
     },
     handleMobjectUpdate(mobjectName, attr, val) {
@@ -725,29 +726,35 @@ export default {
       // eslint-disable-next-line
       console.assert(
         this.scene.contains(this.mobjects[mobjectName].mobject),
-        "modified mobject that isn't in the scene",
+        "modified mobject that isn't in the scene"
       );
       let oldMobject = this.mobjects[mobjectName].mobject;
       let parent = oldMobject.parent;
       let oldMobjectIndex = parent.children.indexOf(oldMobject);
       parent.remove(oldMobject);
-      let split = attr.split('.');
+      let split = attr.split(".");
       if (split[0] === "style") {
         this.$set(this.mobjects[mobjectName].style, split[1], val);
       } else {
         this.$set(this.mobjects[mobjectName], attr, val);
       }
       this.setMobjectField(this.mobjects[mobjectName]);
-      parent.children.splice(oldMobjectIndex, 0, this.mobjects[mobjectName].mobject);
+      parent.children.splice(
+        oldMobjectIndex,
+        0,
+        this.mobjects[mobjectName].mobject
+      );
       this.scene.update();
     },
     handleNewAnimation() {
-      while (this.animationIndex < this.animations.length - 1
-             || this.animationOffset < 1) {
+      while (
+        this.animationIndex < this.animations.length - 1 ||
+        this.animationOffset < 1
+      ) {
         if (this.sceneIsValid && this.animationIsValid) {
           this.stepForward();
         } else {
-          return
+          return;
         }
       }
       this.animations.push({
@@ -755,7 +762,7 @@ export default {
         description: "Hold a still frame",
         durationSeconds: 1,
         args: [],
-        argDescriptions: [],
+        argDescriptions: []
       });
       this.setupDiffs.push({});
       this.stepForward();
@@ -768,36 +775,38 @@ export default {
         style: {
           strokeColor: "#fc6255ff",
           fillColor: "#00000000",
-          strokeWidth: 4,
+          strokeWidth: 4
         },
-        mobject: null,
+        mobject: null
       };
       this.setMobjectField(newMobjectData);
       this.$set(
         this.mobjects,
-        'mobject' + (Object.keys(this.mobjects).length + 1),
-        newMobjectData,
+        "mobject" + (Object.keys(this.mobjects).length + 1),
+        newMobjectData
       );
     },
     handleArgChange(argNum, arg) {
       if (this.animationOffset === 1) {
         this.applyDiff(
           this.currentAnimationDiff,
-          /*reverse=*/true,
-          /*moveCursor=*/false,
+          /*reverse=*/ true,
+          /*moveCursor=*/ false
         );
       }
       let newArgs = _.cloneDeep(this.currentAnimation.args);
       newArgs[argNum] = arg;
       this.currentAnimation.args = newArgs;
-      this.$store.commit('updateDiffs', {
-        animationDiff: Manim[this.currentAnimation.className].getDiff(...newArgs)
+      this.$store.commit("updateDiffs", {
+        animationDiff: Manim[this.currentAnimation.className].getDiff(
+          ...newArgs
+        )
       });
       if (this.animationOffset === 1) {
         this.applyDiff(
           this.currentAnimationDiff,
-          /*reverse=*/false,
-          /*moveCursor=*/false,
+          /*reverse=*/ false,
+          /*moveCursor=*/ false
         );
       }
     },
@@ -805,28 +814,28 @@ export default {
       if (this.animationOffset === 1 && this.animationIsValid) {
         this.applyDiff(
           this.currentAnimationDiff,
-          /*reverse=*/true,
-          /*moveCursor=*/false,
+          /*reverse=*/ true,
+          /*moveCursor=*/ false
         );
       }
       this.applyDiff(
         this.currentSceneDiff,
-        /*reverse=*/true,
-        /*moveCursor=*/false,
+        /*reverse=*/ true,
+        /*moveCursor=*/ false
       );
       let newDiff = _.cloneDeep(this.currentSceneDiff);
       newDiff[action] = newSelection;
-      this.$store.commit('updateDiffs', {sceneDiff: newDiff});
+      this.$store.commit("updateDiffs", { sceneDiff: newDiff });
       this.applyDiff(
         this.currentSceneDiff,
-        /*reverse=*/false,
-        /*moveCursor=*/false,
+        /*reverse=*/ false,
+        /*moveCursor=*/ false
       );
       if (this.animationOffset === 1 && this.animationIsValid) {
         this.applyDiff(
           this.currentAnimationDiff,
-          /*reverse=*/false,
-          /*moveCursor=*/false,
+          /*reverse=*/ false,
+          /*moveCursor=*/ false
         );
       }
     },
@@ -837,20 +846,67 @@ export default {
       this.sceneChoices = window.manimlib.get_scene_choices(this.code);
     },
     diffIsValidForScene(diff, scene) {
-      for (let mobjectName of (diff['add'] || [])) {
-        if (scene.includes(mobjectName)) {
-          return false;
+      for (let mobjectName of diff["add"] || []) {
+        // A Mobject can be added if none of the Mobjects in its heirarchy are
+        // in the scene.
+        let namesInHeirarchy = this.getNamesInHeirarchy(mobjectName);
+        for (let submobName of namesInHeirarchy) {
+          if (scene.includes(submobName)) {
+            return false;
+          }
         }
       }
-      for (let mobjectName of (diff['remove'] || [])) {
-        if (!scene.includes(mobjectName)) {
+      for (let mobjectName of diff["remove"] || []) {
+        // A Mobject can be removed if it or any of its ancestors are in the
+        // scene.
+        let namesInLineage = this.getNamesInLineage(mobjectName);
+        let lineageMemberInScene = false;
+        for (let submobName of namesInLineage) {
+          if (scene.includes(submobName)) {
+            lineageMemberInScene = true;
+            break;
+          }
+        }
+        if (!lineageMemberInScene) {
           return false;
         }
       }
       return true;
     },
-  },
-}
+    getNamesInHeirarchy(mobjectName) {
+      let ret = [mobjectName];
+      let data = this.mobjects[mobjectName];
+      if (data.hasOwnProperty('submobjects')) {
+        for (let submobName of data.submobjects) {
+          ret = _.concat(ret, this.getNamesInHeirarchy(submobName));
+        }
+      }
+      return ret;
+    },
+    getNamesInLineage(mobjectName) {
+      let currentMobject = this.mobjects[mobjectName].mobject;
+      let mobjectsInLineage = [currentMobject];
+      while (currentMobject.parent !== undefined) {
+        currentMobject = currentMobject.parent;
+        // "two-0" is the id of the top-level Group representing the Scene.
+        if (currentMobject.id !== "two-0") {
+          mobjectsInLineage = _.concat(mobjectsInLineage, currentMobject);
+        } else {
+          break;
+        }
+      }
+      return mobjectsInLineage.map(mob => this.getNameFromMobject(mob));
+    },
+    getNameFromMobject(mob) {
+      for (let mobjectName of Object.keys(this.mobjects)) {
+        if (this.mobjects[mobjectName].mobject === mob) {
+          return mobjectName;
+        }
+      }
+      console.error("Encountered a mobject with no name: ", mob);
+    },
+  }
+};
 </script>
 
 <style scoped>
@@ -874,10 +930,6 @@ export default {
 }
 .code-box {
   overflow: scroll;
-}
->>> .v-text-field__slot {
-  font-size: 1.1em;
-  font-family: monospace;
 }
 #visualization-placeholder {
   width: 640px;

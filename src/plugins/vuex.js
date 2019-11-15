@@ -51,8 +51,8 @@ const store = new Vuex.Store({
   getters: {
     sceneBeforeAnimation(state) {
       let ret = state.priorScene;
-      ret = _.concat(ret, state.sceneDiff.add);
-      ret = _.difference(ret, state.sceneDiff.remove);
+      ret = _.concat(ret, state.sceneDiff.add || []);
+      ret = _.difference(ret, state.sceneDiff.remove || []);
       return ret;
     },
   }
