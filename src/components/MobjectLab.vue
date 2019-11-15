@@ -166,7 +166,12 @@
       </div>
     </div>
     <div class="d-flex justify-center">
-      <DebugPanel v-bind:visible="debug" v-bind:mobjects="mobjects"/>
+      <DebugPanel
+        v-bind:visible="debug"
+        v-bind:mobjects="mobjects"
+        v-bind:scene-is-valid="sceneIsValid"
+        v-bind:animation-is-valid="animationIsValid"
+      />
     </div>
   </div>
 </template>
@@ -210,19 +215,48 @@ export default {
     },
     sceneHeaderStyle() {
       let ret = {};
-      if (!this.$store.getters.sceneIsValid) {
+      if (!this.sceneIsValid) {
         ret['color'] = "red";
       }
       return ret;
     },
     animationHeaderStyle() {
       let ret = {};
-      if (this.$store.getters.sceneIsValid
-          && !this.$store.getters.animationIsValid) {
+      if (this.sceneIsValid && !this.animationIsValid) {
         ret['color'] = "red";
       }
       return ret;
-    }
+    },
+    sceneIsValid() {
+      let priorScene = this.$store.state.priorScene;
+      let sceneDiff = this.$store.state.sceneDiff;
+      for (let mobjectName of (sceneDiff['add'] || [])) {
+        if (priorScene.includes(mobjectName)) {
+          return false;
+        }
+      }
+      for (let mobjectName of (sceneDiff['remove'] || [])) {
+        if (!priorScene.includes(mobjectName)) {
+          return false;
+        }
+      }
+      return true;
+    },
+    animationIsValid() {
+      let sceneBeforeAnimation = this.$store.getters.sceneBeforeAnimation;
+      let animationDiff = this.$store.state.animationDiff;
+      for (let mobjectName of (animationDiff['add'] || [])) {
+        if (sceneBeforeAnimation.includes(mobjectName)) {
+          return false;
+        }
+      }
+      for (let mobjectName of (animationDiff['remove'] || [])) {
+        if (!sceneBeforeAnimation.includes(mobjectName)) {
+          return false;
+        }
+      }
+      return true;
+    },
   },
   data() {
     return {
@@ -499,8 +533,7 @@ export default {
         return;
       }
       this.stepForward();
-      if (this.$store.getters.animationIsValid &&
-          this.$store.getters.sceneIsValid) {
+      if (this.animationIsValid && this.sceneIsValid) {
         this.scene.playAnimation(
           this.currentAnimation.animation,
           /*onStep=*/this.onAnimationStep,
@@ -535,8 +568,7 @@ export default {
         );
         this.stepForward();
       }
-      if (this.$store.getters.animationIsValid
-          && this.$store.getters.sceneIsValid) {
+      if (this.animationIsValid && this.sceneIsValid) {
         this.currentAnimation.animation = this.buildCurrentAnimation();
         this.scene.playAnimation(
           this.currentAnimation.animation,
@@ -602,7 +634,7 @@ export default {
         return;
       } else if (this.animationOffset < 1) {
         // eslint-disable-next-line
-        console.assert(this.$store.getters.animationIsValid);
+        console.assert(this.animationIsValid);
         this.scene.clearAnimation();
         if (this.currentAnimation.args.length > 0) {
           let mobjectToRevertName = this.currentAnimation.args[0];
@@ -613,7 +645,7 @@ export default {
           this.scene.update();
         }
       } else {
-        if (this.$store.getters.animationIsValid) {
+        if (this.animationIsValid) {
           this.applyDiff(
             this.currentAnimationDiff,
             /*reverse=*/true,
@@ -629,14 +661,13 @@ export default {
       } else if (this.animationOffset < 1) {
         this.jumpToAnimationStart();
       }
-      if (this.$store.getters.animationIsValid &&
-          this.$store.getters.sceneIsValid) {
+      if (this.animationIsValid && this.sceneIsValid) {
         this.applyDiff(this.currentAnimationDiff);
       }
     },
     // errorcheck scenediffs
     stepForward: function() {
-      if (!this.$store.getters.sceneIsValid || !this.$store.getters.animationIsValid) {
+      if (!this.sceneIsValid || !this.animationIsValid) {
         return;
       }
       this.jumpToAnimationEnd();
@@ -652,7 +683,7 @@ export default {
             ...this.currentAnimation.args
           ),
         });
-        if (this.$store.getters.sceneIsValid) {
+        if (this.sceneIsValid) {
           this.applyDiff(
             this.currentSceneDiff,
             /*reverse=*/false,
@@ -732,9 +763,8 @@ export default {
     handleNewAnimation() {
       while (this.animationIndex < this.animations.length - 1
              || this.animationOffset < 1) {
-        if (this.$store.getters.sceneIsValid
-          && this.$store.getters.animationIsValid) {
-        this.stepForward();
+        if (this.sceneIsValid && this.animationIsValid) {
+          this.stepForward();
         } else {
           return
         }
@@ -791,7 +821,7 @@ export default {
       }
     },
     updateSetup(action, newSelection) {
-      if (this.animationOffset === 1 && this.$store.getters.animationIsValid) {
+      if (this.animationOffset === 1 && this.animationIsValid) {
         this.applyDiff(
           this.currentAnimationDiff,
           /*reverse=*/true,
@@ -811,7 +841,7 @@ export default {
         /*reverse=*/false,
         /*moveCursor=*/false,
       );
-      if (this.animationOffset === 1 && this.$store.getters.animationIsValid) {
+      if (this.animationOffset === 1 && this.animationIsValid) {
         this.applyDiff(
           this.currentAnimationDiff,
           /*reverse=*/false,
@@ -829,7 +859,6 @@ export default {
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 #manim-background {
   width: 640px;

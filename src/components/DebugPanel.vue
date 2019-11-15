@@ -6,7 +6,7 @@
 
       <div class="headline">
         Scene Diff
-        <v-icon v-if="!$store.getters.sceneIsValid" color="red">
+        <v-icon v-if="!sceneIsValid" color="red">
           mdi-alert-circle
         </v-icon>
       </div>
@@ -14,7 +14,7 @@
 
       <div class="headline">
         Animation Diff
-        <v-icon v-if="!$store.getters.animationIsValid" color="red">
+        <v-icon v-if="!animationIsValid" color="red">
           mdi-alert-circle
         </v-icon>
       </div>
@@ -38,6 +38,8 @@ export default {
   props: {
     visible: Boolean, 
     mobjects: Object,
+    sceneIsValid: Boolean,
+    animationIsValid: Boolean,
   },
   data() {
     return {
@@ -47,9 +49,7 @@ export default {
   computed: mapState({
     priorScene: 'priorScene',
     sceneDiff: 'sceneDiff',
-    sceneIsValid: 'sceneIsValid',
     animationDiff: 'animationDiff',
-    animationIsValid: 'animationIsValid',
   }),
   mounted() {
     this.updateJson("prior-scene-container", this.priorScene);
