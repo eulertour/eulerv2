@@ -1,4 +1,5 @@
 import * as Two from 'two.js/build/two.js'
+import * as _ from "lodash";
 
 export function pathFromAnchors(anchors, leftHandles, rightHandles) {
   // TODO: errorcheck lengths
@@ -191,4 +192,60 @@ export function smooth(t, inflection=10) {
 
 export function removeListRedundancies(l) {
   return l;
+}
+
+export function getDiffFromTwoScenes(beforeScene, afterScene, mobjectData) {
+  let mobsToAdd = _.difference(afterScene, beforeScene);
+  let mobsToRemove = _.difference(beforeScene, afterScene);
+  let diff = {
+    add: mobsToAdd,
+    remove: mobsToRemove,
+  };
+  return diff;
+}
+
+function removeLineage(node, set, parentMap) {
+  let curNode = node;
+  set.delete(curNode);
+  while (curNode in parentMap) {
+    curNode = parentMap[curNode];
+    set.delete(curNode);
+  }
+}
+
+export function updateSceneWithDiff(scene, diff, mobjectData) {
+  // This logic will be removed
+  console.log(scene, diff, mobjectData);
+  if ("remove" in diff && diff["remove"].length > 0) {
+    for (let root of scene) {
+      // Perform a depth-first traversal of the heirarchy, taking note of which
+      // nodes should be kept.
+      let nodesToAdd = new Set();
+      let parentMap = {};
+      let stack = [root];
+      while (stack.length > 0) {
+        let node = stack.pop();
+        nodesToAdd.add(node);
+        if (diff["remove"].includes(node)) {
+          removeLineage(node, nodesToAdd, parentMap);
+        } else {
+          if ("submobjects" in mobjectData[node]) {
+            let children = mobjectData[node]["submobjects"];
+            children.forEach(c => {parentMap[c] = node});
+            stack = _.concat(stack, children);
+          }
+        }
+      }
+      if (!nodesToAdd.has(root)) {
+        _.remove(scene, node => node === root);
+        for (let node of nodesToAdd) {
+          scene.push(node);
+        }
+      }
+    }
+  }
+
+  scene = _.concat(scene, diff["add"] || []);
+  console.log(scene);
+  return scene;
 }
