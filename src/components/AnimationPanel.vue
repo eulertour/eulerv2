@@ -13,12 +13,6 @@
     v-bind:scene="scene"
     v-bind:animating="animating"
     v-bind:setup="setup"
-    v-on:class-change="(className, mobjectData)=>$emit('class-change', className, mobjectData)"
-    v-on:position-change="(scenePoint, mobjectData)=>$emit('position-change', scenePoint, mobjectData)"
-    v-on:picker-change="(attr, color, mobjectData)=>$emit('picker-change', attr, color, mobjectData)"
-    v-on:picker-hide="(mobjectData)=>$emit('picker-hide', mobjectData)"
-    v-on:picker-save="(attr, color, mobjectData)=>$emit('picker-save', attr, color, mobjectData)"
-    v-on:width-change="(newWidth, mobjectData)=>$emit('width-change', newWidth, mobjectData)"
     v-on:arg-change="(argNum, arg)=>$emit('arg-change', argNum, arg)"
   />
   <div class="mb-10"></div>

@@ -17,18 +17,18 @@
     </v-app-bar>
 
     <v-content>
-      <MobjectLab />
+      <MobjectLabContainer />
     </v-content>
   </v-app>
 </template>
 
 <script>
-import MobjectLab from './components/MobjectLab.vue'
+import MobjectLabContainer from './components/MobjectLabContainer.vue'
 
 export default {
   name: 'App',
   components: {
-    MobjectLab,
+    MobjectLabContainer,
   },
   data: () => ({
     //
