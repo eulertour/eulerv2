@@ -215,7 +215,7 @@ function removeLineage(node, set, parentMap) {
 
 export function updateSceneWithDiff(scene, diff, mobjectData) {
   // This logic will be removed
-  console.log(scene, diff, mobjectData);
+  // console.log(scene, diff, mobjectData);
   if ("remove" in diff && diff["remove"].length > 0) {
     for (let root of scene) {
       // Perform a depth-first traversal of the heirarchy, taking note of which
@@ -246,6 +246,6 @@ export function updateSceneWithDiff(scene, diff, mobjectData) {
   }
 
   scene = _.concat(scene, diff["add"] || []);
-  console.log(scene);
+  // console.log(scene);
   return scene;
 }

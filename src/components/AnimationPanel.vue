@@ -5,13 +5,15 @@
   </div>
   <div class="subtitle-1 mb-2">{{ animationData.description }}</div>
   <component
-    v-bind:is="animationComponent"
-    v-bind:animation-data="animationData"
-    v-bind:animation-offset="animationOffset"
-    v-bind:mobject-data="mobjectData"
-    v-bind:mobject-classes="mobjectClasses"
-    v-bind:scene="scene"
     v-bind:animating="animating"
+    v-bind:animation-data="animationData"
+    v-bind:animation-diff="animationDiff"
+    v-bind:animation-offset="animationOffset"
+    v-bind:is="animationComponent"
+    v-bind:mobject-classes="mobjectClasses"
+    v-bind:mobject-data="mobjectData"
+    v-bind:scene-before-animation="sceneBeforeAnimation"
+    v-bind:scene="scene"
     v-bind:setup="setup"
     v-on:arg-change="(argNum, arg)=>$emit('arg-change', argNum, arg)"
   />
@@ -67,6 +69,8 @@ export default {
     scene: Object,
     animating: Boolean,
     setup: Object,
+    sceneBeforeAnimation: Array,
+    animationDiff: Object,
   },
   computed: {
     animationComponent: function() {

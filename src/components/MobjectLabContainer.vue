@@ -9,6 +9,7 @@
     v-bind:chosen-scene-prop="chosenScene"
     v-bind:chosen-scene="chosenScene"
     v-bind:code="code"
+    v-bind:current-animation-diff="currentAnimationDiff"
     v-bind:current-animation="currentAnimation"
     v-bind:current-scene-diff="currentSceneDiff"
     v-bind:debug="debug"
@@ -16,8 +17,10 @@
     v-bind:expanded-panel-prop="expandedPanel"
     v-bind:mobject-choices="mobjectChoices"
     v-bind:mobjects="mobjects"
+    v-bind:prior-scene="priorScene"
     v-bind:release-notes-dialog-prop="releaseNotesDialog"
     v-bind:release-notes="releaseNotes"
+    v-bind:scene-before-animation="sceneBeforeAnimation"
     v-bind:scene-choices="sceneChoices"
     v-bind:scene-header-style="sceneHeaderStyle"
     v-bind:scene-is-valid="sceneIsValid"
@@ -63,12 +66,6 @@ export default {
     currentAnimation() {
       return this.animations[this.animationIndex];
     },
-    currentAnimationDiff() {
-      return this.$store.state.animationDiff;
-    },
-    currentSceneDiff() {
-      return this.$store.state.sceneDiff;
-    },
     animating() {
       return this.animationOffset !== 0 && this.animationOffset !== 1;
     },
@@ -87,18 +84,24 @@ export default {
       return ret;
     },
     sceneIsValid() {
-      let priorScene = this.$store.state.priorScene;
-      let sceneDiff = this.$store.state.sceneDiff;
-      return this.diffIsValidForScene(sceneDiff, priorScene);
+      return this.diffIsValidForScene(this.currentSceneDiff, this.priorScene);
     },
     animationIsValid() {
-      let sceneBeforeAnimation = this.$store.getters.sceneBeforeAnimation;
-      let animationDiff = this.$store.state.animationDiff;
-      return this.diffIsValidForScene(animationDiff, sceneBeforeAnimation);
-    }
+      return this.diffIsValidForScene(this.currentAnimationDiff, this.sceneBeforeAnimation);
+    },
+    sceneBeforeAnimation() {
+      // TODO: use utils.updateSceneWithDiff
+      let ret = this.priorScene;
+      ret = _.concat(ret, this.currentSceneDiff.add || []);
+      ret = _.difference(ret, this.currentSceneDiff.remove || []);
+      return ret;
+    },
   },
   data() {
     return {
+      priorScene: [],
+      currentSceneDiff: {},
+      currentAnimationDiff: {},
       expandedPanel: [1],
       releaseNotes: consts.RELEASE_NOTES,
       releaseNotesDialog: false,
@@ -195,12 +198,10 @@ export default {
           this.$set(this.mobjects, mobjectName, data);
         }
         this.currentAnimation.animation = this.buildCurrentAnimation();
-        this.$store.commit("updateDiffs", {
-          sceneDiff: this.setupDiffs[0],
-          animationDiff: Manim[this.currentAnimation.className].getDiff(
-            ...this.currentAnimation.args
-          )
-        });
+        this.currentSceneDiff = this.setupDiffs[0];
+        this.currentAnimationDiff = Manim[this.currentAnimation.className].getDiff(
+          ...this.currentAnimation.args
+        );
         this.applyDiff(
           this.currentSceneDiff,
           /*reverse=*/ false,
@@ -320,13 +321,11 @@ export default {
 
       this.currentAnimation.animation = this.buildCurrentAnimation();
       this.scene.update();
-      this.$store.commit("updateDiffs", {
-        priorScene: [],
-        sceneDiff: this.setupDiffs[0],
-        animationDiff: Manim[this.currentAnimation.className].getDiff(
-          ...this.currentAnimation.args
-        )
-      });
+      this.priorScene = [];
+      this.currentSceneDiff = this.setupDiffs[0];
+      this.currentAnimationDiff = Manim[this.currentAnimation.className].getDiff(
+        ...this.currentAnimation.args
+      );
       this.applyDiff(
         this.currentSceneDiff,
         /*reverse=*/ false,
@@ -519,17 +518,15 @@ export default {
       }
       this.jumpToAnimationEnd();
       if (this.animationIndex < this.animations.length - 1) {
-        this.setupDiffs[this.animationIndex] = this.$store.state.sceneDiff;
-        this.$store.commit("stepForward");
+        this.setupDiffs[this.animationIndex] = this.currentSceneDiff;
+        this.stepPriorSceneForward();
         this.animationIndex += 1;
         this.animationOffset = 0;
         this.currentAnimation.animation = this.buildCurrentAnimation();
-        this.$store.commit("updateDiffs", {
-          sceneDiff: this.setupDiffs[this.animationIndex],
-          animationDiff: Manim[this.currentAnimation.className].getDiff(
-            ...this.currentAnimation.args
-          )
-        });
+        this.currentSceneDiff = this.setupDiffs[this.animationIndex];
+        this.currentAnimationDiff = Manim[this.currentAnimation.className].getDiff(
+          ...this.currentAnimation.args
+        );
         if (this.sceneIsValid) {
           this.applyDiff(
             this.currentSceneDiff,
@@ -548,22 +545,20 @@ export default {
           /*reverse=*/ true,
           /*moveCursor=*/ false
         );
-        this.setupDiffs[this.animationIndex] = this.$store.state.sceneDiff;
+        this.setupDiffs[this.animationIndex] = this.currentSceneDiff;
         this.animationIndex -= 1;
         this.animationOffset = 1;
         this.currentAnimation.animation = this.buildCurrentAnimation();
-        this.$store.commit("stepBackward", {
-          sceneDiff: this.setupDiffs[this.animationIndex],
-          animationDiff: Manim[this.currentAnimation.className].getDiff(
+        this.stepPriorSceneBackward(
+          this.setupDiffs[this.animationIndex],
+          Manim[this.currentAnimation.className].getDiff(
             ...this.currentAnimation.args
-          )
-        });
-        this.$store.commit("updateDiffs", {
-          sceneDiff: this.setupDiffs[this.animationIndex],
-          animationDiff: Manim[this.currentAnimation.className].getDiff(
-            ...this.currentAnimation.args
-          )
-        });
+          ),
+        );
+        this.currentSceneDiff = this.setupDiffs[this.animationIndex];
+        this.currentAnimationDiff = Manim[this.currentAnimation.className].getDiff(
+          ...this.currentAnimation.args
+        );
         this.jumpToAnimationStart();
       }
     },
@@ -662,11 +657,9 @@ export default {
       let newArgs = _.cloneDeep(this.currentAnimation.args);
       newArgs[argNum] = arg;
       this.currentAnimation.args = newArgs;
-      this.$store.commit("updateDiffs", {
-        animationDiff: Manim[this.currentAnimation.className].getDiff(
-          ...this.currentAnimation.args
-        )
-      });
+      this.currentAnimationDiff = Manim[this.currentAnimation.className].getDiff(
+        ...this.currentAnimation.args
+      );
       if (this.animationOffset === 1) {
         this.applyDiff(
           this.currentAnimationDiff,
@@ -690,7 +683,7 @@ export default {
       );
       let newDiff = _.cloneDeep(this.currentSceneDiff);
       newDiff[action] = newSelection;
-      this.$store.commit("updateDiffs", { sceneDiff: newDiff });
+      this.currentSceneDiff = newDiff;
       this.applyDiff(
         this.currentSceneDiff,
         /*reverse=*/ false,
@@ -781,11 +774,25 @@ export default {
       }
       // eslint-disable-next-line
       console.error("Encountered a mobject with no name: ", mob);
-    }
+    },
+    stepPriorSceneForward() {
+      // TODO: use utils.updateSceneWithDiff
+      let newScene = _.cloneDeep(this.priorScene);
+      newScene = _.concat(newScene, this.currentSceneDiff['add'] || []);
+      newScene = _.difference(newScene, this.currentSceneDiff['remove'] || []);
+      newScene = _.concat(newScene, this.currentAnimationDiff['add'] || []);
+      newScene = _.difference(newScene, this.currentAnimationDiff['remove'] || []);
+      this.priorScene = newScene;
+    },
+    stepPriorSceneBackward(sceneDiff, animationDiff) {
+      // TODO: use utils.updateSceneWithDiff
+      let newScene = _.cloneDeep(this.priorScene);
+      newScene = _.concat(newScene, animationDiff['remove'] || []);
+      newScene = _.difference(newScene, animationDiff['add'] || []);
+      newScene = _.concat(newScene, sceneDiff['remove'] || []);
+      newScene = _.difference(newScene, sceneDiff['add'] || []);
+      this.priorScene = newScene;
+    },
   }
 }
 </script>
-
-<style>
-
-</style>

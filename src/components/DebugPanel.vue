@@ -30,7 +30,6 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
 import JSONFormatter from 'json-formatter-js'
 
 export default {
@@ -40,17 +39,18 @@ export default {
     mobjects: Object,
     sceneIsValid: Boolean,
     animationIsValid: Boolean,
+    priorScene: Array,
+    sceneDiff: Object,
+    animationDiff: Object,
   },
   data() {
     return {
       needsJsonUpdate: false,
     }
   },
-  computed: mapState({
-    priorScene: 'priorScene',
-    sceneDiff: 'sceneDiff',
-    animationDiff: 'animationDiff',
-  }),
+  computed: {
+
+  },
   mounted() {
     this.updateJson("prior-scene-container", this.priorScene);
     this.updateJson("scene-diff-container", this.sceneDiff);

@@ -43,6 +43,8 @@
                   v-bind:mobject-data="mobjects"
                   v-bind:scene="scene"
                   v-bind:setup="currentSceneDiff"
+                  v-bind:animation-diff="currentAnimationDiff"
+                  v-bind:scene-before-animation="sceneBeforeAnimation"
                   v-on:arg-change="(argNum, arg)=>$emit('handle-arg-change', argNum, arg)"
                   v-on:jump-to-end="$emit('jump-to-animation-end')"
                   v-on:jump-to-start="$emit('jump-to-animation-start')"
@@ -151,10 +153,13 @@
     </div>
     <div class="d-flex justify-center">
       <DebugPanel
-        v-bind:visible="debug"
-        v-bind:mobjects="mobjects"
-        v-bind:scene-is-valid="sceneIsValid"
+        v-bind:animation-diff="currentAnimationDiff"
         v-bind:animation-is-valid="animationIsValid"
+        v-bind:mobjects="mobjects"
+        v-bind:prior-scene="priorScene"
+        v-bind:scene-diff="currentSceneDiff"
+        v-bind:scene-is-valid="sceneIsValid"
+        v-bind:visible="debug"
       />
     </div>
   </div>
@@ -172,29 +177,32 @@ import DebugPanel from "./DebugPanel.vue";
 export default {
   name: "MobjectLab",
   props: {
+    animating: Boolean,
+    animationHeaderStyle: Object,
     animationIndex: Number,
     animationIsValid: Boolean,
     animationOffset: Number,
     animations: Array,
+    chosenSceneProp: String,
     code: String,
+    currentAnimation: Object,
+    currentAnimationDiff: Object,
+    currentSceneDiff: Object,
     debug: Boolean,
     displayCode: Boolean,
+    expandedPanelProp: Array,
+    mobjectChoices: Array,
     mobjects: Object,
     pause: Boolean,
+    priorScene: Array,
     releaseNotes: String,
+    releaseNotesDialogProp: Boolean,
     scene: Object,
+    sceneBeforeAnimation: Array,
     sceneChoices: Array,
+    sceneHeaderStyle: Object,
     sceneIsValid: Boolean,
     sceneLoaded: Boolean,
-    sceneHeaderStyle: Object,
-    currentSceneDiff: Object,
-    currentAnimation: Object,
-    animating: Boolean,
-    animationHeaderStyle: Object,
-    mobjectChoices: Array,
-    expandedPanelProp: Array,
-    chosenSceneProp: String,
-    releaseNotesDialogProp: Boolean,
   },
   components: {
     AnimationPanel,
@@ -207,28 +215,16 @@ export default {
   },
   computed: {
     expandedPanel: {
-      get() {
-        return this.expandedPanelProp;
-      },
-      set(val) {
-        this.$emit('expanded-panel-update', val);
-      }
+      get() { return this.expandedPanelProp; },
+      set(val) { this.$emit('expanded-panel-update', val); }
     },
     chosenScene: {
-      get() {
-        return this.chosenSceneProp;
-      },
-      set(val) {
-        this.$emit('chosen-scene-update', val);
-      }
+      get() { return this.chosenSceneProp; },
+      set(val) { this.$emit('chosen-scene-update', val); }
     },
     releaseNotesDialog: {
-      get() {
-        return this.releaseNotesDialogProp;
-      },
-      set(val) {
-        this.$emit('release-notes-dialog-update', val);
-      }
+      get() { return this.releaseNotesDialogProp; },
+      set(val) { this.$emit('release-notes-dialog-update', val); }
     },
   },
   data() {

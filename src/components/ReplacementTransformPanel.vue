@@ -56,15 +56,17 @@ export default {
     scene: Object,
     animating: Boolean,
     setup: Object,
+    sceneBeforeAnimation: Array,
+    animationDiff: Object,
   },
   computed: {
     startMobjectChoices() {
-      return this.$store.getters.sceneBeforeAnimation;
+      return this.sceneBeforeAnimation;
     },
     endMobjectChoices() {
       return _.difference(
         Object.keys(this.mobjectData),
-        this.$store.getters.sceneBeforeAnimation,
+        this.sceneBeforeAnimation,
       );
     },
     startError() {
@@ -111,11 +113,11 @@ export default {
   },
   methods: {
     mobjectIsAdded(mobjectName) {
-      let diff = this.$store.state.animationDiff;
+      let diff = this.animationDiff;
       return _.indexOf(diff['add'], mobjectName) !== -1;
     },
     mobjectIsRemoved(mobjectName) {
-      let diff = this.$store.state.animationDiff;
+      let diff = this.animationDiff;
       return _.indexOf(diff['remove'], mobjectName) !== -1;
     }
   },
