@@ -49,11 +49,11 @@
 </template>
 
 <script>
-import * as _ from "lodash";
-import * as consts from "../constants.js";
-import * as Manim from "../manim.js";
-import * as utils from "../utils.js";
-import chroma from "chroma-js";
+import * as _ from "lodash"
+import * as consts from "../constants.js"
+import * as Manim from "../manim.js"
+import * as utils from "../utils.js"
+import chroma from "chroma-js"
 
 import MobjectLab from './MobjectLab.vue'
 
@@ -219,10 +219,10 @@ export default {
 
       // Create a mapping from ids to human-readable names
       let mobjectIdsToNames = {};
-      let mobjectIds = Object.keys(scene.mobject_dict);
+      let mobjectIds = Object.keys(scene.initial_mobject_dict);
       for (let i = 0; i < mobjectIds.length; i++) {
         let id = mobjectIds[i];
-        let mobjectData = scene.mobject_dict[id];
+        let mobjectData = scene.initial_mobject_dict[id];
         if (!utils.isGroupData(mobjectData)) {
           mobjectIdsToNames[id] = "mobject" + (i + 1);
         } else {
@@ -231,15 +231,31 @@ export default {
       }
 
       // Assign human-readble names to the entries of the scene list
-      scene.scene_list = scene.scene_list.map(idList =>
-        idList.map(id => mobjectIdsToNames[id])
-      );
+      let renameScene = (scene) => {
+        let newScene = [];
+        for (let mobData of scene) {
+          let newMobData = {};
+          newMobData['name'] = mobjectIdsToNames[mobData['name']];
+          newMobData['submobjects'] = renameScene(mobData['submobjects']);
+          newScene.push(newMobData);
+        }
+        return newScene;
+      };
+
+      let renameSceneList = (sceneList) => {
+        let newSceneList = [];
+        for (let scene of sceneList) {
+          newSceneList.push(renameScene(scene));
+        }
+        return newSceneList;
+      };
+      scene.scene_before_animation = renameSceneList(scene.scene_before_animation);
 
       // Assign human-readable names to the arguments in the animation list
-      let newAnimationList = _.cloneDeep(scene.render_list);
-      for (let i = 0; i < scene.render_list.length; i++) {
-        if ("args" in scene.render_list[i]) {
-          newAnimationList[i].args = scene.render_list[i].args.map(
+      let newAnimationList = _.cloneDeep(scene.animation_list);
+      for (let i = 0; i < scene.animation_list.length; i++) {
+        if ("args" in scene.animation_list[i]) {
+          newAnimationList[i].args = scene.animation_list[i].args.map(
             id => mobjectIdsToNames[id]
           );
         }
@@ -247,8 +263,8 @@ export default {
 
       // Create initial Mobject data
       let newMobjects = {};
-      for (let id of Object.keys(scene.mobject_dict)) {
-        let mobjectData = scene.mobject_dict[id];
+      for (let id of Object.keys(scene.initial_mobject_dict)) {
+        let mobjectData = scene.initial_mobject_dict[id];
         if (!utils.isGroupData(mobjectData)) {
           // TODO: Mobjects with top-level points can still function as Groups
           let strokeColor = mobjectData.style.strokeColor;
@@ -273,24 +289,32 @@ export default {
         newMobjects[mobjectIdsToNames[id]] = mobjectData;
       }
 
-      // Create Scene Diffs
+      // Create node dict for scene diffs
+      let nodeDict = {};
+      for (let mobjectName of Object.keys(newMobjects)) {
+        nodeDict[mobjectName] = {
+          name: mobjectName,
+          submobjects: newMobjects[mobjectName].submobjects,
+        };
+      }
+
+      // Create scene diffs
       let newSceneDiffs = [];
-      let sceneAfterLastAnimation = [];
-      for (let i = 0; i < scene.scene_list.length; i++) {
+      let tempScene = [];
+      for (let i = 0; i < scene.scene_before_animation.length; i++) {
         newSceneDiffs.push(
           utils.getDiffFromTwoScenes(
-            sceneAfterLastAnimation,
-            scene.scene_list[i],
-            newMobjects,
+            tempScene,
+            scene.scene_before_animation[i],
           )
         );
 
-        sceneAfterLastAnimation = utils.updateSceneWithDiff(
-          scene.scene_list[i],
-          Manim[scene.render_list[i].className].getDiff(
-            ...scene.render_list[i].args.map(id => mobjectIdsToNames[id])
+        tempScene = utils.updateSceneWithDiff(
+          scene.scene_before_animation[i],
+          Manim[scene.animation_list[i].className].getDiff(
+            ...scene.animation_list[i].args.map(id => mobjectIdsToNames[id])
           ),
-          newMobjects,
+          nodeDict,
         );
       }
 
@@ -331,14 +355,11 @@ export default {
         /*reverse=*/ false,
         /*moveCursor=*/ false
       );
+      // this.toggleCode();
       // this.play(null, /*singleAnimationOnly=*/false);
     },
     toggleCode() {
-      if (this.displayCode) {
-        this.displayCode = false;
-      } else {
-        this.displayCode = true;
-      }
+      this.displayCode = !this.displayCode;
     },
     setMobjectField(mobjectData) {
       if (!utils.isGroupData(mobjectData)) {
@@ -467,12 +488,13 @@ export default {
         this.setMobjectField(mobjectData);
       }
       for (let [mobjectName, modifyFunc] of diffCopy["modify"]) {
-        let mobjectData = this.mobjects[mobjectName];
-        // eslint-disable-next-line
-        console.assert(
-          mobjectData.mobject && this.scene.contains(mobjectData.mobject)
-        );
-        modifyFunc(mobjectData.mobject);
+        // let mobjectData = this.mobjects[mobjectName];
+        // // eslint-disable-next-line
+        // console.assert(
+        //   mobjectData.mobject && this.scene.contains(mobjectData.mobject)
+        // );
+        // modifyFunc(mobjectData);
+        // this.setMobjectField(mobjectData);
       }
       this.scene.update();
     },

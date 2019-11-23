@@ -194,58 +194,83 @@ export function removeListRedundancies(l) {
   return l;
 }
 
-export function getDiffFromTwoScenes(beforeScene, afterScene, mobjectData) {
-  let mobsToAdd = _.difference(afterScene, beforeScene);
-  let mobsToRemove = _.difference(beforeScene, afterScene);
-  let diff = {
-    add: mobsToAdd,
-    remove: mobsToRemove,
-  };
-  return diff;
-}
-
-function removeLineage(node, set, parentMap) {
-  let curNode = node;
-  set.delete(curNode);
-  while (curNode in parentMap) {
-    curNode = parentMap[curNode];
-    set.delete(curNode);
+function getModification(beforeNode, afterNode) {
+  let mobsToAdd = _.difference(afterNode.submobjects, beforeNode.submobjects);
+  let mobsToRemove = _.difference(beforeNode.submobjects, afterNode.submobjects);
+  if (mobsToAdd.length > 0) {
+    return ["add", mobsToAdd];
   }
+  if (mobsToRemove.length > 0) {
+    return ["remove", mobsToRemove];
+  }
+  return [];
 }
 
-export function updateSceneWithDiff(scene, diff, mobjectData) {
-  // This logic will be removed
-  // console.log(scene, diff, mobjectData);
-  if ("remove" in diff && diff["remove"].length > 0) {
-    for (let root of scene) {
-      // Perform a depth-first traversal of the heirarchy, taking note of which
-      // nodes should be kept.
-      let nodesToAdd = new Set();
-      let parentMap = {};
-      let stack = [root];
-      while (stack.length > 0) {
-        let node = stack.pop();
-        nodesToAdd.add(node);
-        if (diff["remove"].includes(node)) {
-          removeLineage(node, nodesToAdd, parentMap);
-        } else {
-          if ("submobjects" in mobjectData[node]) {
-            let children = mobjectData[node]["submobjects"];
-            children.forEach(c => {parentMap[c] = node});
-            stack = _.concat(stack, children);
-          }
-        }
-      }
-      if (!nodesToAdd.has(root)) {
-        _.remove(scene, node => node === root);
-        for (let node of nodesToAdd) {
-          scene.push(node);
+export function getDiffFromTwoScenes(beforeScene, afterScene) {
+  let beforeNames = beforeScene.map(node => node.name);
+  let afterNames = afterScene.map(node => node.name);
+  let mobsToAdd = _.difference(afterNames, beforeNames);
+  let mobsToRemove = _.difference(beforeNames, afterNames);
+
+  let modifications = [];
+  for (let node1 of beforeScene) {
+    for (let node2 of afterScene) {
+      if (node1.name === node2.name) {
+        let modification = getModification(node1, node2);
+        if (modification.length !== 0) {
+          modifications.push(modification);
         }
       }
     }
   }
 
-  scene = _.concat(scene, diff["add"] || []);
-  // console.log(scene);
+  let diff = {
+    add: mobsToAdd,
+    remove: mobsToRemove,
+    modify: modifications,
+  };
+  return diff;
+}
+
+function nodeFromName(name, nodeDict) {
+  let ret = {
+    name: name,
+    submobjects: nodeDict[name].submobjects.map(name => nodeFromName(name, nodeDict)),
+  };
+  return ret;
+}
+
+export function updateSceneWithDiff(scene, diff, nodeDict) {
+  if ("remove" in diff && diff["remove"].length > 0) {
+    scene = scene.filter(node => !diff["remove"].includes(node.name));
+    for (let root of scene) {
+      // Perform a depth-first traversal of the heirarchy, taking note of which
+      // nodes should be kept.
+      let parentMap = {};
+      let stack = [root];
+      while (stack.length > 0) {
+        let node = stack.pop();
+        if (diff["remove"].includes(node.name)) {
+          let parentNode = parentMap[node];
+          _.remove(
+            parentNode.submobjects,
+            n => n.name === node.name,
+          );
+          _.remove(
+            nodeDict[parentNode.name].submobjects,
+            n => n.name === node.name,
+          );
+        } else {
+          let children = node.submobjects;
+          children.forEach(c => {parentMap[c] = node});
+          stack = _.concat(stack, children);
+        }
+      }
+    }
+  }
+
+  // the node dict only has names, not nodes
+  let nodesToAdd = (diff["add"] || []).map(name => nodeFromName(name, nodeDict));
+  scene = _.concat(scene, nodesToAdd);
   return scene;
 }
