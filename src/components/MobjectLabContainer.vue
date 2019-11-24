@@ -49,6 +49,9 @@
 </template>
 
 <script>
+/*
+ * A Scene is uniquely defined by its Mobjets, Animations, and scene diffs.
+ */
 import * as _ from "lodash"
 import * as consts from "../constants.js"
 import * as Manim from "../manim.js"
@@ -65,6 +68,26 @@ export default {
   computed: {
     currentAnimation() {
       return this.animations[this.animationIndex];
+    },
+    currentSceneDiff: {
+      get() {
+        return this.sceneDiffs[this.animationIndex];
+      },
+      set(diff) {
+        let newDiffs = _.cloneDeep(this.sceneDiffs);
+        newDiffs[this.animationIndex] = diff;
+        this.sceneDiffs = newDiffs;
+      }
+    },
+    currentAnimationDiff: {
+      get() {
+        return this.animationDiffs[this.animationIndex];
+      },
+      set(diff) {
+        let newDiffs = _.cloneDeep(this.animationDiffs);
+        newDiffs[this.animationIndex] = diff;
+        this.animationDiffs = newDiffs;
+      }
     },
     animating() {
       return this.animationOffset !== 0 && this.animationOffset !== 1;
@@ -84,12 +107,21 @@ export default {
       return ret;
     },
     sceneIsValid() {
+      if (!this.sceneLoaded) {
+        return false;
+      }
       return this.diffIsValidForScene(this.currentSceneDiff, this.priorScene);
     },
     animationIsValid() {
+      if (!this.sceneLoaded) {
+        return false;
+      }
       return this.diffIsValidForScene(this.currentAnimationDiff, this.sceneBeforeAnimation);
     },
     sceneBeforeAnimation() {
+      if (!this.sceneLoaded) {
+        return [];
+      }
       // TODO: use utils.updateSceneWithDiff
       let ret = this.priorScene;
       ret = _.concat(ret, this.currentSceneDiff.add || []);
@@ -100,8 +132,6 @@ export default {
   data() {
     return {
       priorScene: [],
-      currentSceneDiff: {},
-      currentAnimationDiff: {},
       expandedPanel: [1],
       releaseNotes: consts.RELEASE_NOTES,
       releaseNotesDialog: false,
@@ -135,14 +165,16 @@ export default {
           animation: null
         }
       ],
-      setupDiffs: [
+      sceneDiffs: [
         // diffs are of the form:
         // {
         //   'add':    [mobject11, ...],
         //   'remove': [mobject21, ...],
         //   'modify': [[mobject31, forwardFunc, backwardFunc], ...],
         // }
-        { add: ["mobject1"] }
+      ],
+      animationDiffs: [
+
       ],
       mobjects: {},
       initialMobjects: {
@@ -192,13 +224,14 @@ export default {
         window.pyodide.runPython("import manimlib");
         window.pyodide.runPython("import numpy");
         window.manimlib = window.pyodide.pyimport("manimlib");
+        // Initialize Mobjects, Animations, and scene diffs
         for (let mobjectName of Object.keys(this.initialMobjects)) {
           let data = _.cloneDeep(this.initialMobjects[mobjectName]);
           this.setMobjectField(data);
           this.$set(this.mobjects, mobjectName, data);
         }
         this.currentAnimation.animation = this.buildCurrentAnimation();
-        this.currentSceneDiff = this.setupDiffs[0];
+        this.sceneDiffs = [{add: ["mobject1"]}];
         this.currentAnimationDiff = Manim[this.currentAnimation.className].getDiff(
           ...this.currentAnimation.args
         );
@@ -320,7 +353,7 @@ export default {
 
       this.mobjects = newMobjects;
       this.animations = newAnimationList;
-      this.setupDiffs = newSceneDiffs;
+      this.sceneDiffs = newSceneDiffs;
       this.animationIndex = 0;
       this.animationOffset = 0;
       this.scene.clear();
@@ -346,7 +379,7 @@ export default {
       this.currentAnimation.animation = this.buildCurrentAnimation();
       this.scene.update();
       this.priorScene = [];
-      this.currentSceneDiff = this.setupDiffs[0];
+      this.currentSceneDiff = this.sceneDiffs[0];
       this.currentAnimationDiff = Manim[this.currentAnimation.className].getDiff(
         ...this.currentAnimation.args
       );
@@ -540,12 +573,12 @@ export default {
       }
       this.jumpToAnimationEnd();
       if (this.animationIndex < this.animations.length - 1) {
-        this.setupDiffs[this.animationIndex] = this.currentSceneDiff;
+        this.sceneDiffs[this.animationIndex] = this.currentSceneDiff;
         this.stepPriorSceneForward();
         this.animationIndex += 1;
         this.animationOffset = 0;
         this.currentAnimation.animation = this.buildCurrentAnimation();
-        this.currentSceneDiff = this.setupDiffs[this.animationIndex];
+        this.currentSceneDiff = this.sceneDiffs[this.animationIndex];
         this.currentAnimationDiff = Manim[this.currentAnimation.className].getDiff(
           ...this.currentAnimation.args
         );
@@ -567,17 +600,17 @@ export default {
           /*reverse=*/ true,
           /*moveCursor=*/ false
         );
-        this.setupDiffs[this.animationIndex] = this.currentSceneDiff;
+        this.sceneDiffs[this.animationIndex] = this.currentSceneDiff;
         this.animationIndex -= 1;
         this.animationOffset = 1;
         this.currentAnimation.animation = this.buildCurrentAnimation();
         this.stepPriorSceneBackward(
-          this.setupDiffs[this.animationIndex],
+          this.sceneDiffs[this.animationIndex],
           Manim[this.currentAnimation.className].getDiff(
             ...this.currentAnimation.args
           ),
         );
-        this.currentSceneDiff = this.setupDiffs[this.animationIndex];
+        this.currentSceneDiff = this.sceneDiffs[this.animationIndex];
         this.currentAnimationDiff = Manim[this.currentAnimation.className].getDiff(
           ...this.currentAnimation.args
         );
@@ -646,7 +679,7 @@ export default {
         args: [],
         argDescriptions: []
       });
-      this.setupDiffs.push({});
+      this.sceneDiffs.push({});
       this.stepForward();
     },
     newMobject() {
