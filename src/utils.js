@@ -194,17 +194,71 @@ export function removeListRedundancies(l) {
   return l;
 }
 
-function getModification(beforeNode, afterNode) {
-  let mobsToAdd = _.difference(afterNode.submobjects, beforeNode.submobjects);
-  let mobsToRemove = _.difference(beforeNode.submobjects, afterNode.submobjects);
-  if (mobsToAdd.length > 0) {
-    return ["add", mobsToAdd];
-  }
-  if (mobsToRemove.length > 0) {
-    return ["remove", mobsToRemove];
-  }
-  return [];
+export function getFullDiff(diff) {
+  return {
+    add: diff["add"] || [],
+    remove: diff["remove"] || [],
+    modify: diff["modify"] || [],
+  };
 }
+
+export function getReversedDiff(diff) {
+  return {
+    add: diff["remove"] || [],
+    remove: diff["add"] || [],
+    modify: (diff["modify"] || []).map(list => [list[0], list[2], list[1]]),
+  };
+}
+
+export function getMobjectsRemovedFromParent(diff) {
+  let ret = [];
+  for (let arr of diff["modify"]) {
+    let [command, arg] = arr[1].split(" ");
+    if (command === "remove") {
+      ret.push(arg);
+    }
+  }
+  return ret;
+}
+
+export function getMobjectsAddedToParent(diff) {
+  let ret = [];
+  for (let arr of diff["modify"]) {
+    let [command, arg] = arr[1].split(" ");
+    if (command === "add") {
+      ret.push(arg);
+    }
+  }
+  return ret;
+}
+
+export function applyModification(mobjectData, modificationString) {
+  // Commands have the form "add mobject1", "move mobject2 x y", etc.
+  let [command, arg] = modificationString.split(" ");
+  switch (command) {
+    case "add":
+      mobjectData.submobjects.push(arg);
+      break;
+    case "remove":
+      _.remove(mobjectData.submobjects, name => name === arg);
+      break;
+    default:
+      // eslint-disable-next-line
+      console.error("Invalid modification command", modificationString);
+  }
+}
+
+// function getModification(beforeNode, afterNode) {
+//   let mobsToAdd = _.difference(afterNode.submobjects, beforeNode.submobjects);
+//   let mobsToRemove = _.difference(beforeNode.submobjects, afterNode.submobjects);
+//   if (mobsToAdd.length > 0) {
+//     return ["add", mobsToAdd];
+//   }
+//   if (mobsToRemove.length > 0) {
+//     return ["remove", mobsToRemove];
+//   }
+//   return [];
+// }
 
 export function getDiffFromTwoScenes(beforeScene, afterScene) {
   let beforeNames = beforeScene.map(node => node.name);
@@ -213,16 +267,16 @@ export function getDiffFromTwoScenes(beforeScene, afterScene) {
   let mobsToRemove = _.difference(beforeNames, afterNames);
 
   let modifications = [];
-  for (let node1 of beforeScene) {
-    for (let node2 of afterScene) {
-      if (node1.name === node2.name) {
-        let modification = getModification(node1, node2);
-        if (modification.length !== 0) {
-          modifications.push(modification);
-        }
-      }
-    }
-  }
+  // for (let node1 of beforeScene) {
+  //   for (let node2 of afterScene) {
+  //     if (node1.name === node2.name) {
+  //       let modification = getModification(node1, node2);
+  //       if (modification.length !== 0) {
+  //         modifications.push(modification);
+  //       }
+  //     }
+  //   }
+  // }
 
   let diff = {
     add: mobsToAdd,

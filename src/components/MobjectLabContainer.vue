@@ -52,18 +52,18 @@
 /*
  * A Scene is uniquely defined by its Mobjets, Animations, and scene diffs.
  */
-import * as _ from "lodash"
-import * as consts from "../constants.js"
-import * as Manim from "../manim.js"
-import * as utils from "../utils.js"
-import chroma from "chroma-js"
+import * as _ from "lodash";
+import * as consts from "../constants.js";
+import * as Manim from "../manim.js";
+import * as utils from "../utils.js";
+import chroma from "chroma-js";
 
-import MobjectLab from './MobjectLab.vue'
+import MobjectLab from "./MobjectLab.vue";
 
 export default {
   name: "MobjectLabContainer",
   components: {
-    MobjectLab,
+    MobjectLab
   },
   computed: {
     currentAnimation() {
@@ -116,18 +116,17 @@ export default {
       if (!this.sceneLoaded) {
         return false;
       }
-      return this.diffIsValidForScene(this.currentAnimationDiff, this.sceneBeforeAnimation);
+      return this.diffIsValidForScene(
+        this.currentAnimationDiff,
+        this.sceneBeforeAnimation
+      );
     },
     sceneBeforeAnimation() {
       if (!this.sceneLoaded) {
         return [];
       }
-      // TODO: use utils.updateSceneWithDiff
-      let ret = this.priorScene;
-      ret = _.concat(ret, this.currentSceneDiff.add || []);
-      ret = _.difference(ret, this.currentSceneDiff.remove || []);
-      return ret;
-    },
+      return this.diffPriorScene(this.priorScene, this.currentSceneDiff);
+    }
   },
   data() {
     return {
@@ -173,9 +172,7 @@ export default {
         //   'modify': [[mobject31, forwardFunc, backwardFunc], ...],
         // }
       ],
-      animationDiffs: [
-
-      ],
+      animationDiffs: [],
       mobjects: {},
       initialMobjects: {
         mobject1: {
@@ -231,10 +228,10 @@ export default {
           this.$set(this.mobjects, mobjectName, data);
         }
         this.currentAnimation.animation = this.buildCurrentAnimation();
-        this.sceneDiffs = [{add: ["mobject1"]}];
-        this.currentAnimationDiff = Manim[this.currentAnimation.className].getDiff(
-          ...this.currentAnimation.args
-        );
+        this.sceneDiffs = [{ add: ["mobject1"] }];
+        this.currentAnimationDiff = Manim[
+          this.currentAnimation.className
+        ].getDiff(...this.currentAnimation.args, this.mobjects);
         this.applyDiff(
           this.currentSceneDiff,
           /*reverse=*/ false,
@@ -264,25 +261,27 @@ export default {
       }
 
       // Assign human-readble names to the entries of the scene list
-      let renameScene = (scene) => {
+      let renameScene = scene => {
         let newScene = [];
         for (let mobData of scene) {
           let newMobData = {};
-          newMobData['name'] = mobjectIdsToNames[mobData['name']];
-          newMobData['submobjects'] = renameScene(mobData['submobjects']);
+          newMobData["name"] = mobjectIdsToNames[mobData["name"]];
+          newMobData["submobjects"] = renameScene(mobData["submobjects"]);
           newScene.push(newMobData);
         }
         return newScene;
       };
 
-      let renameSceneList = (sceneList) => {
+      let renameSceneList = sceneList => {
         let newSceneList = [];
         for (let scene of sceneList) {
           newSceneList.push(renameScene(scene));
         }
         return newSceneList;
       };
-      scene.scene_before_animation = renameSceneList(scene.scene_before_animation);
+      scene.scene_before_animation = renameSceneList(
+        scene.scene_before_animation
+      );
 
       // Assign human-readable names to the arguments in the animation list
       let newAnimationList = _.cloneDeep(scene.animation_list);
@@ -294,7 +293,7 @@ export default {
         }
       }
 
-      // Create initial Mobject data
+      // Initialize Mobject data
       let newMobjects = {};
       for (let id of Object.keys(scene.initial_mobject_dict)) {
         let mobjectData = scene.initial_mobject_dict[id];
@@ -322,44 +321,7 @@ export default {
         newMobjects[mobjectIdsToNames[id]] = mobjectData;
       }
 
-      // Create node dict for scene diffs
-      let nodeDict = {};
-      for (let mobjectName of Object.keys(newMobjects)) {
-        nodeDict[mobjectName] = {
-          name: mobjectName,
-          submobjects: newMobjects[mobjectName].submobjects,
-        };
-      }
-
-      // Create scene diffs
-      let newSceneDiffs = [];
-      let tempScene = [];
-      for (let i = 0; i < scene.scene_before_animation.length; i++) {
-        newSceneDiffs.push(
-          utils.getDiffFromTwoScenes(
-            tempScene,
-            scene.scene_before_animation[i],
-          )
-        );
-
-        tempScene = utils.updateSceneWithDiff(
-          scene.scene_before_animation[i],
-          Manim[scene.animation_list[i].className].getDiff(
-            ...scene.animation_list[i].args.map(id => mobjectIdsToNames[id])
-          ),
-          nodeDict,
-        );
-      }
-
-      this.mobjects = newMobjects;
-      this.animations = newAnimationList;
-      this.sceneDiffs = newSceneDiffs;
-      this.animationIndex = 0;
-      this.animationOffset = 0;
-      this.scene.clear();
-      this.scene.clearAnimation();
-
-      // Initialize mobjects
+      // Initialize Mobjects
       let groupNames = [];
       for (let mobjectName of Object.keys(newMobjects)) {
         let data = newMobjects[mobjectName];
@@ -370,19 +332,54 @@ export default {
         }
       }
 
-      // Initialize groups
+      // Initialize Groups
       for (let groupName of groupNames) {
         let data = newMobjects[groupName];
-        this.setMobjectField(data);
+        this.setMobjectField(data, /*allMobjectData=*/ newMobjects);
       }
 
+      // Create mutable node dict for use when computing scene diffs
+      let nodeDict = {};
+      for (let mobjectName of Object.keys(newMobjects)) {
+        nodeDict[mobjectName] = {
+          name: mobjectName,
+          submobjects: newMobjects[mobjectName].submobjects
+        };
+      }
+
+      // Create scene diffs
+      let newAnimationDiffs = [];
+      let newSceneDiffs = [];
+      let tempScene = [];
+      for (let i = 0; i < scene.scene_before_animation.length; i++) {
+        newSceneDiffs.push(
+          utils.getDiffFromTwoScenes(tempScene, scene.scene_before_animation[i])
+        );
+
+        let diff = Manim[scene.animation_list[i].className].getDiff(
+          ...scene.animation_list[i].args.map(id => mobjectIdsToNames[id]),
+          newMobjects
+        );
+        newAnimationDiffs.push(diff);
+        tempScene = utils.updateSceneWithDiff(
+          scene.scene_before_animation[i],
+          diff,
+          nodeDict
+        );
+      }
+
+      this.mobjects = newMobjects;
+      this.animations = newAnimationList;
+      this.animationDiffs = newAnimationDiffs;
+      this.sceneDiffs = newSceneDiffs;
+      this.animationIndex = 0;
+      this.animationOffset = 0;
+      this.scene.clear();
+      this.scene.clearAnimation();
       this.currentAnimation.animation = this.buildCurrentAnimation();
       this.scene.update();
       this.priorScene = [];
       this.currentSceneDiff = this.sceneDiffs[0];
-      this.currentAnimationDiff = Manim[this.currentAnimation.className].getDiff(
-        ...this.currentAnimation.args
-      );
       this.applyDiff(
         this.currentSceneDiff,
         /*reverse=*/ false,
@@ -394,7 +391,7 @@ export default {
     toggleCode() {
       this.displayCode = !this.displayCode;
     },
-    setMobjectField(mobjectData) {
+    setMobjectField(mobjectData, allMobjectData = null) {
       if (!utils.isGroupData(mobjectData)) {
         let s = new Manim[mobjectData.className](mobjectData.params);
         s.translateMobject(mobjectData.position);
@@ -402,15 +399,16 @@ export default {
         mobjectData.mobject = s;
         return s;
       } else {
-        let mobs = mobjectData.submobjects.map(
-          mobjectName => this.mobjects[mobjectName].mobject
-        );
+        let mobs = mobjectData.submobjects.map(mobjectName => {
+          if (allMobjectData === null) {
+            return this.mobjects[mobjectName].mobject;
+          } else {
+            return allMobjectData[mobjectName].mobject;
+          }
+        });
         let g = new Manim["Group"](mobs);
         mobjectData.mobject = g;
       }
-    },
-    pause: function() {
-      this.scene.pause();
     },
     buildCurrentAnimation: function() {
       let args = [];
@@ -443,16 +441,6 @@ export default {
         );
       }
     },
-    replay: function(e, singleAnimationOnly = true) {
-      if (singleAnimationOnly) {
-        this.jumpToAnimationStart();
-      } else {
-        while (this.animationIndex > 0 || this.animationOffset > 0) {
-          this.stepBackward();
-        }
-      }
-      this.play(e, singleAnimationOnly);
-    },
     play: function(e, singleAnimationOnly = true) {
       this.playingSingleAnimation = singleAnimationOnly;
       if (this.animating) {
@@ -481,12 +469,25 @@ export default {
         );
       }
     },
+    replay: function(e, singleAnimationOnly = true) {
+      if (singleAnimationOnly) {
+        this.jumpToAnimationStart();
+      } else {
+        while (this.animationIndex > 0 || this.animationOffset > 0) {
+          this.stepBackward();
+        }
+      }
+      this.play(e, singleAnimationOnly);
+    },
+    pause: function() {
+      this.scene.pause();
+    },
     /*  Updates the mobjects in this.scene according to the diff. Diffs are of
      *  the form:
      *  {
      *    'add':    [mobject11, ...],
      *    'remove': [mobject21, ...],
-     *    'modify': [[mobject31, forwardFunc, backwardFunc], ...],
+     *    'modify': [[mobject31, forwardCommand, backwardCommand], ...],
      *  }
      */
     applyDiff: function(diff, reverse = false, moveCursor = true) {
@@ -501,33 +502,58 @@ export default {
       diffCopy["remove"] = diff["remove"] || [];
       diffCopy["modify"] = diff["modify"] || [];
       if (reverse) {
-        diffCopy["add"] = diff["remove"] || [];
-        diffCopy["remove"] = diff["add"] || [];
-        diffCopy["modify"].forEach((newList, index) => {
-          let oldList = diff["modify"][index];
-          newList[1] = oldList[2];
-          newList[2] = oldList[1];
-        });
+        diffCopy = utils.getReversedDiff(diff);
       }
       for (let mobjectName of diffCopy["add"]) {
-        let mobjectData = this.mobjects[mobjectName];
-        this.setMobjectField(mobjectData);
-        this.scene.add(mobjectData.mobject);
+        let postponeUntilModify = utils
+          .getMobjectsAddedToParent(diffCopy)
+          .includes(mobjectName);
+        if (!postponeUntilModify) {
+          let mobjectData = this.mobjects[mobjectName];
+          this.setMobjectField(mobjectData);
+          this.scene.add(mobjectData.mobject);
+        }
       }
       for (let mobjectName of diffCopy["remove"]) {
-        // THIS NEEDS TO BE GROUP-COMPATIBLE
-        let mobjectData = this.mobjects[mobjectName];
-        this.scene.remove(mobjectData.mobject);
-        this.setMobjectField(mobjectData);
+        let postponeUntilModify = utils
+          .getMobjectsRemovedFromParent(diffCopy)
+          .includes(mobjectName);
+        if (!postponeUntilModify) {
+          let mobjectData = this.mobjects[mobjectName];
+          this.scene.remove(mobjectData.mobject);
+          this.setMobjectField(mobjectData);
+        }
       }
       for (let [mobjectName, modifyFunc] of diffCopy["modify"]) {
-        // let mobjectData = this.mobjects[mobjectName];
-        // // eslint-disable-next-line
-        // console.assert(
-        //   mobjectData.mobject && this.scene.contains(mobjectData.mobject)
-        // );
-        // modifyFunc(mobjectData);
-        // this.setMobjectField(mobjectData);
+        let mobjectData = this.mobjects[mobjectName];
+        // eslint-disable-next-line
+        console.assert(
+          mobjectData.mobject && this.scene.contains(mobjectData.mobject)
+        );
+
+        // Commands have the form "add mobject1", "remove mobject1", etc.
+        let removedMobjects = [];
+        let [command, arg] = modifyFunc.split(" ");
+        switch (command) {
+          case "add":
+            mobjectData.submobjects.push(arg);
+            break;
+          case "remove":
+            _.remove(mobjectData.submobjects, name => name === arg);
+            removedMobjects.push(arg);
+            break;
+          default:
+            // eslint-disable-next-line
+            console.error("Invalid modification command", modificationString);
+        }
+
+        this.scene.remove(mobjectData.mobject);
+        this.setMobjectField(mobjectData);
+        this.scene.add(mobjectData.mobject);
+
+        for (let mobjectName of removedMobjects) {
+          this.setMobjectField(this.mobjects[mobjectName]);
+        }
       }
       this.scene.update();
     },
@@ -579,9 +605,6 @@ export default {
         this.animationOffset = 0;
         this.currentAnimation.animation = this.buildCurrentAnimation();
         this.currentSceneDiff = this.sceneDiffs[this.animationIndex];
-        this.currentAnimationDiff = Manim[this.currentAnimation.className].getDiff(
-          ...this.currentAnimation.args
-        );
         if (this.sceneIsValid) {
           this.applyDiff(
             this.currentSceneDiff,
@@ -604,40 +627,14 @@ export default {
         this.animationIndex -= 1;
         this.animationOffset = 1;
         this.currentAnimation.animation = this.buildCurrentAnimation();
-        this.stepPriorSceneBackward(
-          this.sceneDiffs[this.animationIndex],
-          Manim[this.currentAnimation.className].getDiff(
-            ...this.currentAnimation.args
-          ),
-        );
-        this.currentSceneDiff = this.sceneDiffs[this.animationIndex];
-        this.currentAnimationDiff = Manim[this.currentAnimation.className].getDiff(
-          ...this.currentAnimation.args
-        );
+        this.stepPriorSceneBackward();
         this.jumpToAnimationStart();
       }
     },
     onAnimationStep: function(elapsedSeconds) {
       this.animationOffset = elapsedSeconds;
     },
-    jumpToMobjectLocation(mobjectData) {
-      let mobjectIsAtStart;
-      let diff = this.currentAnimation.diff;
-      let attr = diff[0];
-      if (attr === null) {
-        mobjectIsAtStart = diff[1] === mobjectData.name;
-      } else {
-        mobjectIsAtStart = _.split(diff[1], ".")[0] === mobjectData.name;
-      }
-      if (mobjectIsAtStart) {
-        this.jumpToAnimationStart(/*forceDraw=*/ true);
-      } else {
-        this.jumpToAnimationEnd(/*forceDraw=*/ true);
-      }
-    },
     handleMobjectUpdate(mobjectName, attr, val) {
-      // How could this jump to a Mobjects location? Get it from the animation
-      // panel?
       // eslint-disable-next-line
       console.assert(
         this.scene.contains(this.mobjects[mobjectName].mobject),
@@ -680,6 +677,7 @@ export default {
         argDescriptions: []
       });
       this.sceneDiffs.push({});
+      this.animationDiffs.push(Manim["Wait"].getDiff([], this.mobjects));
       this.stepForward();
     },
     newMobject() {
@@ -712,9 +710,9 @@ export default {
       let newArgs = _.cloneDeep(this.currentAnimation.args);
       newArgs[argNum] = arg;
       this.currentAnimation.args = newArgs;
-      this.currentAnimationDiff = Manim[this.currentAnimation.className].getDiff(
-        ...this.currentAnimation.args
-      );
+      this.currentAnimationDiff = Manim[
+        this.currentAnimation.className
+      ].getDiff(...this.currentAnimation.args, this.mobjects);
       if (this.animationOffset === 1) {
         this.applyDiff(
           this.currentAnimationDiff,
@@ -765,26 +763,29 @@ export default {
         let namesInHeirarchy = this.getNamesInHeirarchy(mobjectName);
         for (let submobName of namesInHeirarchy) {
           if (scene.includes(submobName)) {
+            console.log("invalid add", mobjectName);
             return false;
           }
         }
       }
       for (let mobjectName of diff["remove"] || []) {
-        // A Mobject can be removed if it or any of its ancestors are in the
-        // scene.
-        let namesInLineage = this.getNamesInLineage(mobjectName);
-        let lineageMemberInScene = false;
-        for (let submobName of namesInLineage) {
-          if (scene.includes(submobName)) {
-            lineageMemberInScene = true;
-            break;
+        // A Mobject can be removed if it appears anywhere in the scene.
+        let namesInScene = this.getNamesInScene();
+        for (let submobName of namesInScene) {
+          if (!scene.includes(submobName)) {
+            console.log("invalid remove", mobjectName);
+            return false;
           }
-        }
-        if (!lineageMemberInScene) {
-          return false;
         }
       }
       return true;
+    },
+    getNamesInScene() {
+      let ret = [];
+      for (let mobjectName of Object.keys(this.mobjects)) {
+        ret.concat(this.getNamesInHeirarchy(mobjectName));
+      }
+      return ret;
     },
     getNamesInHeirarchy(mobjectName) {
       if (this.mobjects[mobjectName] === undefined) {
@@ -799,55 +800,42 @@ export default {
       }
       return ret;
     },
-    getNamesInLineage(mobjectName) {
-      if (this.mobjects[mobjectName] === undefined) {
-        return [];
-      }
-      let currentMobject = this.mobjects[mobjectName].mobject;
-      let mobjectsInLineage = [currentMobject];
-      while (currentMobject.parent !== undefined) {
-        currentMobject = currentMobject.parent;
-        // Don't add the Group representing the Scene.
-        if (
-          !(
-            currentMobject.parent &&
-            currentMobject.parent.hasOwnProperty("domElement")
-          )
-        ) {
-          mobjectsInLineage = _.concat(mobjectsInLineage, currentMobject);
-        } else {
-          break;
-        }
-      }
-      return mobjectsInLineage.map(mob => this.getNameFromMobject(mob));
-    },
-    getNameFromMobject(mob) {
-      for (let mobjectName of Object.keys(this.mobjects)) {
-        if (this.mobjects[mobjectName].mobject === mob) {
-          return mobjectName;
-        }
-      }
-      // eslint-disable-next-line
-      console.error("Encountered a mobject with no name: ", mob);
-    },
     stepPriorSceneForward() {
-      // TODO: use utils.updateSceneWithDiff
       let newScene = _.cloneDeep(this.priorScene);
-      newScene = _.concat(newScene, this.currentSceneDiff['add'] || []);
-      newScene = _.difference(newScene, this.currentSceneDiff['remove'] || []);
-      newScene = _.concat(newScene, this.currentAnimationDiff['add'] || []);
-      newScene = _.difference(newScene, this.currentAnimationDiff['remove'] || []);
+      newScene = this.diffPriorScene(
+        newScene,
+        utils.getFullDiff(this.currentSceneDiff)
+      );
+      newScene = this.diffPriorScene(
+        newScene,
+        utils.getFullDiff(this.currentAnimationDiff)
+      );
       this.priorScene = newScene;
     },
-    stepPriorSceneBackward(sceneDiff, animationDiff) {
-      // TODO: use utils.updateSceneWithDiff
+    stepPriorSceneBackward() {
       let newScene = _.cloneDeep(this.priorScene);
-      newScene = _.concat(newScene, animationDiff['remove'] || []);
-      newScene = _.difference(newScene, animationDiff['add'] || []);
-      newScene = _.concat(newScene, sceneDiff['remove'] || []);
-      newScene = _.difference(newScene, sceneDiff['add'] || []);
+      newScene = this.diffPriorScene(
+        newScene,
+        utils.getReversedDiff(this.currentAnimationDiff)
+      );
+      newScene = this.diffPriorScene(
+        newScene,
+        utils.getReversedDiff(this.currentSceneDiff)
+      );
       this.priorScene = newScene;
     },
+    diffPriorScene(scene, diff) {
+      diff = utils.getFullDiff(diff);
+      scene = _.concat(
+        scene,
+        _.difference(diff["add"], utils.getMobjectsAddedToParent(diff))
+      );
+      scene = _.difference(
+        scene,
+        _.difference(diff["remove"], utils.getMobjectsRemovedFromParent(diff))
+      );
+      return scene;
+    }
   }
-}
+};
 </script>

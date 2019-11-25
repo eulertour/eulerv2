@@ -161,10 +161,22 @@ class FadeOut extends Animation {
     this.mobject.opacity = 1 - alpha;
   }
 
-  static getDiff(mobject) {
-    return {
+  static getDiff(mobject, mobjectData) {
+    let ret = {
       'remove': [mobject],
+      'modify': [],
     };
+    for (let mobjectName of Object.keys(mobjectData)) {
+      let data = mobjectData[mobjectName];
+      if (data.submobjects.includes(mobject)) {
+        ret['modify'].push([
+          mobjectName,
+          "remove " + mobject,
+          "add " + mobject,
+        ]);
+      }
+    }
+    return ret;
   }
 }
 
