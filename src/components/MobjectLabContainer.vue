@@ -400,11 +400,14 @@ export default {
         return s;
       } else {
         let mobs = mobjectData.submobjects.map(mobjectName => {
+          let data;
           if (allMobjectData === null) {
-            return this.mobjects[mobjectName].mobject;
+            data = this.mobjects[mobjectName];
           } else {
-            return allMobjectData[mobjectName].mobject;
+            data = allMobjectData[mobjectName];
           }
+          this.setMobjectField(data, allMobjectData);
+          return data.mobject;
         });
         let g = new Manim["Group"](mobs);
         mobjectData.mobject = g;

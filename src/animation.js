@@ -120,7 +120,6 @@ class ReplacementTransform extends Animation {
   }
 
   interpolateSubmobject(alpha, submob, start, targetCopy) {
-    // Mobjects duplicated in begin() have vanished at this point
     submob.interpolate(start, targetCopy, alpha);
   }
 

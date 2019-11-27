@@ -62,14 +62,28 @@ class Group extends Two.Group {
     this.nullPointAlign(other);
     this.alignSubmobjects(other);
     this.alignPoints(other);
+    // eslint-disable-next-line
+    console.assert(this.submobjects().length === other.submobjects().length);
     this.submobjects().forEach(
       (mob, i) => mob.alignData(other.submobjects()[i])
     );
   }
 
-  nullPointAlign(/*other*/) {
+  pushSelfIntoSubmobjects() {
     // eslint-disable-next-line
-    console.log('Mobject.nullPointAlign not implemented');
+    console.log('null point aligning...');
+    let clonedMobject = new Mobject(this.path().clone());
+    let center = this.getPointCenter();
+    this.children[0] = utils.pathFromAnchors([center], [center], [center]);
+    this.add(clonedMobject);
+  }
+
+  nullPointAlign(other) {
+    if (this.points().length === 0 && other.points().length !== 0) {
+      other.pushSelfIntoSubmobjects();
+    } else if (other.points().length === 0 && this.points().length !== 0) {
+      this.pushSelfIntoSubmobjects();
+    }
   }
 
   alignSubmobjects(other) {
@@ -124,6 +138,7 @@ class Group extends Two.Group {
         newSubmobjects.push(submob);
       }
     }
+    // this.children = [this.children[0], ...newSubmobjects];
     this.remove(this.submobjects());
     this.add(newSubmobjects);
   }
@@ -374,6 +389,42 @@ class Mobject extends Group {
     super([path].concat(submobjects), /*fillTopLevel=*/true);
     this.normalizeToCanvas();
     this.applyStyle(style);
+  }
+
+  clone(parent) {
+    let clone = new Mobject(
+      this.path().clone(),
+      [],
+      this.getStyleDict(),
+    );
+
+    let children = Two.Utils.map(this.children, function(child) {
+      return child.clone();
+    });
+
+    clone.remove(clone.children);
+    clone.add(children);
+
+    clone.opacity = this.opacity;
+
+    if (this.mask) {
+      clone.mask = this.mask;
+    }
+
+    clone.translation.copy(this.translation);
+    clone.rotation = this.rotation;
+    clone.scale = this.scale;
+    clone.className = this.className;
+
+    if (this.matrix.manual) {
+      clone.matrix.copy(this.matrix);
+    }
+
+    if (parent) {
+      parent.add(clone);
+    }
+
+    return clone._update();
   }
 }
 

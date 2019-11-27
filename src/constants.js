@@ -176,6 +176,16 @@ class GroupExample(WebScene):
         self.play(ReplacementTransform(g1, g2))
         self.play(FadeOut(c2))
         self.wait()
+
+class AlignDataExample(WebScene):
+  def construct(self):
+      c1 = Circle().shift(LEFT)
+      s1 = Square().shift(RIGHT)
+      g1 = Group(c1, s1)
+
+      c2 = Circle().shift(RIGHT + 2 * DOWN)
+      self.play(FadeIn(g1))
+      self.play(ReplacementTransform(g1, c2))
 `;
 
 export const RELEASE_NOTES =
