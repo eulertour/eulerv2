@@ -1,5 +1,4 @@
 import * as utils from './utils.js';
-import * as _ from 'lodash';
 
 class Animation {
   constructor(
@@ -94,7 +93,7 @@ class Animation {
   }
 
   createStartingMobject() {
-    return _.cloneDeep(this.mobject);
+    return this.mobject.clone();
   }
 }
 
@@ -108,7 +107,7 @@ class ReplacementTransform extends Animation {
     // Use a copy of targetMobject for the alignData
     // call so that the actual targetMobject is
     // preserved.
-    this.targetCopy = _.cloneDeep(this.targetMobject);
+    this.targetCopy = this.targetMobject.clone()
     // Note, this potentially changes the structure
     // of both this.mobject and this.targetMobject
     this.mobject.alignData(this.targetCopy);
@@ -185,6 +184,8 @@ class Wait extends Animation {
   static getDiff() {
     return {};
   }
+
+  createStartingMobject() {}
 }
 
 export {

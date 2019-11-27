@@ -22,7 +22,7 @@ const DEFAULT_STYLE = {
 
 /* TODO: error check python access */
 class Group extends Two.Group {
-  constructor (submobjects, fillTopLevel=false) {
+  constructor (submobjects=[], fillTopLevel=false) {
     super();
     // this.children[0] represents this the current-level mobject, and should
     // be a Two.Path (not a Mobject). This.children.slice(1) represents
@@ -73,6 +73,7 @@ class Group extends Two.Group {
     // eslint-disable-next-line
     console.log('null point aligning...');
     let clonedMobject = new Mobject(this.path().clone());
+    clonedMobject.applyStyle(this.getStyleDict());
     let center = this.getPointCenter();
     this.children[0] = utils.pathFromAnchors([center], [center], [center]);
     this.add(clonedMobject);
@@ -138,8 +139,13 @@ class Group extends Two.Group {
         newSubmobjects.push(submob);
       }
     }
-    // this.children = [this.children[0], ...newSubmobjects];
     this.remove(this.submobjects());
+    // eslint-disable-next-line
+    console.assert(
+      this.submobjects().length === 0,
+      "A submobject was not removed properly.",
+      this.submobjects().length,
+    );
     this.add(newSubmobjects);
   }
 
@@ -178,14 +184,14 @@ class Group extends Two.Group {
   }
 
   applyStyle(style) {
-    let combinedStyle = this.getFullStyle(style);
+    let combinedStyle = this.getStyleWithDefaults(style);
     this.stroke = combinedStyle.strokeColor;
     this.fill = combinedStyle.fillColor;
     this.linewidth = combinedStyle.strokeWidth / 100;
     return this;
   }
 
-  getFullStyle(style) {
+  getStyleWithDefaults(style) {
     return Object.assign(Object.assign({}, DEFAULT_STYLE), style);
   }
 
@@ -377,6 +383,38 @@ class Group extends Two.Group {
     style['fillColor']     = chroma.scale([style1.fillColor, style2.fillColor])(alpha);
 
     this.applyStyle(style);
+  }
+
+  clone(parent) {
+    let clone = new Group();
+
+    let children = Two.Utils.map(this.children, function(child) {
+      return child.clone();
+    });
+
+    clone.remove(clone.children);
+    clone.add(children);
+
+    clone.opacity = this.opacity;
+
+    if (this.mask) {
+      clone.mask = this.mask;
+    }
+
+    clone.translation.copy(this.translation);
+    clone.rotation = this.rotation;
+    clone.scale = this.scale;
+    clone.className = this.className;
+
+    if (this.matrix.manual) {
+      clone.matrix.copy(this.matrix);
+    }
+
+    if (parent) {
+      parent.add(clone);
+    }
+
+    return clone._update();
   }
 }
 

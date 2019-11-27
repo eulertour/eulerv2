@@ -406,6 +406,7 @@ export default {
           } else {
             data = allMobjectData[mobjectName];
           }
+          // Set submobjects before setting the Group
           this.setMobjectField(data, allMobjectData);
           return data.mobject;
         });
@@ -766,7 +767,6 @@ export default {
         let namesInHeirarchy = this.getNamesInHeirarchy(mobjectName);
         for (let submobName of namesInHeirarchy) {
           if (scene.includes(submobName)) {
-            console.log("invalid add", mobjectName);
             return false;
           }
         }
@@ -776,7 +776,6 @@ export default {
         let namesInScene = this.getNamesInScene();
         for (let submobName of namesInScene) {
           if (!scene.includes(submobName)) {
-            console.log("invalid remove", mobjectName);
             return false;
           }
         }
