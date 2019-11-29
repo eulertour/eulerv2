@@ -139,7 +139,7 @@ export default {
       displayCode: true,
       playingSingleAnimation: null,
       sceneChoices: [],
-      chosenScene: "SquareToCircle",
+      chosenScene: "WriteStuff",
       scene: null,
       sceneLoaded: false,
       mobjectChoices: [

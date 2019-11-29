@@ -775,18 +775,33 @@ class Square extends RegularPolygon {
 
 class TexMobject extends Mobject {
   constructor({
-    texString="x",
+    texString="x^2",
     style={
       strokeColor: consts.WHITE,
       fillColor: consts.WHITE,
     }
   }={}) {
+    // eslint-disable-next-line
+    console.log(texString);
+
+    // find a way to make the mobject
+    let mob = Two.load(window.MathJax.tex2svg(texString));
+
+    // eslint-disable-next-line
+    console.log(mob);
+
     super(
       null,
       [],
       style,
     );
     this.texString = texString;
+  }
+}
+
+class TextMobject extends TexMobject {
+  constructor() {
+    super();
   }
 }
 
@@ -806,6 +821,7 @@ export {
   Rectangle,
   Square,
   TexMobject,
+  TextMobject,
   Animation,
   ReplacementTransform,
   ShowCreation,

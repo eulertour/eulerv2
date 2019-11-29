@@ -155,7 +155,7 @@
       <div class="mr-7">
         <div class="d-flex justify-center">
           <div style="width:300px">
-            <v-text-field v-model="tex" label="tex"></v-text-field>
+            <v-textarea v-model="tex" label="tex"></v-textarea>
           </div>
           <v-btn color="primary" v-on:click="updateLatex(tex)">Render Tex</v-btn>
         </div>
@@ -251,7 +251,7 @@ export default {
       if (children.length > 0) {
         texOutput.removeChild(texOutput.childNodes[0]);
       }
-      let html = MathJax.tex2svg(tex);
+      let html = window.MathJax.tex2svg(tex);
       texOutput.appendChild(html);
     }
   }
