@@ -99,7 +99,7 @@ export function getManimPoints(mobject) {
 }
 
 export function isGroupData(mobjectData) {
-  return ["Group", "Mobject"].includes(mobjectData.className);
+  return ["Group", "Mobject", "VGroup"].includes(mobjectData.className);
 }
 
 let CHOOSE_CACHE = [[1]];

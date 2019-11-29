@@ -70,8 +70,6 @@ class Group extends Two.Group {
   }
 
   pushSelfIntoSubmobjects() {
-    // eslint-disable-next-line
-    console.log('null point aligning...');
     let clonedMobject = new Mobject(this.path().clone());
     clonedMobject.applyStyle(this.getStyleDict());
     let center = this.getPointCenter();
@@ -775,6 +773,23 @@ class Square extends RegularPolygon {
   }
 }
 
+class TexMobject extends Mobject {
+  constructor({
+    texString="x",
+    style={
+      strokeColor: consts.WHITE,
+      fillColor: consts.WHITE,
+    }
+  }={}) {
+    super(
+      null,
+      [],
+      style,
+    );
+    this.texString = texString;
+  }
+}
+
 export {
   Group,
   Mobject,
@@ -790,6 +805,7 @@ export {
   Octagon,
   Rectangle,
   Square,
+  TexMobject,
   Animation,
   ReplacementTransform,
   ShowCreation,

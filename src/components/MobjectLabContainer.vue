@@ -134,7 +134,7 @@ export default {
       expandedPanel: [1],
       releaseNotes: consts.RELEASE_NOTES,
       releaseNotesDialog: false,
-      debug: true,
+      debug: true, // setting to false triggers a bug
       code: consts.EXAMPLE_CODE,
       displayCode: true,
       playingSingleAnimation: null,
@@ -761,31 +761,41 @@ export default {
       this.sceneChoices = window.manimlib.get_scene_choices(this.code);
     },
     diffIsValidForScene(diff, scene) {
+      let namesInScene = this.getNamesInScene(scene);
       for (let mobjectName of diff["add"] || []) {
         // A Mobject can be added if none of the Mobjects in its heirarchy are
         // in the scene.
         let namesInHeirarchy = this.getNamesInHeirarchy(mobjectName);
         for (let submobName of namesInHeirarchy) {
-          if (scene.includes(submobName)) {
+          if (namesInScene.includes(submobName)) {
+            // eslint-disable-next-line
+            console.error(`can't add ${submobName}`);
             return false;
           }
         }
       }
-      for (let mobjectName of diff["remove"] || []) {
-        // A Mobject can be removed if it appears anywhere in the scene.
-        let namesInScene = this.getNamesInScene();
-        for (let submobName of namesInScene) {
-          if (!scene.includes(submobName)) {
-            return false;
-          }
+      // A Mobject can be removed if it appears anywhere in the scene.
+      for (let submobName of diff["remove"] || []) {
+        if (!namesInScene.includes(submobName)) {
+          // eslint-disable-next-line
+          console.error(`can't remove ${submobName}`);
+          return false;
+        }
+      }
+      // A Mobject can be modified if it appears anywhere in the scene.
+      for (let submobName of diff["modify"] || []) {
+        if (!namesInScene.includes(submobName)) {
+          // eslint-disable-next-line
+          console.error(`can't modify ${submobName}`);
+          return false;
         }
       }
       return true;
     },
-    getNamesInScene() {
+    getNamesInScene(scene) {
       let ret = [];
-      for (let mobjectName of Object.keys(this.mobjects)) {
-        ret.concat(this.getNamesInHeirarchy(mobjectName));
+      for (let mobjectName of scene) {
+        ret = ret.concat(this.getNamesInHeirarchy(mobjectName));
       }
       return ret;
     },

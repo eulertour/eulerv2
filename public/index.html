@@ -12,6 +12,14 @@
       window.languagePluginUrl = "<%= VUE_APP_ORIGIN %>/pyodide/";
     </script>
     <script src="<%= VUE_APP_ORIGIN %>/pyodide/pyodide.js"></script>
+    <script>
+    MathJax = {
+      svg: { fontCache: 'none' }
+    };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg-full.js">
+    </script>
   </head>
   <body>
     <noscript>

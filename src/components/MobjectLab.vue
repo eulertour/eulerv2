@@ -151,7 +151,16 @@
         </v-dialog>
       </div>
     </div>
-    <div class="d-flex justify-center">
+    <div class="d-flex justify-center align-center">
+      <div class="mr-7">
+        <div class="d-flex justify-center">
+          <div style="width:300px">
+            <v-text-field v-model="tex" label="tex"></v-text-field>
+          </div>
+          <v-btn color="primary" v-on:click="updateLatex(tex)">Render Tex</v-btn>
+        </div>
+        <div id="tex-output"></div>
+      </div>
       <DebugPanel
         v-bind:animation-diff="currentAnimationDiff"
         v-bind:animation-is-valid="animationIsValid"
@@ -229,14 +238,22 @@ export default {
   },
   data() {
     return {
-
+      tex: "x^2 + 2x + 5",
     };
   },
   mounted() {
 
   },
   methods: {
-
+    updateLatex(tex) {
+      let texOutput = document.getElementById("tex-output");
+      let children = texOutput.childNodes;
+      if (children.length > 0) {
+        texOutput.removeChild(texOutput.childNodes[0]);
+      }
+      let html = MathJax.tex2svg(tex);
+      texOutput.appendChild(html);
+    }
   }
 };
 </script>
