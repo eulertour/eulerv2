@@ -43,7 +43,7 @@
     v-on:run-manim="runManim"
     v-on:step-backward="stepBackward"
     v-on:step-forward="stepForward"
-    v-on:update-code="updateCode"
+    v-on:update-code="(val)=>{code=val}"
     v-on:update-setup="updateSetup"
   />
 </template>
@@ -130,6 +130,7 @@ export default {
   },
   data() {
     return {
+      texToPathsMap: {},
       priorScene: [],
       expandedPanel: [1],
       releaseNotes: consts.RELEASE_NOTES,
@@ -247,6 +248,14 @@ export default {
       let scene = window.manimlib.get_scene(this.code, [this.chosenScene]);
       scene.render();
 
+      /* scene.scenes_before_animation:
+       *   A list of snapshots of the Scene before each Animation
+       * scene.animation_list:
+       *   A list of serialized Animations
+       * scene.initial_mobject_dict:
+       *   A mapping of ids to Mobjects
+       */
+
       // Create a mapping from ids to human-readable names
       let mobjectIdsToNames = {};
       let mobjectIds = Object.keys(scene.initial_mobject_dict);
@@ -279,8 +288,9 @@ export default {
         }
         return newSceneList;
       };
-      scene.scene_before_animation = renameSceneList(
-        scene.scene_before_animation
+
+      scene.scenes_before_animation = renameSceneList(
+        scene.scenes_before_animation
       );
 
       // Assign human-readable names to the arguments in the animation list
@@ -297,7 +307,7 @@ export default {
       let newMobjects = {};
       for (let id of Object.keys(scene.initial_mobject_dict)) {
         let mobjectData = scene.initial_mobject_dict[id];
-        if (!utils.isGroupData(mobjectData)) {
+        if (!utils.isGroupData(mobjectData) && !utils.isTexData(mobjectData)) {
           // TODO: Mobjects with top-level points can still function as Groups
           let strokeColor = mobjectData.style.strokeColor;
           let strokeOpacity = mobjectData.style.strokeOpacity;
@@ -313,21 +323,53 @@ export default {
             .hex();
           delete mobjectData.style.fillOpacity;
         } else {
-          let newSumbojects = mobjectData.submobjects.map(
+          let newSubmobjects = mobjectData.submobjects.map(
             id => mobjectIdsToNames[id]
           );
-          mobjectData.submobjects = newSumbojects;
+          mobjectData.submobjects = newSubmobjects;
         }
         newMobjects[mobjectIdsToNames[id]] = mobjectData;
+      }
+
+      /* SingleStringTexMobjects are converted to Paths and cached first, so
+       * that TexSymbols can read the appropriate Path upon initialization.
+       * TexSymbols are identified by their tex string (for a
+       * SingleStringTexMobject in initial_mobject_dict) and position in the
+       * resulting latex, e.g. (x^2, 1).
+       */
+      let texToPathsMap = {};
+      for (let mobjectName of Object.keys(newMobjects)) {
+        let data = newMobjects[mobjectName];
+        if (data.className === "SingleStringTexMobject") {
+          let svgNode = window.MathJax.tex2svg(data.params.tex_string)
+            .children[0];
+          let texPath = this.scene.interpret(svgNode);
+          this.scene.remove(texPath);
+          this.texToPathsMap[data.params.tex_string] = texPath;
+          for (let index in data.submobjects) {
+            let submobjectName = data.submobjects[index];
+            let submobjectData = newMobjects[submobjectName];
+            submobjectData["texString"] = data.params.tex_string;
+            submobjectData["texIndex"] = index;
+          }
+        }
+      }
+
+      // Initialize TexMobjects
+      for (let mobjectName of Object.keys(newMobjects)) {
+        let data = newMobjects[mobjectName];
+        if (data.className === "TexMobject") {
+          this.setMobjectField(data);
+        }
       }
 
       // Initialize Mobjects
       let groupNames = [];
       for (let mobjectName of Object.keys(newMobjects)) {
         let data = newMobjects[mobjectName];
-        if (!utils.isGroupData(data)) {
+        if (!utils.isGroupData(data) && !utils.isTexData(data)) {
           this.setMobjectField(data);
-        } else {
+        } else if (utils.isGroupData(data)) {
           groupNames.push(mobjectName);
         }
       }
@@ -351,9 +393,12 @@ export default {
       let newAnimationDiffs = [];
       let newSceneDiffs = [];
       let tempScene = [];
-      for (let i = 0; i < scene.scene_before_animation.length; i++) {
+      for (let i = 0; i < scene.scenes_before_animation.length; i++) {
         newSceneDiffs.push(
-          utils.getDiffFromTwoScenes(tempScene, scene.scene_before_animation[i])
+          utils.getDiffFromTwoScenes(
+            tempScene,
+            scene.scenes_before_animation[i]
+          )
         );
 
         let diff = Manim[scene.animation_list[i].className].getDiff(
@@ -362,7 +407,7 @@ export default {
         );
         newAnimationDiffs.push(diff);
         tempScene = utils.updateSceneWithDiff(
-          scene.scene_before_animation[i],
+          scene.scenes_before_animation[i],
           diff,
           nodeDict
         );
@@ -392,7 +437,28 @@ export default {
       this.displayCode = !this.displayCode;
     },
     setMobjectField(mobjectData, allMobjectData = null) {
-      if (!utils.isGroupData(mobjectData)) {
+      if (mobjectData.className === "TexSymbol") {
+        // just ensure that the (string, index) -> path mapping is valid
+        // console.assert(
+        //   mobjectData.texString in this.texToPathsMap,
+        //   mobjectData,
+        //   this.texToPathsMap
+        // );
+        // console.assert(
+        //   this.texToPathsMap[mobjectData.texString][mobjectData.texIndex] !==
+        //     undefined,
+        //   mobjectData,
+        //   this.texToPathsMap
+        // );
+        return;
+      } else if (mobjectData.className === "SingleStringTexMobject") {
+        mobjectData.mobject = new Manim.SingleStringTexMobject(
+          mobjectData.params.tex_string,
+          this.texToPathsMap[mobjectData.params.tex_string]
+        );
+      } else if (mobjectData.className === "TexMobject") {
+        mobjectData.mobject = new Manim.TexMobject(mobjectData.params.tex_strings, this.texToPathsMap);
+      } else if (!utils.isGroupData(mobjectData)) {
         let s = new Manim[mobjectData.className](mobjectData.params);
         s.translateMobject(mobjectData.position);
         s.applyStyle(mobjectData.style);
@@ -754,9 +820,6 @@ export default {
         );
       }
     },
-    updateCode(newCode) {
-      this.code = newCode;
-    },
     refreshSceneChoices() {
       this.sceneChoices = window.manimlib.get_scene_choices(this.code);
     },
@@ -847,7 +910,7 @@ export default {
         _.difference(diff["remove"], utils.getMobjectsRemovedFromParent(diff))
       );
       return scene;
-    }
+    },
   }
 };
 </script>

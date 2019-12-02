@@ -102,6 +102,10 @@ export function isGroupData(mobjectData) {
   return ["Group", "Mobject", "VGroup"].includes(mobjectData.className);
 }
 
+export function isTexData(mobjectData) {
+  return ["TexSymbol", "SingleStringTexMobject", "TexMobject", "TextMobject"].includes(mobjectData.className);
+}
+
 let CHOOSE_CACHE = [[1]];
 
 export function choose(n, k) {

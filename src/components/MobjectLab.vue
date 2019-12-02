@@ -90,7 +90,7 @@
         <CodeMirror
           v-else-if="sceneLoaded && displayCode"
           v-bind:code="code"
-          v-on:update-code="$emit('update-code')"
+          v-on:update-code="(code)=>$emit('update-code', code)"
         />
         <v-card v-else class="d-flex justify-center align-center" height="500px" width="100%">
           <v-progress-circular indeterminate />

@@ -422,6 +422,9 @@ class Mobject extends Group {
     submobjects=[],
     style=DEFAULT_STYLE,
   ) {
+    if (path === null) {
+      path = new Two.Path();
+    }
     super([path].concat(submobjects), /*fillTopLevel=*/true);
     this.normalizeToCanvas();
     this.applyStyle(style);
@@ -773,29 +776,51 @@ class Square extends RegularPolygon {
   }
 }
 
+class SingleStringTexMobject extends Mobject {
+  constructor(
+    texString,
+    group,
+    style={strokeColor: consts.WHITE, fillColor: consts.WHITE}
+  ) {
+    super(null, [group], style);
+    this.texString = texString;
+  }
+
+  extractPathsFromGroup(group) {
+    let ret = [];
+    if (group instanceof Two.Group) {
+      group.children.forEach(child =>
+        ret.push(...this.extractPathsFromGroup(child))
+      );
+    } else {
+      ret.push(group);
+    }
+    return ret;
+  }
+
+  submobjects() {
+    return this.extractPathsFromGroup(this.children[1]);
+  }
+}
+
 class TexMobject extends Mobject {
-  constructor({
-    texString="x^2",
+  constructor(
+    texStrings,
+    texToPathsMap,
     style={
       strokeColor: consts.WHITE,
       fillColor: consts.WHITE,
     }
-  }={}) {
-    // eslint-disable-next-line
-    console.log(texString);
+  ) {
+    let submobs = [new Two.Path()];
+    for (let texString of texStrings) {
+      // eslint-disable-next-line
+      console.assert(texString in texToPathsMap);
+      submobs.push(new SingleStringTexMobject(texString, texToPathsMap[texString]));
+    }
 
-    // find a way to make the mobject
-    let mob = Two.load(window.MathJax.tex2svg(texString));
-
-    // eslint-disable-next-line
-    console.log(mob);
-
-    super(
-      null,
-      [],
-      style,
-    );
-    this.texString = texString;
+    super(null, submobs, style);
+    this.texStrings = texStrings;
   }
 }
 
@@ -820,6 +845,7 @@ export {
   Octagon,
   Rectangle,
   Square,
+  SingleStringTexMobject,
   TexMobject,
   TextMobject,
   Animation,
