@@ -161,8 +161,8 @@ class FadeOut extends Animation {
 
   static getDiff(mobject, mobjectData) {
     let ret = {
-      'remove': [mobject],
-      'modify': [],
+      remove: [mobject],
+      modify: [],
     };
     for (let mobjectName of Object.keys(mobjectData)) {
       let data = mobjectData[mobjectName];

@@ -650,7 +650,8 @@ export default {
         let mobjectData = this.mobjects[mobjectName];
         // eslint-disable-next-line
         console.assert(
-          mobjectData.mobject && this.scene.contains(mobjectData.mobject)
+          mobjectData.mobject && this.scene.contains(mobjectData.mobject),
+          `attempt to modify ${mobjectName} when it isn't in the scene`
         );
 
         // Commands have the form "add mobject1", "remove mobject1", etc.
@@ -668,11 +669,9 @@ export default {
             // eslint-disable-next-line
             console.error("Invalid modification command", modificationString);
         }
-
         this.scene.remove(mobjectData.mobject);
         this.setMobjectField(mobjectData);
         this.scene.add(mobjectData.mobject);
-
         for (let mobjectName of removedMobjects) {
           this.setMobjectField(this.mobjects[mobjectName]);
         }
@@ -695,13 +694,15 @@ export default {
           this.scene.update();
         }
       } else {
-        if (this.animationIsValid) {
+        // TODO: How can I check this correctly?
+        // The reversed diff must be valid for the scene at offset=1
+        // if (this.animationIsValid) {
           this.applyDiff(
             this.currentAnimationDiff,
             /*reverse=*/ true,
             /*moveCursor=*/ true
           );
-        }
+        // }
       }
       this.animationOffset = 0;
     },
@@ -898,7 +899,7 @@ export default {
         }
       }
       // A Mobject can be modified if it appears anywhere in the scene.
-      for (let submobName of diff["modify"] || []) {
+      for (let [submobName, ...rest] of diff["modify"] || []) {
         if (!namesInScene.includes(submobName)) {
           // eslint-disable-next-line
           console.error(`can't modify ${submobName}`);
