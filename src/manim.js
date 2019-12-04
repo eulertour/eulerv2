@@ -35,7 +35,7 @@ class Group extends Two.Group {
 
   scaleMobject(factor) {
     utils.scalePath(factor, this.children[0]);
-    for (let submob of this.children.slice(1)) {
+    for (let submob of this.submobjects()) {
       submob.scaleMobject(factor);
     }
     return this;
@@ -786,20 +786,8 @@ class SingleStringTexMobject extends Mobject {
     this.texString = texString;
   }
 
-  extractPathsFromGroup(group) {
-    let ret = [];
-    if (group instanceof Two.Group) {
-      group.children.forEach(child =>
-        ret.push(...this.extractPathsFromGroup(child))
-      );
-    } else {
-      ret.push(group);
-    }
-    return ret;
-  }
-
   submobjects() {
-    return this.extractPathsFromGroup(this.children[1]);
+    return utils.extractPathsFromGroup(this.children[1]);
   }
 }
 

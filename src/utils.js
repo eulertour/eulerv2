@@ -332,3 +332,30 @@ export function updateSceneWithDiff(scene, diff, nodeDict) {
   scene = _.concat(scene, nodesToAdd);
   return scene;
 }
+
+export function extractPathsFromGroup(group) {
+  let ret = [];
+  if (group instanceof Two.Group) {
+    group.children.forEach(child =>
+      ret.push(...extractPathsFromGroup(child))
+    );
+  } else {
+    ret.push(group);
+  }
+  return ret;
+}
+
+export function logPoints(path) {
+  // eslint-disable-next-line
+  console.assert(!path.automatic, path);
+  let ret = [];
+  for (let v of path.vertices) {
+    ret.push({
+      point: [v.x, v.y],
+      left: [v.controls.left.x, v.controls.left.y],
+      right: [v.controls.right.x, v.controls.right.y],
+      command: v.command,
+    });
+  }
+  return ret;
+}

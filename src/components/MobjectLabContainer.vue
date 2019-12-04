@@ -337,15 +337,64 @@ export default {
        * SingleStringTexMobject in initial_mobject_dict) and position in the
        * resulting latex, e.g. (x^2, 1).
        */
-      let texToPathsMap = {};
       for (let mobjectName of Object.keys(newMobjects)) {
         let data = newMobjects[mobjectName];
         if (data.className === "SingleStringTexMobject") {
           let svgNode = window.MathJax.tex2svg(data.params.tex_string)
             .children[0];
-          let texPath = this.scene.interpret(svgNode);
-          this.scene.remove(texPath);
-          this.texToPathsMap[data.params.tex_string] = texPath;
+          let texGroup = this.scene.interpret(svgNode);
+          this.scene.remove(texGroup);
+
+          // Convert anchors to absolute coordinates
+          for (let path of utils.extractPathsFromGroup(texGroup)) {
+            for (let v of path.vertices) {
+              v.controls.left.add(v);
+              v.controls.right.add(v);
+              v.relative = false;
+            }
+          }
+
+          // Convert all commands to C (and M)
+          for (let path of utils.extractPathsFromGroup(texGroup)) {
+            let lastMove;
+            if (path.vertices[0].command === "M") {
+              lastMove = path.vertices[0];
+            }
+            for (let i = 1; i < path.vertices.length; i++) {
+              let previousVertex = path.vertices[i - 1];
+              let currentVertex = path.vertices[i];
+              if (currentVertex.command === "C") {
+                continue;
+              } else if (currentVertex.command === "L") {
+                previousVertex.controls.right = previousVertex
+                  .clone()
+                  .lerp(currentVertex, 1 / 3);
+                currentVertex.controls.left = previousVertex
+                  .clone()
+                  .lerp(currentVertex, 2 / 3);
+                currentVertex.command = "C";
+              } else if (currentVertex.command === "M") {
+                lastMove = currentVertex;
+              } else if (currentVertex.command === "Z") {
+                currentVertex.copy(lastMove);
+                previousVertex.controls.right = previousVertex
+                  .clone()
+                  .lerp(currentVertex, 1 / 3);
+                currentVertex.controls.left = previousVertex
+                  .clone()
+                  .lerp(currentVertex, 2 / 3);
+                currentVertex.command = "C";
+              } else {
+                // eslint-disable-next-line
+                console.error(
+                  "Encountered an unknown SVG command",
+                  currentVertex.command
+                );
+              }
+            }
+          }
+          this.texToPathsMap[data.params.tex_string] = texGroup;
+
           for (let index in data.submobjects) {
             let submobjectName = data.submobjects[index];
             let submobjectData = newMobjects[submobjectName];
@@ -457,7 +506,10 @@ export default {
           this.texToPathsMap[mobjectData.params.tex_string]
         );
       } else if (mobjectData.className === "TexMobject") {
-        mobjectData.mobject = new Manim.TexMobject(mobjectData.params.tex_strings, this.texToPathsMap);
+        mobjectData.mobject = new Manim.TexMobject(
+          mobjectData.params.tex_strings,
+          this.texToPathsMap
+        );
       } else if (!utils.isGroupData(mobjectData)) {
         let s = new Manim[mobjectData.className](mobjectData.params);
         s.translateMobject(mobjectData.position);
@@ -910,7 +962,7 @@ export default {
         _.difference(diff["remove"], utils.getMobjectsRemovedFromParent(diff))
       );
       return scene;
-    },
+    }
   }
 };
 </script>
