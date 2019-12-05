@@ -694,15 +694,11 @@ export default {
           this.scene.update();
         }
       } else {
-        // TODO: How can I check this correctly?
-        // The reversed diff must be valid for the scene at offset=1
-        // if (this.animationIsValid) {
-          this.applyDiff(
-            this.currentAnimationDiff,
-            /*reverse=*/ true,
-            /*moveCursor=*/ true
-          );
-        // }
+        this.applyDiff(
+          this.currentAnimationDiff,
+          /*reverse=*/ true,
+          /*moveCursor=*/ true
+        );
       }
       this.animationOffset = 0;
     },
@@ -845,7 +841,7 @@ export default {
       }
     },
     updateSetup(action, newSelection) {
-      if (this.animationOffset === 1 && this.animationIsValid) {
+      if (this.animationOffset === 1) {
         this.applyDiff(
           this.currentAnimationDiff,
           /*reverse=*/ true,
