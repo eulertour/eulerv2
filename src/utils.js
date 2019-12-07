@@ -26,6 +26,7 @@ export function pathFromAnchors(anchors, leftHandles, rightHandles) {
   return path;
 }
 
+/* Returns a path composed of straight lines through points. */
 export function pathFromPoints(points) {
   let np = window.pyodide.pyimport("numpy");
   let interpolation = [];
@@ -84,6 +85,17 @@ export function interpolateMatrices(m1, m2, alpha) {
   return ret;
 }
 
+/* Returns a list of points of the form: [
+ *   anchor1,
+ *   rightControl1,
+ *   leftControl2,
+ *   anchor2,
+ *   anchor2,
+ *   rightControl2,
+ *   leftControl3,
+ *   ...
+ * ]
+ */
 export function getManimPoints(mobject) {
   let ret = [];
   let length = mobject.children[0].vertices.length;
@@ -96,6 +108,36 @@ export function getManimPoints(mobject) {
     ret.push([nextV.x, nextV.y]);
   }
   return ret;
+}
+
+/* Returns a Path from a list of points of the form: [
+ *   anchor1,
+ *   rightControl1,
+ *   leftControl2,
+ *   anchor2,
+ *   anchor2,
+ *   rightControl2,
+ *   leftControl3,
+ *   ...
+ * ]
+ */
+export function pathFromManimPoints(points) {
+  if (points.length === 0) {
+    return new Two.Path();
+  }
+  // eslint-disable-next-line
+  console.assert(points.length % 4 === 0);
+  let leftControls = [points[0]];
+  let anchors = [];
+  let rightControls = [];
+  for (let i = 0; i < points.length; i+=4) {
+    anchors.push(points[i]);
+    rightControls.push(points[i+1]);
+    leftControls.push(points[i+2]);
+  }
+  anchors.push(points[points.length-1]);
+  rightControls.push(points[points.length-1]);
+  return pathFromAnchors(anchors, leftControls, rightControls);
 }
 
 export function isGroupData(mobjectData) {
@@ -358,4 +400,23 @@ export function logPoints(path) {
     });
   }
   return ret;
+}
+
+export function deCasteljauReduction(points, alpha) {
+  let ret = [];
+  for (let i = 0; i < points.length - 1; i++) {
+    ret.push(interpolateArrays(points[i], points[i+1], alpha));
+  }
+  return ret;
+}
+
+/* Splits a bezier curve specified by its list of Bernstein coefficients, e.g.
+ * for degree 3 [rightAnchor, rightControl, leftControl, leftAnchor]
+ */
+export function splitBezier(points, alpha, /* fromStart=true */) {
+  let bernsteinCoefficients = [_.clone(points)];
+  while (_.last(bernsteinCoefficients).length > 1) {
+    bernsteinCoefficients.push(deCasteljauReduction(_.last(bernsteinCoefficients), alpha));
+  }
+  return bernsteinCoefficients.map(arr => _.first(arr));
 }

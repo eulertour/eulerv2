@@ -155,7 +155,7 @@ class SquareToCircle(WebScene):
         square.rotate(-3 * TAU / 8)
         circle.set_fill(PINK, opacity=0.5)
 
-        self.play(FadeIn(square))
+        self.play(ShowCreation(square))
         self.play(ReplacementTransform(square, circle))
         self.play(FadeOut(circle))
 

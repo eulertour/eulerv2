@@ -11,6 +11,7 @@ import {
   FadeIn,
 } from './animation.js';
 import { Scene } from './scene.js';
+import * as _ from 'lodash'
 
 const DEFAULT_STYLE = {
   strokeColor: consts.WHITE,
@@ -413,6 +414,39 @@ class Group extends Two.Group {
     }
 
     return clone._update();
+  }
+
+  // TODO: Use a
+  pointWiseBecomePartial(other, a, b) {
+    if (a === b) {
+      return;
+    }
+    // eslint-disable-next-line
+    console.assert(0 <= a && a <= 1 && 0 <= b && b <= 1 && a <= b, a, b);
+    let bezierQuads = _.chunk(utils.getManimPoints(other), 4);
+
+    // let aScaled = a * bezierQuads.length;
+    // let aIndex = Math.floor(aScaled);
+    // let aResidue = aScaled % 1;
+
+    let bScaled = b * bezierQuads.length;
+    let bIndex = Math.floor(bScaled);
+    let bResidue = bScaled % 1;
+
+    let newPathCoeffs = bezierQuads.slice(0, bIndex);
+    let bResidueCoeffs = [];
+    if (bIndex < bezierQuads.length) {
+      bResidueCoeffs = utils.splitBezier(bezierQuads[bIndex], bResidue);
+    }
+    if (bResidueCoeffs.length > 0) {
+      newPathCoeffs.push(bResidueCoeffs);
+    }
+
+    let newPath = utils.pathFromManimPoints(newPathCoeffs.flat());
+    this.remove(this.children[0]);
+    this.add(newPath);
+    this.normalizeToCanvas();
+    this.applyStyle(this.getStyleDict());
   }
 }
 

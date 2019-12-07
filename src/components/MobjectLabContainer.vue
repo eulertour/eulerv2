@@ -140,7 +140,7 @@ export default {
       displayCode: true,
       playingSingleAnimation: null,
       sceneChoices: [],
-      chosenScene: "WriteStuff",
+      chosenScene: "SquareToCircle",
       scene: null,
       sceneLoaded: false,
       mobjectChoices: [
@@ -480,7 +480,7 @@ export default {
         /*moveCursor=*/ false
       );
       // this.toggleCode();
-      // this.play(null, /*singleAnimationOnly=*/false);
+      this.play(null, /*singleAnimationOnly=*/false);
     },
     toggleCode() {
       this.displayCode = !this.displayCode;
@@ -895,7 +895,8 @@ export default {
         }
       }
       // A Mobject can be modified if it appears anywhere in the scene.
-      for (let [submobName, ...rest] of diff["modify"] || []) {
+      for (let modification of diff["modify"] || []) {
+        let submobName = modification[0];
         if (!namesInScene.includes(submobName)) {
           // eslint-disable-next-line
           console.error(`can't modify ${submobName}`);

@@ -131,8 +131,12 @@ class ReplacementTransform extends Animation {
 }
 
 class ShowCreation extends Animation {
-  constructor(mobject) {
-    super(mobject);
+  interpolateSubmobject(alpha, submob, startingSubmobject) {
+    submob.pointWiseBecomePartial(startingSubmobject, 0, alpha);
+  }
+
+  getCopiesForInterpolation() {
+    return [this.mobject, this.startingMobject];
   }
 
   static getDiff(mobject) {
