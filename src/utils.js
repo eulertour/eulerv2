@@ -1,5 +1,5 @@
 import * as Two from 'two.js/build/two.js'
-import * as _ from "lodash";
+import * as _ from 'lodash'
 
 export function pathFromAnchors(anchors, leftHandles, rightHandles) {
   // TODO: errorcheck lengths
@@ -58,15 +58,15 @@ export function scalePath(factor, path) {
 export function translatePath(vector, path) {
   let vec = new Two.Vector(vector[0], vector[1]);
   if (path.vertices)
-  for (let v of path.vertices) {
-    v.addSelf(vec);
-    v.controls.left.addSelf(vec);
-    v.controls.right.addSelf(vec);
-  }
+    for (let v of path.vertices) {
+      v.addSelf(vec);
+      v.controls.left.addSelf(vec);
+      v.controls.right.addSelf(vec);
+    }
 }
 
 export function interpolate(start, end, alpha) {
-    return (1 - alpha) * start + alpha * end;
+  return (1 - alpha) * start + alpha * end;
 }
 
 export function interpolateArrays(arr1, arr2, alpha) {
@@ -130,13 +130,13 @@ export function pathFromManimPoints(points) {
   let leftControls = [points[0]];
   let anchors = [];
   let rightControls = [];
-  for (let i = 0; i < points.length; i+=4) {
+  for (let i = 0; i < points.length; i += 4) {
     anchors.push(points[i]);
-    rightControls.push(points[i+1]);
-    leftControls.push(points[i+2]);
+    rightControls.push(points[i + 1]);
+    leftControls.push(points[i + 2]);
   }
-  anchors.push(points[points.length-1]);
-  rightControls.push(points[points.length-1]);
+  anchors.push(points[points.length - 1]);
+  rightControls.push(points[points.length - 1]);
   return pathFromAnchors(anchors, leftControls, rightControls);
 }
 
@@ -157,22 +157,22 @@ export function choose(n, k) {
 
   // find the first incomplete row
   let i;
-  for (i = 0; i < Math.min(CHOOSE_CACHE.length, n+1); i++) {
-    if (CHOOSE_CACHE[i].length < Math.min(k+1, i+1)) {
+  for (i = 0; i < Math.min(CHOOSE_CACHE.length, n + 1); i++) {
+    if (CHOOSE_CACHE[i].length < Math.min(k + 1, i + 1)) {
       break;
     }
   }
 
-  for (; i < n+1; i++) {
+  for (; i < n + 1; i++) {
     if (i === CHOOSE_CACHE.length) {
       CHOOSE_CACHE.push([1]);
     }
     // complete the row
     let j;
-    for (j = CHOOSE_CACHE[i].length; j < Math.min(k+1, i+1); j++) {
+    for (j = CHOOSE_CACHE[i].length; j < Math.min(k + 1, i + 1); j++) {
       CHOOSE_CACHE[i].push(
-        (CHOOSE_CACHE[i-1][j-1] !== undefined ? CHOOSE_CACHE[i-1][j-1] : 0) +
-        (CHOOSE_CACHE[i-1][j] !== undefined ? CHOOSE_CACHE[i-1][j] : 0)
+        (CHOOSE_CACHE[i - 1][j - 1] !== undefined ? CHOOSE_CACHE[i - 1][j - 1] : 0) +
+        (CHOOSE_CACHE[i - 1][j] !== undefined ? CHOOSE_CACHE[i - 1][j] : 0)
       );
     }
   }
@@ -181,12 +181,12 @@ export function choose(n, k) {
 
 export function bezier(points) {
   let n = points.length - 1;
-  let f = function(t) {
+  let f = function (t) {
     let ret = [0, 0, 0];
     for (let k = 0; k < points.length; k++) {
       let point = points[k];
-      ret[0] += ((1 - t)**(n - k)) * (t**k) * choose(n, k) * point[0]
-      ret[1] += ((1 - t)**(n - k)) * (t**k) * choose(n, k) * point[1]
+      ret[0] += ((1 - t) ** (n - k)) * (t ** k) * choose(n, k) * point[0]
+      ret[1] += ((1 - t) ** (n - k)) * (t ** k) * choose(n, k) * point[1]
     }
     return ret;
   };
@@ -226,7 +226,7 @@ export function sigmoid(x) {
   return 1.0 / (1 + np.exp(-x));
 }
 
-export function smooth(t, inflection=10) {
+export function smooth(t, inflection = 10) {
   let np = window.pyodide.pyimport("numpy");
   let error = sigmoid(-inflection / 2);
   return np.clip(
@@ -405,7 +405,7 @@ export function logPoints(path) {
 export function deCasteljauReduction(points, alpha) {
   let ret = [];
   for (let i = 0; i < points.length - 1; i++) {
-    ret.push(interpolateArrays(points[i], points[i+1], alpha));
+    ret.push(interpolateArrays(points[i], points[i + 1], alpha));
   }
   return ret;
 }
