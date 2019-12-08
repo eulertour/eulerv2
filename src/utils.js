@@ -420,3 +420,55 @@ export function splitBezier(points, alpha, /* fromStart=true */) {
   }
   return bernsteinCoefficients.map(arr => _.first(arr));
 }
+
+export function convertSVGGroup(svgGroup) {
+  // Convert anchors to absolute coordinates
+  for (let path of extractPathsFromGroup(svgGroup)) {
+    for (let v of path.vertices) {
+      v.controls.left.add(v);
+      v.controls.right.add(v);
+      v.relative = false;
+    }
+  }
+
+  // Convert all commands to C (and M)
+  for (let path of extractPathsFromGroup(svgGroup)) {
+    let lastMove;
+    if (path.vertices[0].command === "M") {
+      lastMove = path.vertices[0];
+    }
+    for (let i = 1; i < path.vertices.length; i++) {
+      let previousVertex = path.vertices[i - 1];
+      let currentVertex = path.vertices[i];
+      if (currentVertex.command === "C") {
+        continue;
+      } else if (currentVertex.command === "L") {
+        previousVertex.controls.right = previousVertex
+          .clone()
+          .lerp(currentVertex, 1 / 3);
+        currentVertex.controls.left = previousVertex
+          .clone()
+          .lerp(currentVertex, 2 / 3);
+        currentVertex.command = "C";
+      } else if (currentVertex.command === "M") {
+        lastMove = currentVertex;
+      } else if (currentVertex.command === "Z") {
+        currentVertex.copy(lastMove);
+        previousVertex.controls.right = previousVertex
+          .clone()
+          .lerp(currentVertex, 1 / 3);
+        currentVertex.controls.left = previousVertex
+          .clone()
+          .lerp(currentVertex, 2 / 3);
+        currentVertex.command = "C";
+      } else {
+        // eslint-disable-next-line
+        console.error(
+          "Encountered an unknown SVG command",
+          currentVertex.command
+        );
+      }
+    }
+  }
+  return svgGroup;
+}

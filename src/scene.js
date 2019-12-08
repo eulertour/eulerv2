@@ -1,5 +1,6 @@
-import * as Two from 'two.js/build/two.js';
-import * as consts from './constants.js';
+import * as Two from 'two.js/build/two.js'
+import * as consts from './constants.js'
+import * as utils from './utils.js'
 
 class Scene extends Two {
   constructor(conf) {
@@ -67,6 +68,14 @@ class Scene extends Two {
     let x = p[0] / consts.FRAME_WIDTH * this.width + this.width / 2;
     let y = this.height / 2 - p[1] / consts.FRAME_HEIGHT * this.height;
     return [x, y];
+  }
+
+  texToSvgGroup(texString) {
+    let svgNode = window.MathJax.tex2svg(texString).children[0];
+    let svgGroup = this.interpret.call(this, svgNode);
+    this.remove(svgGroup);
+    svgGroup = utils.convertSVGGroup(svgGroup);
+    return svgGroup;
   }
 }
 

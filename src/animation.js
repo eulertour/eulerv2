@@ -132,7 +132,7 @@ class ReplacementTransform extends Animation {
 
 class ShowCreation extends Animation {
   interpolateSubmobject(alpha, submob, startingSubmobject) {
-    submob.pointWiseBecomePartial(startingSubmobject, 0, alpha);
+    submob.pointwiseBecomePartial(startingSubmobject, 0, alpha);
   }
 
   getCopiesForInterpolation() {
