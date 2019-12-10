@@ -60,7 +60,7 @@ class Scene extends Two {
 
   normalizePoint(p) {
     let x = p[0] / this.width * consts.FRAME_WIDTH - consts.FRAME_WIDTH / 2;
-    let y =  -(p[1] - this.height / 2) / this.height * consts.FRAME_HEIGHT;
+    let y = -(p[1] - this.height / 2) / this.height * consts.FRAME_HEIGHT;
     return [x, y];
   }
 
@@ -72,8 +72,9 @@ class Scene extends Two {
 
   texToSvgGroup(texString) {
     let svgNode = window.MathJax.tex2svg(texString).children[0];
-    let svgGroup = this.interpret.call(this, svgNode);
+    let svgGroup = this.interpret(svgNode);
     this.remove(svgGroup);
+    svgGroup.viewBox = svgNode.getAttribute("viewBox");
     svgGroup = utils.convertSVGGroup(svgGroup);
     return svgGroup;
   }

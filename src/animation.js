@@ -131,12 +131,25 @@ class ReplacementTransform extends Animation {
 }
 
 class ShowCreation extends Animation {
-  interpolateSubmobject(alpha, submob, startingSubmobject) {
+  begin() {
+    this.targetMobject = this.mobject.clone();
+    this.mobject.applyStyle({ strokeColor: '#ffffff', strokeWidth: 4, fillOpacity: 0 });
+    Animation.prototype.begin.call(this);
+    this.startingMobject.applyStyle({ fillOpacity: 0 });
+  }
+
+  interpolateSubmobject(alpha, submob, startingSubmobject, targetMobject) {
     submob.pointwiseBecomePartial(startingSubmobject, 0, alpha);
+    // let [index, subalpha] = utils.integerInterpolate(0, 2, alpha);
+    // if (index === 0) {
+    //   submob.pointwiseBecomePartial(startingSubmobject, 0, subalpha);
+    // } else {
+    //   submob.interpolate(startingSubmobject, targetMobject, subalpha);
+    // }
   }
 
   getCopiesForInterpolation() {
-    return [this.mobject, this.startingMobject];
+    return [this.mobject, this.startingMobject, this.targetMobject];
   }
 
   static getDiff(mobject) {

@@ -1,8 +1,15 @@
 import * as Two from 'two.js/build/two.js'
 import * as _ from 'lodash'
 
-export function pathFromAnchors(anchors, leftHandles, rightHandles) {
-  // TODO: errorcheck lengths
+export function pathFromAnchors(anchors, leftHandles, rightHandles, commands=null) {
+  // eslint-disable-next-line
+  console.assert(anchors.length === leftHandles.length);
+  // eslint-disable-next-line
+  console.assert(leftHandles.length === rightHandles.length);
+  if (commands !== null) {
+    // eslint-disable-next-line
+    console.assert(rightHandles.length === commands.length);
+  }
   let vertices = [];
   for (let i = 0; i < anchors.length; i++) {
     vertices.push(new Two.Anchor(
@@ -12,7 +19,7 @@ export function pathFromAnchors(anchors, leftHandles, rightHandles) {
       leftHandles[i][1],
       rightHandles[i][0],
       rightHandles[i][1],
-      'C',
+      commands !== null ? commands[i] : 'C',
     ));
   }
   vertices.forEach(v => v.relative = false);
@@ -121,7 +128,11 @@ export function getManimPoints(mobject) {
  *   ...
  * ]
  */
-export function pathFromManimPoints(points) {
+export function pathFromManimPoints(points, commands=null) {
+  if (commands !== null) {
+    // eslint-disable-next-line
+    console.assert(commands.length === points.length / 4 + 1)
+  }
   if (points.length === 0) {
     return new Two.Path();
   }
@@ -137,7 +148,7 @@ export function pathFromManimPoints(points) {
   }
   anchors.push(points[points.length - 1]);
   rightControls.push(points[points.length - 1]);
-  return pathFromAnchors(anchors, leftControls, rightControls);
+  return pathFromAnchors(anchors, leftControls, rightControls, commands);
 }
 
 export function isGroupData(mobjectData) {
@@ -422,6 +433,14 @@ export function splitBezier(points, alpha, /* fromStart=true */) {
 }
 
 export function convertSVGGroup(svgGroup) {
+  // Convert all paths to Two.Path
+  for (let path of extractPathsFromGroup(svgGroup)) {
+    let parent = path.parent;
+    let newPath = Two.Path.prototype.clone.call(path);
+    parent.remove(path);
+    parent.add(newPath);
+  }
+
   // Convert anchors to absolute coordinates
   for (let path of extractPathsFromGroup(svgGroup)) {
     for (let v of path.vertices) {
@@ -471,4 +490,15 @@ export function convertSVGGroup(svgGroup) {
     }
   }
   return svgGroup;
+}
+
+export function integerInterpolate(start, end, alpha) {
+  if (alpha >= 1) {
+    return [end - 1, 1];
+  } else if (alpha <= 0) {
+    return [start, 0];
+  } else {
+    let interpolation = interpolate(start, end, alpha);
+    return [Math.floor(interpolation), interpolation % 1];
+  }
 }

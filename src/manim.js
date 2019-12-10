@@ -182,22 +182,34 @@ class Group extends Two.Group {
     fewer.setAnchorsFromPoints(newPoints);
   }
 
+  /* Takes a style of the form
+   * {
+   *   strokeColor: '#fff',
+   *   strokeOpacity: 1,
+   *   strokeWidth: 4,
+   *   fillColor: '#000',
+   *   fillOpacity: 0,
+   * }
+   * and applies it to the Mobject.
+   */
   applyStyle(style) {
-    let combinedStyle = this.getStyleWithDefaults(style);
-    this.stroke = combinedStyle.strokeColor;
-    this.fill = combinedStyle.fillColor;
+    let combinedStyle = Object.assign(this.getStyleDict(), style);
+    let strokeChroma = chroma(combinedStyle.strokeColor).alpha(combinedStyle.strokeOpacity);
+    let fillChroma = chroma(combinedStyle.fillColor).alpha(combinedStyle.fillOpacity);
+    this.stroke = strokeChroma.hex();
+    this.fill = fillChroma.hex();
     this.linewidth = combinedStyle.strokeWidth / 100;
     return this;
   }
 
-  getStyleWithDefaults(style) {
-    return Object.assign(Object.assign({}, DEFAULT_STYLE), style);
-  }
-
   getStyleDict() {
+    let strokeChroma = chroma(this.stroke);
+    let fillChroma = chroma(this.fill);
     return {
-      strokeColor: chroma(this.stroke).hex(),
-      fillColor: chroma(this.fill).hex(),
+      strokeColor: strokeChroma.hex(),
+      strokeOpacity: strokeChroma.alpha(),
+      fillColor: fillChroma.hex(),
+      fillOpacity: fillChroma.alpha(),
       strokeWidth: this.linewidth * 100,
     };
   }
@@ -213,7 +225,7 @@ class Group extends Two.Group {
       .translate(canvasWidth / 2, canvasHeight / 2)
       .scale(canvasHeight / sceneHeight)
       .multiply(
-        1, 0, 0, /* reflect over +x axis */
+        1, 0, 0, /* reflect over x axis */
         0, -1, 0,
         0, 0, 1,
       );
@@ -373,15 +385,15 @@ class Group extends Two.Group {
     this.children[0].vertices = newAnchors;
 
     // interpolate styles
-    let style = {};
     let style1 = mobject1.getStyleDict();
     let style2 = mobject2.getStyleDict();
-
-    style['strokeColor'] = chroma.scale([style1.strokeColor, style2.strokeColor])(alpha);
-    style['strokeWidth'] = utils.interpolate(style1.strokeWidth, style2.strokeWidth, alpha);
-    style['fillColor'] = chroma.scale([style1.fillColor, style2.fillColor])(alpha);
-
-    this.applyStyle(style);
+    this.applyStyle({
+      strokeColor : chroma.scale([style1.strokeColor, style2.strokeColor])(alpha),
+      strokeOpacity : utils.interpolate(style1.strokeOpacity, style2.strokeOpacity, alpha),
+      fillColor : chroma.scale([style1.fillColor, style2.fillColor])(alpha),
+      fillOpacity : utils.interpolate(style1.fillOpacity, style2.fillOpacity, alpha),
+      strokeWidth : utils.interpolate(style1.strokeWidth, style2.strokeWidth, alpha),
+    });
   }
 
   clone(parent) {
@@ -403,7 +415,6 @@ class Group extends Two.Group {
     clone.translation.copy(this.translation);
     clone.rotation = this.rotation;
     clone.scale = this.scale;
-    clone.className = this.className;
 
     if (this.matrix.manual) {
       clone.matrix.copy(this.matrix);
@@ -418,9 +429,6 @@ class Group extends Two.Group {
 
   // TODO: Use a
   pointwiseBecomePartial(other, a, b) {
-    if (a === b) {
-      return;
-    }
     // eslint-disable-next-line
     console.assert(0 <= a && a <= 1 && 0 <= b && b <= 1 && a <= b, a, b);
     let bezierQuads = _.chunk(utils.getManimPoints(other), 4);
@@ -429,9 +437,7 @@ class Group extends Two.Group {
     // let aIndex = Math.floor(aScaled);
     // let aResidue = aScaled % 1;
 
-    let bScaled = b * bezierQuads.length;
-    let bIndex = Math.floor(bScaled);
-    let bResidue = bScaled % 1;
+    let [bIndex, bResidue] = utils.integerInterpolate(0, bezierQuads.length, b);
 
     let newPathCoeffs = bezierQuads.slice(0, bIndex);
     let bResidueCoeffs = [];
@@ -441,11 +447,24 @@ class Group extends Two.Group {
     if (bResidueCoeffs.length > 0) {
       newPathCoeffs.push(bResidueCoeffs);
     }
+    let vertexCommands = other.children[0].vertices.slice(0, newPathCoeffs.length + 1).map(v => v.command);
+    // eslint-disable-next-line
+    console.assert(
+      vertexCommands.length === newPathCoeffs.length + 1,
+      vertexCommands.length,
+      newPathCoeffs.length,
+    );
 
-    let newPath = utils.pathFromManimPoints(newPathCoeffs.flat());
+    // TODO: Why doesn't this.path() work???
+    let newPath = this.children[0].clone();
+    let partialPath = utils.pathFromManimPoints(newPathCoeffs.flat(), vertexCommands);
+    newPath.vertices = partialPath.vertices;
+    newPath.closed = false;
     this.remove(this.children[0]);
     this.add(newPath);
-    this.normalizeToCanvas();
+    if (!(this instanceof TexSymbol)) {
+      this.normalizeToCanvas();
+    }
     this.applyStyle(this.getStyleDict());
   }
 }
@@ -461,7 +480,7 @@ class Mobject extends Group {
     }
     super([path].concat(submobjects), /*fillTopLevel=*/true);
     this.normalizeToCanvas();
-    this.applyStyle(style);
+    this.applyStyle(Object.assign(Object.assign({}, DEFAULT_STYLE), style));
   }
 
   clone(parent) {
@@ -483,7 +502,6 @@ class Mobject extends Group {
     clone.translation.copy(this.translation);
     clone.rotation = this.rotation;
     clone.scale = this.scale;
-    clone.className = this.className;
 
     if (this.matrix.manual) {
       clone.matrix.copy(this.matrix);
@@ -585,7 +603,6 @@ class Circle extends Arc {
     clone.translation.copy(this.translation);
     clone.rotation = this.rotation;
     clone.scale = this.scale;
-    clone.className = this.className;
 
     if (this.matrix.manual) {
       clone.matrix.copy(this.matrix);
@@ -792,7 +809,6 @@ class Square extends RegularPolygon {
     clone.translation.copy(this.translation);
     clone.rotation = this.rotation;
     clone.scale = this.scale;
-    clone.className = this.className;
 
     if (this.matrix.manual) {
       clone.matrix.copy(this.matrix);
@@ -832,7 +848,6 @@ class TexSymbol extends Group {
     clone.translation.copy(this.translation);
     clone.rotation = this.rotation;
     clone.scale = this.scale;
-    clone.className = this.className;
 
     if (this.matrix.manual) {
       clone.matrix.copy(this.matrix);
@@ -864,6 +879,7 @@ class SingleStringTexMobject extends Mobject {
     super(null, [group], style);
     this.texString = texString;
     this.texSymbols = texSymbols;
+    this.viewBox = group.viewBox;
   }
 
   submobjects() {
@@ -899,7 +915,6 @@ class SingleStringTexMobject extends Mobject {
     clone.translation.copy(this.translation);
     clone.rotation = this.rotation;
     clone.scale = this.scale;
-    clone.className = this.className;
 
     if (this.matrix.manual) {
       clone.matrix.copy(this.matrix);
@@ -944,6 +959,27 @@ class TexMobject extends Mobject {
     return ret;
   }
 
+  applyStyle(style) {
+    for (let submob of this.submobjects()) {
+      submob.applyStyle(style);
+      if ("strokeWidth" in style) {
+        let styleCopy = Object.assign({}, style);
+        let viewBoxFields = submob.viewBox.split(" ").map(x => parseInt(x));
+        let [width, height] = viewBoxFields.slice(2);
+        let majorDimension = Math.max(width, height);
+        if (majorDimension < 400) {
+          // eslint-disable-next-line
+          console.warn(`The latex for ${submob.texString} is too small to guess accurately. strokeWidth may be inconsistent`);
+        }
+        let convertedStrokeWidth = majorDimension / (style["strokeWidth"] * consts.strokeWidthConstant);
+        styleCopy["strokeWidth"] = convertedStrokeWidth;
+        submob.applyStyle(styleCopy);
+      } else {
+        submob.applyStyle(style);
+      }
+    }
+  }
+
   clone(parent) {
     // TODO: This is very wasteful, since the children are removed later
     let clone = new TexMobject(_.cloneDeep(this.texStrings), this.scene);
@@ -964,7 +1000,6 @@ class TexMobject extends Mobject {
     clone.translation.copy(this.translation);
     clone.rotation = this.rotation;
     clone.scale = this.scale;
-    clone.className = this.className;
 
     if (this.matrix.manual) {
       clone.matrix.copy(this.matrix);

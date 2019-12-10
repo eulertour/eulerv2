@@ -431,9 +431,11 @@ export default {
     },
     setMobjectField: function(mobjectData, allMobjectData = null) {
       if (mobjectData.className === "TexSymbol") {
+        // eslint-disable-next-line
         console.error("TexSymbols should only be generated from a TexMobject");
         return;
       } else if (mobjectData.className === "SingleStringTexMobject") {
+        // eslint-disable-next-line
         console.error("SingleStringTexMobjects should only be generated from a TexMobject");
         return;
       } else if (mobjectData.className === "TexMobject") {
