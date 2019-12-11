@@ -1,5 +1,6 @@
 import * as Two from 'two.js/build/two.js'
 import * as _ from 'lodash'
+import chroma from 'chroma-js'
 
 export function pathFromAnchors(anchors, leftHandles, rightHandles, commands=null) {
   // eslint-disable-next-line
@@ -90,6 +91,16 @@ export function interpolateMatrices(m1, m2, alpha) {
     ret.push(interpolateArrays(m1[i], m2[i], alpha));
   }
   return ret;
+}
+
+export function interpolateStyles(style1, style2, alpha) {
+  return {
+    strokeColor : chroma.scale([style1.strokeColor, style2.strokeColor])(alpha),
+    strokeOpacity : interpolate(style1.strokeOpacity, style2.strokeOpacity, alpha),
+    fillColor : chroma.scale([style1.fillColor, style2.fillColor])(alpha),
+    fillOpacity : interpolate(style1.fillOpacity, style2.fillOpacity, alpha),
+    strokeWidth : interpolate(style1.strokeWidth, style2.strokeWidth, alpha),
+  }
 }
 
 /* Returns a list of points of the form: [

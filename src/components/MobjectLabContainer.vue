@@ -139,7 +139,7 @@ export default {
       displayCode: true,
       playingSingleAnimation: null,
       sceneChoices: [],
-      chosenScene: "WriteStuff",
+      chosenScene: "AlignDataExample",
       scene: null,
       sceneLoaded: false,
       mobjectChoices: [
@@ -500,8 +500,8 @@ export default {
       }
     },
     play: function(e, singleAnimationOnly = true) {
-      // Testing whether clones display correctly
-      // this.scene.add(this.mobjects[this.currentAnimation.args[0]].mobject.clone());
+      // Testing whether mobjects display correctly
+      // this.scene.add(this.mobjects[this.currentAnimation.args[0]].mobject);
       // this.scene.update();
       this.playingSingleAnimation = singleAnimationOnly;
       if (this.animating) {

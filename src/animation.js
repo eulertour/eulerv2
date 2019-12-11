@@ -1,5 +1,6 @@
 import * as utils from './utils.js';
 import * as _ from 'lodash';
+import chroma from 'chroma-js';
 
 class Animation {
   constructor(
@@ -205,8 +206,16 @@ class ShowCreation extends Animation {
 }
 
 class FadeIn extends Animation {
-  interpolateMobject(alpha) {
-    this.mobject.applyStyle({fillOpacity: alpha});
+  interpolateSubmobject(alpha, mob, startingMob) {
+    let style1 = startingMob.getStyleDict();
+    let style2 = Object.assign({}, style1);
+    style1.strokeOpacity = 0;
+    style1.fillOpacity = 0;
+    mob.applyStyle(utils.interpolateStyles(style1, style2, alpha));
+  }
+
+  getCopiesForInterpolation() {
+    return [this.mobject, this.startingMobject];
   }
 
   static getDiff(mobject) {

@@ -193,6 +193,10 @@ class Group extends Two.Group {
    * and applies it to the Mobject.
    */
   applyStyle(style) {
+    if (this.__proto__ === Group.prototype) {
+      this.submobjects().forEach(submob => submob.applyStyle(style));
+      return;
+    }
     let combinedStyle = Object.assign(this.getStyleDict(), style);
     let strokeChroma = chroma(combinedStyle.strokeColor).alpha(combinedStyle.strokeOpacity);
     let fillChroma = chroma(combinedStyle.fillColor).alpha(combinedStyle.fillOpacity);
@@ -385,15 +389,11 @@ class Group extends Two.Group {
     this.children[0].vertices = newAnchors;
 
     // interpolate styles
-    let style1 = mobject1.getStyleDict();
-    let style2 = mobject2.getStyleDict();
-    this.applyStyle({
-      strokeColor : chroma.scale([style1.strokeColor, style2.strokeColor])(alpha),
-      strokeOpacity : utils.interpolate(style1.strokeOpacity, style2.strokeOpacity, alpha),
-      fillColor : chroma.scale([style1.fillColor, style2.fillColor])(alpha),
-      fillOpacity : utils.interpolate(style1.fillOpacity, style2.fillOpacity, alpha),
-      strokeWidth : utils.interpolate(style1.strokeWidth, style2.strokeWidth, alpha),
-    });
+    this.applyStyle(utils.interpolateStyles(
+      mobject1.getStyleDict(),
+      mobject2.getStyleDict(),
+      alpha,
+    ));
   }
 
   clone(parent) {
@@ -480,7 +480,7 @@ class Mobject extends Group {
     }
     super([path].concat(submobjects), /*fillTopLevel=*/true);
     this.normalizeToCanvas();
-    this.applyStyle(Object.assign(Object.assign({}, DEFAULT_STYLE), style));
+    this.applyStyle(Object.assign({}, DEFAULT_STYLE, style));
   }
 
   clone(parent) {
