@@ -166,8 +166,6 @@ class WriteStuff(WebScene):
             "\\sum_{k=1}^\\infty {1 \\over k^2} = {\\pi^2 \\over 6}",
             # "a",
         )
-        s = Square()
-        self.play(FadeIn(s))
         self.play(ShowCreation(example_tex))
 
 
@@ -211,7 +209,7 @@ FadeIn and FadeOut Animations and the Circle and Square Mobjects can be
 processed from manim.`
 
 // When rendered to latex, the a character has a viewBox height of 451 and
-// closely matches a strokeWidth of 4 most when given a strokeWidth of 290. That
-// constant is a bit too small, so arbitrarily subtract from the denominator
+// closely matches a strokeWidth of 4 when given a strokeWidth of 290. That
+// constant is a bit too large, so arbitrarily subtract from the numerator
 // ¯\_(ツ)_/¯.
-export const strokeWidthConstant = 451 / ((290 - 120) * 4);
+export const strokeWidthConstant = (290 - 100) / (4 * 451);

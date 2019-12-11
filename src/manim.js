@@ -44,7 +44,7 @@ class Group extends Two.Group {
 
   translateMobject(vector) {
     utils.translatePath(vector, this.children[0]);
-    for (let submob of this.children.slice(1)) {
+    for (let submob of this.submobjects()) {
       submob.translateMobject(vector);
     }
     return this;
@@ -866,7 +866,7 @@ class SingleStringTexMobject extends Mobject {
   constructor(
     texString,
     group,
-    style = {strokeColor: consts.WHITE, fillColor: consts.WHITE}
+    style = {strokeColor: consts.WHITE, fillColor: consts.WHITE, fillOpacity: 1}
   ) {
     let texSymbols = [];
     for (let path of utils.extractPathsFromGroup(group)) {
@@ -933,8 +933,11 @@ class TexMobject extends Mobject {
     texStrings,
     scene,
     style = {
-      strokeColor: consts.WHITE,
       fillColor: consts.WHITE,
+      fillOpacity: 1,
+      strokeColor: consts.WHITE,
+      strokeOpacity: 1,
+      strokeWidth: 1,
     }
   ) {
     super(
@@ -971,7 +974,7 @@ class TexMobject extends Mobject {
           // eslint-disable-next-line
           console.warn(`The latex for ${submob.texString} is too small to guess accurately. strokeWidth may be inconsistent`);
         }
-        let convertedStrokeWidth = majorDimension / (style["strokeWidth"] * consts.strokeWidthConstant);
+        let convertedStrokeWidth = style["strokeWidth"] * majorDimension * consts.strokeWidthConstant;
         styleCopy["strokeWidth"] = convertedStrokeWidth;
         submob.applyStyle(styleCopy);
       } else {

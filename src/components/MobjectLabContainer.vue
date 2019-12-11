@@ -439,10 +439,13 @@ export default {
         console.error("SingleStringTexMobjects should only be generated from a TexMobject");
         return;
       } else if (mobjectData.className === "TexMobject") {
-        mobjectData.mobject = new Manim.TexMobject(
+        let s = new Manim.TexMobject(
           mobjectData.params.tex_strings,
           this.scene,
         );
+        s.translateMobject(mobjectData.position);
+        s.applyStyle(mobjectData.style);
+        mobjectData.mobject = s;
       } else if (!utils.isGroupData(mobjectData)) {
         let s = new Manim[mobjectData.className](mobjectData.params);
         s.translateMobject(mobjectData.position);

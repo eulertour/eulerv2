@@ -247,6 +247,10 @@ export function smooth(t, inflection = 10) {
   );
 }
 
+export function linear(t) {
+  return t;
+}
+
 export function removeListRedundancies(l) {
   return l;
 }

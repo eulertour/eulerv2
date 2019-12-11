@@ -1,13 +1,17 @@
 import * as utils from './utils.js';
+import * as _ from 'lodash';
 
 class Animation {
   constructor(
     mobject,
     rateFunc=utils.smooth,
-    /* suspendMobjectUpdating=true, */
+    lagRatio=0,
+    runtime=1,
   ) {
     this.mobject = mobject;
     this.rateFunc = rateFunc;
+    this.lagRatio = lagRatio;
+    this.runtime = runtime;
   }
 
   /* This is called right as an animation is being
@@ -56,8 +60,9 @@ class Animation {
      * only as Groups).
      */
     let interpolateSubmobjectArgs = this.getAllArgsToInterpolateSubmobject();
-    for (let args of interpolateSubmobjectArgs) {
-      this.interpolateSubmobject(alpha, ...args);
+    for (let i = 0; i < interpolateSubmobjectArgs.length; i++) {
+      let subAlpha = this.getSubAlpha(alpha, i, interpolateSubmobjectArgs.length);
+      this.interpolateSubmobject(subAlpha, ...interpolateSubmobjectArgs[i]);
     }
   }
 
@@ -86,6 +91,26 @@ class Animation {
       argsList.push(mobjectHeirarchies.map(h => h[i]));
     }
     return argsList;
+  }
+
+  /* In order to stagger the start times of animations for multiple Mobjects,
+   * have the Mobject at index i begin its animation at a proportion
+   * this.lagRatio * i * alpha from the start of the Animation.
+   */
+  getSubAlpha(alpha, index, numSubmobjects) {
+    // eslint-disable-next-line
+    console.assert(0 <= alpha && alpha <= 1);
+    let fullRuntime = (numSubmobjects - 1) * this.lagRatio + 1;
+    let fullRuntimeAlpha = fullRuntime * alpha;
+    let startTime = this.lagRatio * index;
+    let endTime = startTime + 1;
+    if (fullRuntimeAlpha <= startTime) {
+      return 0;
+    } else if (endTime <= fullRuntimeAlpha) {
+      return 1;
+    } else {
+      return fullRuntimeAlpha - startTime;
+    }
   }
 
   isFinished(alpha) {
@@ -131,25 +156,45 @@ class ReplacementTransform extends Animation {
 }
 
 class ShowCreation extends Animation {
+  constructor(mobject, runtime=null, lagRatio=null) {
+    super(mobject, utils.linear, lagRatio, runtime);
+    if (runtime === null || lagRatio === null) {
+      this.setConfigFromLength(mobject.getMobjectHeirarchy().length);
+    }
+  }
+
+  setConfigFromLength(length) {
+    if (this.runtime === null) {
+      if (length) {
+        this.runtime = 1;
+      } else {
+        this.runtime = 2;
+      }
+    }
+    if (this.lagRatio === null) {
+      this.lagRatio = Math.min(4 / length, 0.2);
+    }
+  }
+
   begin() {
-    this.targetMobject = this.mobject.clone();
-    this.mobject.applyStyle({ strokeColor: '#ffffff', strokeWidth: 4, fillOpacity: 0 });
+    this.mobject.applyStyle({ strokeWidth: 1, fillOpacity: 0 });
     Animation.prototype.begin.call(this);
     this.startingMobject.applyStyle({ fillOpacity: 0 });
   }
 
-  interpolateSubmobject(alpha, submob, startingSubmobject, targetMobject) {
-    submob.pointwiseBecomePartial(startingSubmobject, 0, alpha);
-    // let [index, subalpha] = utils.integerInterpolate(0, 2, alpha);
-    // if (index === 0) {
-    //   submob.pointwiseBecomePartial(startingSubmobject, 0, subalpha);
-    // } else {
-    //   submob.interpolate(startingSubmobject, targetMobject, subalpha);
-    // }
+  interpolateSubmobject(alpha, submob, startingSubmobject) {
+    if (alpha <= 0.5) {
+      submob.pointwiseBecomePartial(startingSubmobject, 0, 2 * alpha);
+    } else {
+      if(!_.last(submob.children[0].vertices).equals(_.last(startingSubmobject.children[0].vertices))) {
+        submob.pointwiseBecomePartial(startingSubmobject, 0, 1);
+      }
+      submob.applyStyle({ fillOpacity: 2 * alpha - 1 });
+    }
   }
 
   getCopiesForInterpolation() {
-    return [this.mobject, this.startingMobject, this.targetMobject];
+    return [this.mobject, this.startingMobject];
   }
 
   static getDiff(mobject) {
@@ -161,7 +206,7 @@ class ShowCreation extends Animation {
 
 class FadeIn extends Animation {
   interpolateMobject(alpha) {
-    this.mobject.opacity = alpha;
+    this.mobject.applyStyle({fillOpacity: alpha});
   }
 
   static getDiff(mobject) {
