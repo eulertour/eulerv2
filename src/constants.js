@@ -164,7 +164,7 @@ class WriteStuff(WebScene):
     def construct(self):
         example_tex = TexMobject(
             "\\sum_{k=1}^\\infty {1 \\over k^2} = {\\pi^2 \\over 6}",
-            # "a",
+            "a",
         )
         self.play(ShowCreation(example_tex))
 

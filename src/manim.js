@@ -332,6 +332,9 @@ class Group extends Two.Group {
   }
 
   getPointCenter() {
+    if (this.__proto__ === TexMobject.prototype) {
+      console.warning("getPointCenter() doesn't work on latex");
+    }
     if (this.points().length === 0) {
       return [0, 0];
     }
@@ -350,8 +353,42 @@ class Group extends Two.Group {
     return [(xMax + xMin) / 2, (yMax + yMin) / 2];
   }
 
+  getDimensions() {
+    let xMin = Infinity,
+      xMax = -Infinity,
+      yMin = Infinity,
+      yMax = -Infinity;
+    this.getMobjectHeirarchy().forEach(submob => {
+      submob.points().forEach(p => {
+        xMin = Math.min(xMin, p.x);
+        xMax = Math.max(xMax, p.x);
+        yMin = Math.min(yMin, p.y);
+        yMax = Math.max(yMax, p.y);
+      });
+    });
+    if (xMin === Infinity) {
+      return null;
+    }
+    let center = {
+      x: (xMax + xMin) / 2,
+      y: (yMax + yMin) / 2,
+    };
+    let height = yMax - yMin;
+    let width = xMax - xMin;
+    return {
+      center: center,
+      height: height,
+      width: width,
+      topLeft:     { x: center.x - width / 2, y: center.y - height / 2 },
+      topRight:    { x: center.x + width / 2, y: center.y - height / 2 },
+      bottomRight: { x: center.x + width / 2, y: center.y + height / 2 },
+      bottomLeft:  { x: center.x - width / 2, y: center.y + height / 2 },
+    };
+  }
+
   getPixelCenter() {
     if (this.points().length === 0) {
+      // TODO: This needs the scene's height and width
       return [this.width / 2, this.height / 2];
     }
     let rect = this.getBoundingClientRect();
@@ -940,11 +977,41 @@ class TexMobject extends Mobject {
       strokeWidth: 1,
     }
   ) {
+    let submobLatex = [];
+    let submobLatexLengths = [];
+    for (let texString of texStrings) {
+      let group = scene.texToSvgGroup(texString);
+      submobLatex.push(new SingleStringTexMobject(texString, group, style));
+      submobLatexLengths.push(utils.extractPathsFromGroup(group).length);
+    }
+    let combinedTexString = texStrings.join(' ');
+    let combinedLatexGroup = scene.texToSvgGroup(combinedTexString);
+    let combinedLatex = new SingleStringTexMobject(combinedTexString, combinedLatexGroup);
+    let combinedLatexLength = utils.extractPathsFromGroup(combinedLatexGroup).length;
+
+    let currentIndex = 0;
+    for (let i = 0; i < submobLatex.length; i++) {
+      let submob = submobLatex[i];
+      let submobScalingMob = submob.submobjects()[0];
+      let combinedScalingMob = combinedLatex.submobjects()[currentIndex];
+      console.log("####");
+      console.log(submob.viewBox.split(" ")[3]);
+      console.log(submob.getBoundingClientRect().height);
+      console.log(submobScalingMob.getBoundingClientRect().height);
+      console.log();
+      console.log(combinedLatex.getBoundingClientRect().height);
+      console.log(combinedLatex.submobjects()[currentIndex].getBoundingClientRect().height);
+      console.log("####");
+      currentIndex += submobLatexLengths[i];
+    }
+
     super(
       null,
-      texStrings.map(tex =>
-        new SingleStringTexMobject(tex, scene.texToSvgGroup(tex))
-      ),
+      // submobLatex,
+      // texStrings.map(tex =>
+      //   new SingleStringTexMobject(tex, scene.texToSvgGroup(tex))
+      // ),
+      [combinedLatex],
       style
     );
     this.texStrings = texStrings;
