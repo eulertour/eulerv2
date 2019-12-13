@@ -994,24 +994,28 @@ class TexMobject extends Mobject {
       let submob = submobLatex[i];
       let submobScalingMob = submob.submobjects()[0];
       let combinedScalingMob = combinedLatex.submobjects()[currentIndex];
+
       console.log("####");
-      console.log(submob.viewBox.split(" ")[3]);
-      console.log(submob.getBoundingClientRect().height);
-      console.log(submobScalingMob.getBoundingClientRect().height);
-      console.log();
-      console.log(combinedLatex.getBoundingClientRect().height);
-      console.log(combinedLatex.submobjects()[currentIndex].getBoundingClientRect().height);
+      console.log(`submob tex = ${submob.texString}`);
+      console.log(`submob height = ${submob.getBoundingClientRect().height}`);
+      console.log(`submob scaler height = ${submobScalingMob.getBoundingClientRect().height}`);
+      console.log(`combined height = ${combinedLatex.getBoundingClientRect().height}`);
+      console.log(`combined scaler height = ${combinedLatex.submobjects()[currentIndex].getBoundingClientRect().height}`);
       console.log("####");
+      // submob.scaleMobject(
+      //   combinedLatex.submobjects()[currentIndex].getBoundingClientRect().height /
+      //   submobScalingMob.getBoundingClientRect().height
+      // );
       currentIndex += submobLatexLengths[i];
     }
 
     super(
       null,
-      // submobLatex,
+      submobLatex,
       // texStrings.map(tex =>
       //   new SingleStringTexMobject(tex, scene.texToSvgGroup(tex))
       // ),
-      [combinedLatex],
+      // [combinedLatex],
       style
     );
     this.texStrings = texStrings;
