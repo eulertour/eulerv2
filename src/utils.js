@@ -517,3 +517,7 @@ export function integerInterpolate(start, end, alpha) {
     return [Math.floor(interpolation), interpolation % 1];
   }
 }
+
+export function getBoundingClientRectCenter(rect) {
+  return [rect.left + rect.width / 2, rect.top + rect.height / 2];
+}

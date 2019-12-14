@@ -333,6 +333,7 @@ class Group extends Two.Group {
 
   getPointCenter() {
     if (this.__proto__ === TexMobject.prototype) {
+      // eslint-disable-next-line
       console.warning("getPointCenter() doesn't work on latex");
     }
     if (this.points().length === 0) {
@@ -859,7 +860,6 @@ class Square extends RegularPolygon {
   }
 }
 
-// TODO: This probably needs to override clone()
 class TexSymbol extends Group {
   constructor(path) {
     super([path], /*fillTopLevel=*/true);
@@ -975,49 +975,63 @@ class TexMobject extends Mobject {
       strokeColor: consts.WHITE,
       strokeOpacity: 1,
       strokeWidth: 1,
-    }
+    },
+    startString = "",
+    endString = "",
   ) {
     let submobLatex = [];
     let submobLatexLengths = [];
     for (let texString of texStrings) {
-      let group = scene.texToSvgGroup(texString);
-      submobLatex.push(new SingleStringTexMobject(texString, group, style));
+      let wrappedTexString = `${startString}${texString}${endString}`;
+      let group = scene.texToSvgGroup(wrappedTexString);
+      submobLatex.push(new SingleStringTexMobject(wrappedTexString, group, style));
       submobLatexLengths.push(utils.extractPathsFromGroup(group).length);
     }
-    let combinedTexString = texStrings.join(' ');
+    let combinedTexString = `${startString}${texStrings.join(' ')}${endString}`;
     let combinedLatexGroup = scene.texToSvgGroup(combinedTexString);
     let combinedLatex = new SingleStringTexMobject(combinedTexString, combinedLatexGroup);
-    let combinedLatexLength = utils.extractPathsFromGroup(combinedLatexGroup).length;
 
+    // Scale submobjects
     let currentIndex = 0;
     for (let i = 0; i < submobLatex.length; i++) {
       let submob = submobLatex[i];
       let submobScalingMob = submob.submobjects()[0];
-      let combinedScalingMob = combinedLatex.submobjects()[currentIndex];
-
-      console.log("####");
-      console.log(`submob tex = ${submob.texString}`);
-      console.log(`submob height = ${submob.getBoundingClientRect().height}`);
-      console.log(`submob scaler height = ${submobScalingMob.getBoundingClientRect().height}`);
-      console.log(`combined height = ${combinedLatex.getBoundingClientRect().height}`);
-      console.log(`combined scaler height = ${combinedLatex.submobjects()[currentIndex].getBoundingClientRect().height}`);
-      console.log("####");
-      // submob.scaleMobject(
-      //   combinedLatex.submobjects()[currentIndex].getBoundingClientRect().height /
-      //   submobScalingMob.getBoundingClientRect().height
-      // );
+      // TODO: Why are these calls necessary? The only modification seems to be
+      // that _update() is called on each mobject in the heirarchy.
+      submob.getBoundingClientRect();
+      combinedLatex.getBoundingClientRect();
+      submob.scaleMobject(
+        combinedLatex.submobjects()[currentIndex].getBoundingClientRect().height /
+        submobScalingMob.getBoundingClientRect().height
+      );
       currentIndex += submobLatexLengths[i];
     }
 
-    super(
-      null,
-      submobLatex,
-      // texStrings.map(tex =>
-      //   new SingleStringTexMobject(tex, scene.texToSvgGroup(tex))
-      // ),
-      // [combinedLatex],
-      style
-    );
+    // Translate submobjects
+    let currentTexStringIndex = 0;
+    let currentTexSymbolIndex = 0;
+    for (let i = 0; i < combinedLatex.submobjects().length; i++) {
+      let combinedTexSymbol = combinedLatex.submobjects()[i];
+      let currentTexString = submobLatex[currentTexStringIndex];
+      let currentTexSymbol = currentTexString.submobjects()[currentTexSymbolIndex];
+      let combinedSymbolCenter = utils.getBoundingClientRectCenter(combinedTexSymbol.getBoundingClientRect());
+      let currentSymbolCenter = utils.getBoundingClientRectCenter(currentTexSymbol.getBoundingClientRect());
+      let currentSymbolMatrix = Two.Utils.getComputedMatrix(currentTexSymbol.children[0]);
+      // TODO: Use actual matrix multiplication
+      currentTexSymbol.translateMobject([
+        (combinedSymbolCenter[0] - currentSymbolCenter[0]) * 1/currentSymbolMatrix.elements[0],
+        (combinedSymbolCenter[1] - currentSymbolCenter[1]) * 1/currentSymbolMatrix.elements[4],
+      ]);
+
+      if (currentTexSymbolIndex === currentTexString.submobjects().length - 1) {
+        currentTexStringIndex += 1;
+        currentTexSymbolIndex = 0;
+      } else {
+        currentTexSymbolIndex += 1;
+      }
+    }
+
+    super(null, submobLatex, style);
     this.texStrings = texStrings;
     this.scene = scene;
   }
@@ -1057,6 +1071,8 @@ class TexMobject extends Mobject {
   clone(parent) {
     // TODO: This is very wasteful, since the children are removed later
     let clone = new TexMobject(_.cloneDeep(this.texStrings), this.scene);
+    clone.startString = this.startString;
+    clone.endString = this.endString;
 
     let children = Two.Utils.map(this.children, function (child) {
       return child.clone();
@@ -1088,8 +1104,20 @@ class TexMobject extends Mobject {
 }
 
 class TextMobject extends TexMobject {
-  constructor() {
-    super();
+  constructor(
+    texStrings,
+    scene,
+    style = {
+      fillColor: consts.WHITE,
+      fillOpacity: 1,
+      strokeColor: consts.WHITE,
+      strokeOpacity: 1,
+      strokeWidth: 1,
+    },
+    startString = "\\textrm{",
+    endString = "}",
+  ) {
+    super(texStrings, scene, style, startString, endString);
   }
 }
 

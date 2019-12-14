@@ -351,7 +351,7 @@ export default {
       // Initialize TexMobjects
       for (let mobjectName of Object.keys(newMobjects)) {
         let data = newMobjects[mobjectName];
-        if (data.className === "TexMobject") {
+        if (data.className === "TexMobject" || data.className === "TextMobject") {
           this.setMobjectField(data);
         }
       }
@@ -438,8 +438,8 @@ export default {
         // eslint-disable-next-line
         console.error("SingleStringTexMobjects should only be generated from a TexMobject");
         return;
-      } else if (mobjectData.className === "TexMobject") {
-        let s = new Manim.TexMobject(
+      } else if (mobjectData.className === "TexMobject" || mobjectData.className === "TextMobject") {
+        let s = new Manim[mobjectData.className](
           mobjectData.params.tex_strings,
           this.scene,
         );
