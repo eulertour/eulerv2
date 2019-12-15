@@ -139,7 +139,7 @@ export default {
       displayCode: true,
       playingSingleAnimation: null,
       sceneChoices: [],
-      chosenScene: "WriteStuff",
+      chosenScene: "SquareToCircle",
       scene: null,
       sceneLoaded: false,
       mobjectChoices: [
@@ -179,6 +179,7 @@ export default {
           className: "Circle",
           params: {},
           position: [-1, 0],
+          transformations: [],
           style: {
             strokeColor: "#fc6255ff",
             fillColor: "#00000000",
@@ -190,6 +191,7 @@ export default {
           className: "Square",
           params: {},
           position: [1, 0],
+          transformations: [],
           style: {
             strokeColor: "#ffffffff",
             fillColor: "#00000000",
@@ -201,6 +203,7 @@ export default {
           className: "Square",
           params: {},
           position: [1, 0],
+          transformations: [],
           style: {
             strokeColor: "#00ff00ff",
             fillColor: "#00000000",
@@ -306,22 +309,8 @@ export default {
       let newMobjects = {};
       for (let id of Object.keys(scene.initial_mobject_dict)) {
         let mobjectData = scene.initial_mobject_dict[id];
-        if (!utils.isGroupData(mobjectData) && !utils.isTexData(mobjectData)) {
+        if (utils.isGroupData(mobjectData) || utils.isTexData(mobjectData)) {
           // TODO: Mobjects with top-level points can still function as Groups
-          let strokeColor = mobjectData.style.strokeColor;
-          let strokeOpacity = mobjectData.style.strokeOpacity;
-          mobjectData.style.strokeColor = chroma(strokeColor)
-            .alpha(strokeOpacity)
-            .hex();
-          delete mobjectData.style.strokeOpacity;
-
-          let fillColor = mobjectData.style.fillColor;
-          let fillOpacity = mobjectData.style.fillOpacity;
-          mobjectData.style.fillColor = chroma(fillColor)
-            .alpha(fillOpacity)
-            .hex();
-          delete mobjectData.style.fillOpacity;
-        } else {
           let newSubmobjects = mobjectData.submobjects.map(
             id => mobjectIdsToNames[id],
           );
@@ -383,6 +372,7 @@ export default {
       }
 
       // Create scene diffs
+      // TODO: Transformations aren't diffed
       let newAnimationDiffs = [];
       let newSceneDiffs = [];
       let tempScene = [];
@@ -448,6 +438,7 @@ export default {
         mobjectData.mobject = s;
       } else if (!utils.isGroupData(mobjectData)) {
         let s = new Manim[mobjectData.className](mobjectData.params);
+        s.applyTransformations(mobjectData.transformations);
         s.translateMobject(mobjectData.position);
         s.applyStyle(mobjectData.style);
         mobjectData.mobject = s;
@@ -500,8 +491,8 @@ export default {
       }
     },
     play: function(e, singleAnimationOnly = true) {
-      // Testing whether mobjects display correctly
-      // this.scene.add(this.mobjects[this.currentAnimation.args[0]].mobject);
+      // // Testing whether mobjects display correctly
+      // this.scene.add(this.mobjects[this.currentAnimation.args[1]].mobject);
       // this.scene.update();
       this.playingSingleAnimation = singleAnimationOnly;
       if (this.animating) {

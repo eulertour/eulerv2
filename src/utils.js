@@ -1,6 +1,7 @@
 import * as Two from 'two.js/build/two.js'
 import * as _ from 'lodash'
 import chroma from 'chroma-js'
+import * as math from 'mathjs'
 
 export function pathFromAnchors(anchors, leftHandles, rightHandles, commands=null) {
   // eslint-disable-next-line
@@ -520,4 +521,29 @@ export function integerInterpolate(start, end, alpha) {
 
 export function getBoundingClientRectCenter(rect) {
   return [rect.left + rect.width / 2, rect.top + rect.height / 2];
+}
+
+export function reflectionMatrixAcrossVector(vector) {
+  if (vector[0] === 0 && vector[1] === 0) {
+    // eslint-disable-next-line
+    console.error(`Cannot reflect across ${vector}`);
+  } else if (vector[0] === 0) {
+    return math.matrix([[-1, 0], [0, 1]]);
+  } else {
+    let m = vector[1] / vector[0];
+    return math.multiply(
+      1 / (1 + m**2),
+      math.matrix([
+        [1-m**2, 2*m],
+        [2*m, m**2-1],
+      ]),
+    );
+  }
+}
+
+export function rotationMatrixByAngle(angle) {
+  return math.matrix([
+      [Math.cos(angle), -Math.sin(angle)],
+      [Math.sin(angle), Math.cos(angle)],
+  ]);
 }

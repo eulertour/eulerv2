@@ -1,6 +1,5 @@
 import * as utils from './utils.js';
 import * as _ from 'lodash';
-import chroma from 'chroma-js';
 
 class Animation {
   constructor(
@@ -121,6 +120,11 @@ class Animation {
   createStartingMobject() {
     return this.mobject.clone();
   }
+
+  static getDiff() {
+    // eslint-disable-next-line
+    console.error(`${this.name} does not override getDiff()`);
+  }
 }
 
 class ReplacementTransform extends Animation {
@@ -157,6 +161,25 @@ class ReplacementTransform extends Animation {
 }
 
 class ShowCreation extends Animation {
+  interpolateSubmobject(alpha, submob, startingSubmobject) {
+    if (alpha > 0) {
+      submob.pointwiseBecomePartial(startingSubmobject, 0, alpha);
+    }
+  }
+
+  getCopiesForInterpolation() {
+    return [this.mobject, this.startingMobject];
+  }
+
+  static getDiff(mobject) {
+    return {
+      'add': [mobject],
+    };
+  }
+}
+
+// TODO: This should start with a thick stroke width then fade to a thin one
+class Write extends Animation {
   constructor(mobject, runtime=null, lagRatio=null) {
     super(mobject, utils.linear, lagRatio, runtime);
     if (runtime === null || lagRatio === null) {
@@ -259,11 +282,14 @@ class Wait extends Animation {
   createStartingMobject() {}
 }
 
+// Any Animation exported here must also be exported in manim.js before it can
+// be imported.
 export {
   Animation,
   Wait,
   ReplacementTransform,
   ShowCreation,
+  Write,
   FadeOut,
   FadeIn,
 }

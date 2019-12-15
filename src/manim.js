@@ -7,11 +7,13 @@ import {
   Wait,
   ReplacementTransform,
   ShowCreation,
+  Write,
   FadeOut,
   FadeIn,
 } from './animation.js';
 import {Scene} from './scene.js';
 import * as _ from 'lodash'
+import * as math from 'mathjs'
 
 const DEFAULT_STYLE = {
   strokeColor: consts.WHITE,
@@ -204,6 +206,33 @@ class Group extends Two.Group {
     this.fill = fillChroma.hex();
     this.linewidth = combinedStyle.strokeWidth / 100;
     return this;
+  }
+
+  transformWithMatrix(matrix) {
+    for (let anchor of this.children[0].vertices) {
+      for (let vector of [anchor, anchor.controls.left, anchor.controls.right]) {
+        let mappedVector = math.multiply(matrix, [vector.x, vector.y]).toArray();
+        vector.x = mappedVector[0];
+        vector.y = mappedVector[1];
+      }
+    }
+  }
+
+  applyTransformations(transformations) {
+    for (let i = 0; i < transformations.length; i++) {
+      let command = transformations[i][0];
+      let args = transformations[i].slice(1);
+      if (command === 'flip') {
+        let reflectionMatrix = utils.reflectionMatrixAcrossVector(args[0]);
+        this.transformWithMatrix(reflectionMatrix);
+      } else if (command === 'rotate') {
+        let rotationMatrix = utils.rotationMatrixByAngle(args[0]);
+        this.transformWithMatrix(rotationMatrix);
+      } else {
+        // eslint-disable-next-line
+        console.error(`Unknown transformation ${command}`);
+      }
+    }
   }
 
   getStyleDict() {
@@ -1143,6 +1172,7 @@ export {
   Animation,
   ReplacementTransform,
   ShowCreation,
+  Write,
   FadeOut,
   FadeIn,
   Wait,
