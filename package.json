@@ -14,7 +14,7 @@
     "core-js": "^2.6.5",
     "json-formatter-js": "^2.2.1",
     "mathjs": "^6.2.5",
-    "two.js": "https://github.com/jonobr1/two.js",
+    "two.js": "https://github.com/eulertour/two.js",
     "vue": "^2.6.10",
     "vue-material": "^1.0.0-beta-11",
     "vuetify": "^2.0.0",

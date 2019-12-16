@@ -468,6 +468,9 @@ export function convertSVGGroup(svgGroup) {
 
   // Convert all commands to C (and M)
   for (let path of extractPathsFromGroup(svgGroup)) {
+    if (path.vertices.length === 0) {
+      continue;
+    }
     let lastMove;
     if (path.vertices[0].command === "M") {
       lastMove = path.vertices[0];

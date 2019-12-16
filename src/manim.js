@@ -230,7 +230,7 @@ class Group extends Two.Group {
         this.transformWithMatrix(rotationMatrix);
       } else {
         // eslint-disable-next-line
-        console.error(`Unknown transformation ${command}`);
+        console.error(`Unknown transformation ${command} with args ${args}`);
       }
     }
   }
@@ -1020,7 +1020,7 @@ class TexMobject extends Mobject {
     let combinedLatexGroup = scene.texToSvgGroup(combinedTexString);
     let combinedLatex = new SingleStringTexMobject(combinedTexString, combinedLatexGroup);
 
-    // Scale submobjects
+    // Scale the SingleStringTexMobjects within this TexMobject.
     let currentIndex = 0;
     for (let i = 0; i < submobLatex.length; i++) {
       let submob = submobLatex[i];
@@ -1036,7 +1036,7 @@ class TexMobject extends Mobject {
       currentIndex += submobLatexLengths[i];
     }
 
-    // Translate submobjects
+    // Translate the SingleStringTexMobjects within this TexMobject.
     let currentTexStringIndex = 0;
     let currentTexSymbolIndex = 0;
     for (let i = 0; i < combinedLatex.submobjects().length; i++) {
@@ -1059,6 +1059,8 @@ class TexMobject extends Mobject {
         currentTexSymbolIndex += 1;
       }
     }
+
+    // Scale the full TexMobject to the proper size
 
     super(null, submobLatex, style);
     this.texStrings = texStrings;

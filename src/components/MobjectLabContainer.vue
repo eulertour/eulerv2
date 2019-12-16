@@ -56,7 +56,6 @@ import * as _ from "lodash";
 import * as consts from "../constants.js";
 import * as Manim from "../manim.js";
 import * as utils from "../utils.js";
-import chroma from "chroma-js";
 
 import MobjectLab from "./MobjectLab.vue";
 
@@ -139,7 +138,7 @@ export default {
       displayCode: true,
       playingSingleAnimation: null,
       sceneChoices: [],
-      chosenScene: "SquareToCircle",
+      chosenScene: "WriteStuff",
       scene: null,
       sceneLoaded: false,
       mobjectChoices: [
@@ -345,6 +344,8 @@ export default {
         }
       }
 
+      // Some Rectangles which in Manim were part of TexMobjects are initialized
+      // here even though they aren't part of Mobjects here.
       // Initialize Mobjects
       let groupNames = [];
       for (let mobjectName of Object.keys(newMobjects)) {
