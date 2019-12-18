@@ -160,22 +160,33 @@ class SquareToCircle(WebScene):
         self.play(FadeOut(circle))
 
 
+class WriteA(WebScene):
+    def construct(self):
+      a = TexMobject("a")
+      self.play(Write(a))
+      self.wait()
+
+
 class WriteStuff(WebScene):
     def construct(self):
+        # scaler = TexMobject("a")
+        # c = Circle()
         example_text = TextMobject(
             "This is a some text",
             tex_to_color_map={"text": YELLOW}
         )
-        example_tex = TexMobject(
-            "\\sum_{k=1}^\\infty {1 \\over k^2} = {\\pi^2 \\over 6}",
-        )
+        #example_tex = TexMobject(
+        #    "\\sum_{k=1}^\\infty {1 \\over k^2} = {\\pi^2 \\over 6}",
+        #)
         # group = VGroup(example_text, example_tex)
         # group.arrange(DOWN)
         # group.set_width(FRAME_WIDTH - 2 * LARGE_BUFF)
 
         self.play(Write(example_text))
-        self.play(Write(example_tex))
-        self.wait()
+        # self.play(Write(example_tex))
+        # self.play(Write(scaler))
+        # self.play(FadeIn(c))
+        # self.wait()
 
 
 class GroupExample(WebScene):
@@ -222,3 +233,6 @@ processed from manim.`
 // constant is a bit too large, so arbitrarily subtract from the numerator
 // ¯\_(ツ)_/¯.
 export const strokeWidthConstant = (290 - 100) / (4 * 451);
+
+// Height of an a in manim space.
+export const aHeightManim = 0.22565395;

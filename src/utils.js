@@ -2,6 +2,7 @@ import * as Two from 'two.js/build/two.js'
 import * as _ from 'lodash'
 import chroma from 'chroma-js'
 import * as math from 'mathjs'
+import * as consts from './constants.js'
 
 export function pathFromAnchors(anchors, leftHandles, rightHandles, commands=null) {
   // eslint-disable-next-line
@@ -429,6 +430,18 @@ export function logPoints(path) {
   return ret;
 }
 
+export function logMatrixMappedPoints(path) {
+  let points = logPoints(path);
+  let matrix = Two.Utils.getComputedMatrix(path);
+  for (let obj of points) {
+    for (let attr of ['point', 'left', 'right']) {
+      let mappedObj = matrix.multiply(obj[attr][0], obj[attr][1], 1);
+      obj[attr] = [mappedObj.x, mappedObj.y];
+    }
+  }
+  return points;
+}
+
 export function deCasteljauReduction(points, alpha) {
   let ret = [];
   for (let i = 0; i < points.length - 1; i++) {
@@ -449,7 +462,7 @@ export function splitBezier(points, alpha, /* fromStart=true */) {
 }
 
 export function convertSVGGroup(svgGroup) {
-  // Convert all paths to Two.Path
+  // Convert all paths (e.g. Two.Rectangles) to Two.Path
   for (let path of extractPathsFromGroup(svgGroup)) {
     let parent = path.parent;
     let newPath = Two.Path.prototype.clone.call(path);
@@ -537,8 +550,9 @@ export function reflectionMatrixAcrossVector(vector) {
     return math.multiply(
       1 / (1 + m**2),
       math.matrix([
-        [1-m**2, 2*m],
-        [2*m, m**2-1],
+        [1-m**2, 2*m, 0],
+        [2*m, m**2-1, 0],
+        [0, 0, 1],
       ]),
     );
   }
@@ -546,7 +560,48 @@ export function reflectionMatrixAcrossVector(vector) {
 
 export function rotationMatrixByAngle(angle) {
   return math.matrix([
-      [Math.cos(angle), -Math.sin(angle)],
-      [Math.sin(angle), Math.cos(angle)],
+      [Math.cos(angle), -Math.sin(angle), 0],
+      [Math.sin(angle), Math.cos(angle), 0],
+      [0, 0, 1],
+  ]);
+}
+
+/* Returns a matrix for transforming points in two space to points in manim
+ * space. Given tx ty in two space and matrix M returned from this function, the
+ * corresponding point mx my in manim space is given by
+ * M * [tx] = [mx]
+ *     [ty]   [my]
+ *     [ 1]
+ */
+export function getTwoToManimTransformationMatrix(
+  manimWidth = consts.FRAME_WIDTH,
+  manimHeight = consts.FRAME_HEIGHT,
+  twoWidth = 640,
+  twoHeight = 360,
+) {
+  return math.matrix([
+    [manimWidth/twoWidth, 0, -manimWidth/2],
+    [0, -manimHeight/twoHeight, manimHeight/2],
+    [0, 0, 1],
+  ]);
+}
+
+/* Returns a matrix for transforming points in manim space to points in two
+ * space. Given mx my in manim space and matrix M returned from this function,
+ * the corresponding point tx ty in manim space is given by
+ * M * [mx] = [tx]
+ *     [my]   [ty]
+ *     [ 1]
+ */
+export function getManimToTwoTransformationMatrix(
+  manimWidth = consts.FRAME_WIDTH,
+  manimHeight = consts.FRAME_HEIGHT,
+  twoWidth = 640,
+  twoHeight = 360,
+) {
+  return math.matrix([
+    [twoWidth/manimWidth, 0, twoWidth/2],
+    [0, -twoHeight/manimHeight, twoHeight/2],
+    [0, 0, 1],
   ]);
 }

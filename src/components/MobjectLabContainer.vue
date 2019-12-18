@@ -138,7 +138,7 @@ export default {
       displayCode: true,
       playingSingleAnimation: null,
       sceneChoices: [],
-      chosenScene: "WriteStuff",
+      chosenScene: "WriteA",
       scene: null,
       sceneLoaded: false,
       mobjectChoices: [

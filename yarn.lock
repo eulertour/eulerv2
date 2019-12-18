@@ -8010,7 +8010,7 @@ tweetnacl@^0.14.3, tweetnacl@~0.14.0:
 
 "two.js@https://github.com/eulertour/two.js":
   version "0.7.0-beta.4"
-  resolved "https://github.com/eulertour/two.js#e7daa3b0c8e79df674474a4778108e1f4caa1077"
+  resolved "https://github.com/eulertour/two.js#f6ca600411f38f248fd73bb138b5d37ae1007225"
 
 type-check@~0.3.2:
   version "0.3.2"

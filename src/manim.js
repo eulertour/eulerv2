@@ -209,9 +209,18 @@ class Group extends Two.Group {
   }
 
   transformWithMatrix(matrix) {
+    const matrixDimensions = math.size(matrix).toArray();
+    // eslint-disable-next-line
+    console.assert(
+      _.isEqual(matrixDimensions, [3,3]),
+      "Invalid dimensions for matrix transformation",
+      matrixDimensions,
+    );
     for (let anchor of this.children[0].vertices) {
       for (let vector of [anchor, anchor.controls.left, anchor.controls.right]) {
-        let mappedVector = math.multiply(matrix, [vector.x, vector.y]).toArray();
+        const mappedVector = (matrixDimensions[1] === 2)
+          ? math.multiply(matrix, [vector.x, vector.y]).toArray()
+          : math.multiply(matrix, [vector.x, vector.y].concat(1)).toArray();
         vector.x = mappedVector[0];
         vector.y = mappedVector[1];
       }
@@ -1010,13 +1019,21 @@ class TexMobject extends Mobject {
   ) {
     let submobLatex = [];
     let submobLatexLengths = [];
+
+    // Prepend an (unwrapped) a for scaling later.
+    let wrappedTexString = "a";
+    let group = scene.texToSvgGroup(wrappedTexString);
+    submobLatex.push(new SingleStringTexMobject(wrappedTexString, group, style));
+    submobLatexLengths.push(utils.extractPathsFromGroup(group).length);
+
     for (let texString of texStrings) {
       let wrappedTexString = `${startString}${texString}${endString}`;
       let group = scene.texToSvgGroup(wrappedTexString);
       submobLatex.push(new SingleStringTexMobject(wrappedTexString, group, style));
       submobLatexLengths.push(utils.extractPathsFromGroup(group).length);
     }
-    let combinedTexString = `${startString}${texStrings.join(' ')}${endString}`;
+    let combinedTexString = `a${startString}${texStrings.join(' ')}${endString}`;
+    // let combinedTexString = `${startString}${texStrings.join(' ')}${endString}`;
     let combinedLatexGroup = scene.texToSvgGroup(combinedTexString);
     let combinedLatex = new SingleStringTexMobject(combinedTexString, combinedLatexGroup);
 
@@ -1051,7 +1068,6 @@ class TexMobject extends Mobject {
         (combinedSymbolCenter[0] - currentSymbolCenter[0]) * 1/currentSymbolMatrix.elements[0],
         (combinedSymbolCenter[1] - currentSymbolCenter[1]) * 1/currentSymbolMatrix.elements[4],
       ]);
-
       if (currentTexSymbolIndex === currentTexString.submobjects().length - 1) {
         currentTexStringIndex += 1;
         currentTexSymbolIndex = 0;
@@ -1060,9 +1076,32 @@ class TexMobject extends Mobject {
       }
     }
 
-    // Scale the full TexMobject to the proper size
 
     super(null, submobLatex, style);
+    // Scale the TexMobject to the proper size
+    let manim2two = utils.getManimToTwoTransformationMatrix();
+    const targetScalerHeight = math.multiply(manim2two, [0, -consts.aHeightManim, 0])
+                           .toArray()[1];
+    const scalerHeight = submobLatex[0].getBoundingClientRect().height;
+    const scalingRatio = targetScalerHeight / scalerHeight;
+    this.matrix.manual = true;
+    this.matrix.scale(scalingRatio);
+
+    // Center the TexMobject
+    const boundingRect = this.getBoundingClientRect();
+    const texCenter = [
+      boundingRect.left + boundingRect.width / 2,
+      boundingRect.top + boundingRect.height / 2,
+    ];
+    const clientCenter = [scene.width / 2, scene.height / 2];
+    const translation = [clientCenter[0] - texCenter[0], clientCenter[1] - texCenter[1]];
+    for (let singleStringTexMobject of this.submobjects()) {
+      for (let texSymbol of singleStringTexMobject.submobjects()) {
+        console.log(Two.Utils.getComputedMatrix(texSymbol).elements);
+      }
+    }
+
+
     this.texStrings = texStrings;
     this.scene = scene;
   }
