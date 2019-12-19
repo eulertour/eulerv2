@@ -45,6 +45,10 @@ class Group extends Two.Group {
   }
 
   translateMobject(vector) {
+    if (this instanceof TexMobject) {
+      // eslint-disable-next-line
+      console.warn("translateMobject() doesn't work on latex");
+    }
     utils.translatePath(vector, this.children[0]);
     for (let submob of this.submobjects()) {
       submob.translateMobject(vector);
@@ -372,7 +376,7 @@ class Group extends Two.Group {
   getPointCenter() {
     if (this.__proto__ === TexMobject.prototype) {
       // eslint-disable-next-line
-      console.warning("getPointCenter() doesn't work on latex");
+      console.warn("getPointCenter() doesn't work on latex");
     }
     if (this.points().length === 0) {
       return [0, 0];
@@ -1064,10 +1068,13 @@ class TexMobject extends Mobject {
       let currentSymbolCenter = utils.getBoundingClientRectCenter(currentTexSymbol.getBoundingClientRect());
       let currentSymbolMatrix = Two.Utils.getComputedMatrix(currentTexSymbol.children[0]);
       // TODO: Use actual matrix multiplication
-      currentTexSymbol.translateMobject([
-        (combinedSymbolCenter[0] - currentSymbolCenter[0]) * 1/currentSymbolMatrix.elements[0],
-        (combinedSymbolCenter[1] - currentSymbolCenter[1]) * 1/currentSymbolMatrix.elements[4],
-      ]);
+      utils.translatePath(
+        [
+          (combinedSymbolCenter[0] - currentSymbolCenter[0]) * 1/currentSymbolMatrix.elements[0],
+          (combinedSymbolCenter[1] - currentSymbolCenter[1]) * 1/currentSymbolMatrix.elements[4],
+        ],
+        currentTexSymbol.children[0],
+      );
       if (currentTexSymbolIndex === currentTexString.submobjects().length - 1) {
         currentTexStringIndex += 1;
         currentTexSymbolIndex = 0;
@@ -1087,6 +1094,9 @@ class TexMobject extends Mobject {
     this.matrix.manual = true;
     this.matrix.scale(scalingRatio);
 
+    // Remove the scaler
+    this.remove(this.children[1]);
+
     // Center the TexMobject
     const boundingRect = this.getBoundingClientRect();
     const texCenter = [
@@ -1097,13 +1107,37 @@ class TexMobject extends Mobject {
     const translation = [clientCenter[0] - texCenter[0], clientCenter[1] - texCenter[1]];
     for (let singleStringTexMobject of this.submobjects()) {
       for (let texSymbol of singleStringTexMobject.submobjects()) {
-        console.log(Two.Utils.getComputedMatrix(texSymbol).elements);
+        // TODO: The coefficients on these matrices tend to be really small,
+        // consider normalizing them in some way.
+        let matrix = Two.Utils.getComputedMatrix(texSymbol);
+        let mappedTranslation = [
+          translation[0] / matrix.elements[0],
+          translation[1] / matrix.elements[4],
+        ];
+        utils.translatePath(mappedTranslation, texSymbol.children[0]);
       }
     }
 
-
     this.texStrings = texStrings;
     this.scene = scene;
+  }
+
+  translateMobject(manimVector) {
+    let manim2two = utils.getManimToTwoTransformationMatrix();
+    let twoVector = math.multiply(manim2two, manimVector).toArray().slice(0, 2);
+    for (let singleStringTexMobject of this.submobjects()) {
+      for (let texSymbol of singleStringTexMobject.submobjects()) {
+        if (texSymbol.children[0].vertices.length === 0) {
+          continue;
+        }
+        let matrix = Two.Utils.getComputedMatrix(texSymbol.children[0]);
+        let mappedTranslation = [
+          twoVector[0] / matrix.elements[0],
+          twoVector[1] / matrix.elements[4],
+        ];
+        utils.translatePath(mappedTranslation, texSymbol.children[0]);
+      }
+    }
   }
 
   getMobjectHeirarchy() {

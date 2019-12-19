@@ -138,7 +138,7 @@ export default {
       displayCode: true,
       playingSingleAnimation: null,
       sceneChoices: [],
-      chosenScene: "WriteA",
+      chosenScene: "WriteStuff",
       scene: null,
       sceneLoaded: false,
       mobjectChoices: [
@@ -315,25 +315,11 @@ export default {
           );
           mobjectData.submobjects = newSubmobjects;
         }
-        newMobjects[mobjectIdsToNames[id]] = mobjectData;
-      }
-
-      /* SingleStringTexMobjects are converted to Paths and cached first, so
-       * that TexSymbols can read the appropriate Path upon initialization.
-       * TexSymbols are identified by their tex string (for a
-       * SingleStringTexMobject in initial_mobject_dict) and position in the
-       * resulting latex, e.g. (x^2, 1).
-       */
-      for (let mobjectName of Object.keys(newMobjects)) {
-        let data = newMobjects[mobjectName];
-        if (data.className === "SingleStringTexMobject") {
-          for (let index in data.submobjects) {
-            let submobjectName = data.submobjects[index];
-            let submobjectData = newMobjects[submobjectName];
-            submobjectData["texString"] = data.params.tex_string;
-            submobjectData["texIndex"] = index;
-          }
+        // Convert position from a Float64Array to a regular array.
+        if ('position' in mobjectData) {
+          mobjectData.position = [].slice.call(mobjectData.position);
         }
+        newMobjects[mobjectIdsToNames[id]] = mobjectData;
       }
 
       // Initialize TexMobjects
@@ -344,9 +330,9 @@ export default {
         }
       }
 
+      // Initialize Mobjects
       // Some Rectangles which in Manim were part of TexMobjects are initialized
       // here even though they aren't part of Mobjects here.
-      // Initialize Mobjects
       let groupNames = [];
       for (let mobjectName of Object.keys(newMobjects)) {
         let data = newMobjects[mobjectName];
@@ -434,6 +420,7 @@ export default {
           mobjectData.params.tex_strings,
           this.scene,
         );
+        s.applyTransformations(mobjectData.transformations);
         s.translateMobject(mobjectData.position);
         s.applyStyle(mobjectData.style);
         mobjectData.mobject = s;
