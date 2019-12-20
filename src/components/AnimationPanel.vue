@@ -52,12 +52,16 @@
 import ReplacementTransformPanel from './ReplacementTransformPanel.vue'
 import WaitPanel from './WaitPanel.vue'
 import BlankPanel from './BlankPanel.vue'
+import FadeInPanel from './FadeInPanel.vue'
+import FadeOutPanel from './FadeOutPanel.vue'
 import * as Manim from '../manim.js'
 
 export default {
   name: 'AnimationPanel',
   components: {
     ReplacementTransformPanel,
+    FadeInPanel,
+    FadeOutPanel,
     WaitPanel,
     BlankPanel,
   },
