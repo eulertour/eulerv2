@@ -605,3 +605,92 @@ export function getManimToTwoTransformationMatrix(
     [0, 0, 1],
   ]);
 }
+
+/* Converts a Two.Path with an arbitrary matrix heirarchy to an equivalent one
+ * in Manim coordinates.
+ */
+export function normalizePath(path) {
+  let oldPoints = logMatrixMappedPoints(path);
+
+  let matrix = Two.Utils.getComputedMatrix(path);
+  let anchors = [], leftHandles = [], rightHandles = [], commands = [];
+  commands = path.vertices.map(v => v.command);
+  path.vertices.forEach(v => {
+    let mappedAnchorObj = matrix.multiply(v.x, v.y, 1);
+    let mappedLeftControlObj = matrix.multiply(v.controls.left.x, v.controls.left.y, 1);
+    let mappedRightControlObj = matrix.multiply(v.controls.right.x, v.controls.right.y, 1);
+
+    anchors = [...anchors, [mappedAnchorObj.x, mappedAnchorObj.y]];
+    leftHandles = [...leftHandles, [mappedLeftControlObj.x, mappedLeftControlObj.y]];
+    rightHandles = [...rightHandles, [mappedRightControlObj.x, mappedRightControlObj.y]];
+  });
+
+  let two2manim = getTwoToManimTransformationMatrix();
+  let zippedAnchors = anchors.map((_, i) => [anchors[i], leftHandles[i], rightHandles[i]]);
+  let manimAnchors = [], manimLeftHandles = [], manimRightHandles = [];
+  zippedAnchors.forEach(v => {
+    let [a, l, r] = v;
+    let aManim = math.multiply(two2manim, [...a, 1]).toArray().slice(0, 2);
+    let lManim = math.multiply(two2manim, [...l, 1]).toArray().slice(0, 2);
+    let rManim = math.multiply(two2manim, [...r, 1]).toArray().slice(0, 2);
+    manimAnchors = [...manimAnchors, aManim];
+    manimLeftHandles = [...manimLeftHandles, lManim];
+    manimRightHandles = [...manimRightHandles, rManim];
+  });
+  let newPath = pathFromAnchors(manimAnchors, manimLeftHandles, manimRightHandles, commands);
+  newPath.matrix.manual = true;
+  let manim2two = getManimToTwoTransformationMatrix();
+  newPath.matrix.set(...manim2two.toArray().flat());
+
+  let newPoints = logMatrixMappedPoints(newPath);
+  for (let i = 0; i < oldPoints.length; i++) {
+    let oldPoint = oldPoints[i];
+    let newPoint = newPoints[i];
+    if (oldPoint.command !== newPoint.command) {
+      console.log("commands don't match", i, oldPoint.command, newPoint.command);
+    }
+    if (!arrayEqualsWithError(oldPoint.point, newPoint.point)) {
+      console.log("points don't match", i, oldPoint.point, newPoint.point);
+    }
+    if (!arrayEqualsWithError(oldPoint.left, newPoint.left)) {
+      console.log("lefts don't match", i, oldPoint.left, newPoint.left);
+    }
+    if (!arrayEqualsWithError(oldPoint.right, newPoint.right)) {
+      console.log("rights don't match", i, oldPoint.right, newPoint.right);
+    }
+  }
+  return newPath;
+}
+
+export function mappedPointsEqual(path1, path2) {
+  let points1 = logMatrixMappedPoints(path1);
+  let points2 = logMatrixMappedPoints(path2);
+  for (let i = 0; i < points1.length; i++) {
+    let oldPoint = points1[i];
+    let newPoint = points2[i];
+    if (oldPoint.command !== newPoint.command) {
+      console.log("commands don't match", i, oldPoint.command, newPoint.command);
+    }
+    if (!arrayEqualsWithError(oldPoint.point, newPoint.point)) {
+      console.log("points don't match", i, oldPoint.point, newPoint.point);
+    }
+    if (!arrayEqualsWithError(oldPoint.left, newPoint.left)) {
+      console.log("lefts don't match", i, oldPoint.left, newPoint.left);
+    }
+    if (!arrayEqualsWithError(oldPoint.right, newPoint.right)) {
+      console.log("rights don't match", i, oldPoint.right, newPoint.right);
+    }
+  }
+}
+
+export function arrayEqualsWithError(arr1, arr2, e=0.1) {
+  if (arr1.length !== arr2.length) {
+    return false;
+  }
+  for (let i = 0; i < arr1.length; i++) {
+    if (Math.abs(arr1[i] - arr2[i]) > e) {
+      return false;
+    }
+  }
+  return true;
+}

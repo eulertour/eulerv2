@@ -138,7 +138,7 @@ export default {
       displayCode: true,
       playingSingleAnimation: null,
       sceneChoices: [],
-      chosenScene: "WriteStuff",
+      chosenScene: "WriteA",
       scene: null,
       sceneLoaded: false,
       mobjectChoices: [
@@ -241,6 +241,7 @@ export default {
         );
         this.refreshSceneChoices();
         this.sceneLoaded = true;
+        this.runManim();
       });
     });
   },

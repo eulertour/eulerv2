@@ -940,7 +940,38 @@ class TexSymbol extends Group {
   }
 }
 
-// TODO: This probably needs to override clone()
+class StringTexMobject extends Mobject {
+  constructor(
+    texString,
+    texSymbols,
+    style = {strokeColor: consts.WHITE, fillColor: consts.WHITE, fillOpacity: 1}
+  ) {
+    super(null, texSymbols, style);
+    this.texString = texString;
+  }
+
+  // TODO: should eventually take tex -> sstm
+  static fromSVGGroup(texString, group, style) {
+    let texSymbols = utils.extractPathsFromGroup(group).map(path => {
+      let newSymbol = new TexSymbol(utils.normalizePath(path));
+      newSymbol.applyStyle(Object.assign({}, DEFAULT_STYLE, style));
+      return newSymbol;
+    });
+    return new StringTexMobject(texString, texSymbols, style);
+  }
+
+  static fromSingleStringTexMobject(sstm, style) {
+    let newSymbols = sstm.submobjects().map(symbol => {
+      let newSymbol = new TexSymbol(utils.normalizePath(symbol.children[0]));
+      newSymbol.applyStyle(Object.assign({}, DEFAULT_STYLE, style));
+      newSymbol.translateMobject([0, -2]);
+      return newSymbol;
+    });
+    let s = new StringTexMobject(sstm.texString, newSymbols, style);
+    return s;
+  }
+}
+
 class SingleStringTexMobject extends Mobject {
   constructor(
     texString,
@@ -1023,100 +1054,119 @@ class TexMobject extends Mobject {
   ) {
     let submobLatex = [];
     let submobLatexLengths = [];
+    let newSubmobLatex = [];
 
     // Prepend an (unwrapped) a for scaling later.
     let wrappedTexString = "a";
     let group = scene.texToSvgGroup(wrappedTexString);
+    newSubmobLatex.push(StringTexMobject.fromSVGGroup(wrappedTexString, group, style));
     submobLatex.push(new SingleStringTexMobject(wrappedTexString, group, style));
     submobLatexLengths.push(utils.extractPathsFromGroup(group).length);
 
     for (let texString of texStrings) {
       let wrappedTexString = `${startString}${texString}${endString}`;
       let group = scene.texToSvgGroup(wrappedTexString);
+      newSubmobLatex.push(StringTexMobject.fromSVGGroup(wrappedTexString, group, style));
       submobLatex.push(new SingleStringTexMobject(wrappedTexString, group, style));
       submobLatexLengths.push(utils.extractPathsFromGroup(group).length);
     }
     let combinedTexString = `a${startString}${texStrings.join(' ')}${endString}`;
-    // let combinedTexString = `${startString}${texStrings.join(' ')}${endString}`;
     let combinedLatexGroup = scene.texToSvgGroup(combinedTexString);
+    // let combinedLatex = StringTexMobject.fromSVGGroup(combinedTexString, combinedLatexGroup);
     let combinedLatex = new SingleStringTexMobject(combinedTexString, combinedLatexGroup);
 
-    // Scale the SingleStringTexMobjects within this TexMobject.
-    let currentIndex = 0;
-    for (let i = 0; i < submobLatex.length; i++) {
-      let submob = submobLatex[i];
-      let submobScalingMob = submob.submobjects()[0];
-      // TODO: Why are these calls necessary? The only modification seems to be
-      // that _update() is called on each mobject in the heirarchy.
-      submob.getBoundingClientRect();
-      combinedLatex.getBoundingClientRect();
-      submob.scaleMobject(
-        combinedLatex.submobjects()[currentIndex].getBoundingClientRect().height /
-        submobScalingMob.getBoundingClientRect().height
-      );
-      currentIndex += submobLatexLengths[i];
-    }
+    let oldPath = submobLatex[1].submobjects()[0].children[0];
+    let newPath = newSubmobLatex[1].submobjects()[0].children[0];
+    utils.mappedPointsEqual(oldPath, newPath);
 
-    // Translate the SingleStringTexMobjects within this TexMobject.
-    let currentTexStringIndex = 0;
-    let currentTexSymbolIndex = 0;
-    for (let i = 0; i < combinedLatex.submobjects().length; i++) {
-      let combinedTexSymbol = combinedLatex.submobjects()[i];
-      let currentTexString = submobLatex[currentTexStringIndex];
-      let currentTexSymbol = currentTexString.submobjects()[currentTexSymbolIndex];
-      let combinedSymbolCenter = utils.getBoundingClientRectCenter(combinedTexSymbol.getBoundingClientRect());
-      let currentSymbolCenter = utils.getBoundingClientRectCenter(currentTexSymbol.getBoundingClientRect());
-      let currentSymbolMatrix = Two.Utils.getComputedMatrix(currentTexSymbol.children[0]);
-      // TODO: Use actual matrix multiplication
-      utils.translatePath(
-        [
-          (combinedSymbolCenter[0] - currentSymbolCenter[0]) * 1/currentSymbolMatrix.elements[0],
-          (combinedSymbolCenter[1] - currentSymbolCenter[1]) * 1/currentSymbolMatrix.elements[4],
-        ],
-        currentTexSymbol.children[0],
-      );
-      if (currentTexSymbolIndex === currentTexString.submobjects().length - 1) {
-        currentTexStringIndex += 1;
-        currentTexSymbolIndex = 0;
-      } else {
-        currentTexSymbolIndex += 1;
-      }
-    }
+    oldPath = submobLatex[0].submobjects()[0].children[0];
+    newPath = newSubmobLatex[0].submobjects()[0].children[0];
+    utils.mappedPointsEqual(oldPath, newPath);
 
+    super(null, [submobLatex[0], newSubmobLatex[1]], style);
 
-    super(null, submobLatex, style);
-    // Scale the TexMobject to the proper size
-    let manim2two = utils.getManimToTwoTransformationMatrix();
-    const targetScalerHeight = math.multiply(manim2two, [0, -consts.aHeightManim, 0])
-                           .toArray()[1];
-    const scalerHeight = submobLatex[0].getBoundingClientRect().height;
-    const scalingRatio = targetScalerHeight / scalerHeight;
-    this.matrix.manual = true;
-    this.matrix.scale(scalingRatio);
+    // // Scale the SingleStringTexMobjects within this TexMobject.
+    // let currentIndex = 0;
+    // for (let i = 0; i < submobLatex.length; i++) {
+    //   let submob = submobLatex[i];
+    //   let submobScalingMob = submob.submobjects()[0];
+    //   // TODO: Why are these calls necessary? The only modification seems to be
+    //   // that _update() is called on each mobject in the heirarchy.
+    //   submob.getBoundingClientRect();
+    //   combinedLatex.getBoundingClientRect();
+    //   submob.scaleMobject(
+    //     combinedLatex.submobjects()[currentIndex].getBoundingClientRect().height /
+    //     submobScalingMob.getBoundingClientRect().height
+    //   );
+    //   currentIndex += submobLatexLengths[i];
+    // }
 
-    // Remove the scaler
-    this.remove(this.children[1]);
+    // // Translate the SingleStringTexMobjects within this TexMobject.
+    // let currentTexStringIndex = 0;
+    // let currentTexSymbolIndex = 0;
+    // for (let i = 0; i < combinedLatex.submobjects().length; i++) {
+    //   let combinedTexSymbol = combinedLatex.submobjects()[i];
+    //   let currentTexString = submobLatex[currentTexStringIndex];
+    //   let currentTexSymbol = currentTexString.submobjects()[currentTexSymbolIndex];
+    //   let combinedSymbolCenter = utils.getBoundingClientRectCenter(combinedTexSymbol.getBoundingClientRect());
+    //   let currentSymbolCenter = utils.getBoundingClientRectCenter(currentTexSymbol.getBoundingClientRect());
+    //   let currentSymbolMatrix = Two.Utils.getComputedMatrix(currentTexSymbol.children[0]);
+    //   // TODO: Use actual matrix multiplication
+    //   utils.translatePath(
+    //     [
+    //       (combinedSymbolCenter[0] - currentSymbolCenter[0]) * 1/currentSymbolMatrix.elements[0],
+    //       (combinedSymbolCenter[1] - currentSymbolCenter[1]) * 1/currentSymbolMatrix.elements[4],
+    //     ],
+    //     currentTexSymbol.children[0],
+    //   );
+    //   if (currentTexSymbolIndex === currentTexString.submobjects().length - 1) {
+    //     currentTexStringIndex += 1;
+    //     currentTexSymbolIndex = 0;
+    //   } else {
+    //     currentTexSymbolIndex += 1;
+    //   }
+    // }
 
-    // Center the TexMobject
-    const boundingRect = this.getBoundingClientRect();
-    const texCenter = [
-      boundingRect.left + boundingRect.width / 2,
-      boundingRect.top + boundingRect.height / 2,
-    ];
-    const clientCenter = [scene.width / 2, scene.height / 2];
-    const translation = [clientCenter[0] - texCenter[0], clientCenter[1] - texCenter[1]];
-    for (let singleStringTexMobject of this.submobjects()) {
-      for (let texSymbol of singleStringTexMobject.submobjects()) {
-        // TODO: The coefficients on these matrices tend to be really small,
-        // consider normalizing them in some way.
-        let matrix = Two.Utils.getComputedMatrix(texSymbol);
-        let mappedTranslation = [
-          translation[0] / matrix.elements[0],
-          translation[1] / matrix.elements[4],
-        ];
-        utils.translatePath(mappedTranslation, texSymbol.children[0]);
-      }
-    }
+    // super(null, submobLatex, style);
+    // // Scale the TexMobject to the proper size
+    // let manim2two = utils.getManimToTwoTransformationMatrix();
+    // const targetScalerHeight = math.multiply(manim2two, [0, -consts.aHeightManim, 0])
+    //                        .toArray()[1];
+    // const scalerHeight = submobLatex[0].getBoundingClientRect().height;
+    // const scalingRatio = targetScalerHeight / scalerHeight;
+    // this.matrix.manual = true;
+    // this.matrix.scale(scalingRatio);
+
+    // // Remove the scaler
+    // this.remove(this.children[1]);
+
+    // // Center the TexMobject
+    // const boundingRect = this.getBoundingClientRect();
+    // const texCenter = [
+    //   boundingRect.left + boundingRect.width / 2,
+    //   boundingRect.top + boundingRect.height / 2,
+    // ];
+    // const clientCenter = [scene.width / 2, scene.height / 2];
+    // const translation = [clientCenter[0] - texCenter[0], clientCenter[1] - texCenter[1]];
+    // for (let singleStringTexMobject of this.submobjects()) {
+    //   for (let texSymbol of singleStringTexMobject.submobjects()) {
+    //     // TODO: The coefficients on these matrices tend to be really small,
+    //     // consider normalizing them in some way.
+    //     let matrix = Two.Utils.getComputedMatrix(texSymbol);
+    //     let mappedTranslation = [
+    //       translation[0] / matrix.elements[0],
+    //       translation[1] / matrix.elements[4],
+    //     ];
+    //     utils.translatePath(mappedTranslation, texSymbol.children[0]);
+    //   }
+    // }
+
+    // /* CONSTRUCTION */
+    // for (let singleStringTexMobject of this.submobjects()) {
+    //   let s = StringTexMobject.fromSingleStringTexMobject(singleStringTexMobject, style);
+    //   scene.add(s);
+    // }
+    // /* CONSTRUCTION */
 
     this.texStrings = texStrings;
     this.scene = scene;
@@ -1153,8 +1203,7 @@ class TexMobject extends Mobject {
 
   applyStyle(style) {
     for (let submob of this.submobjects()) {
-      submob.applyStyle(style);
-      if ("strokeWidth" in style) {
+      if ("strokeWidth" in style && submob.hasOwnProperty("viewBox")) {
         let styleCopy = Object.assign({}, style);
         let viewBoxFields = submob.viewBox.split(" ").map(x => parseInt(x));
         let [width, height] = viewBoxFields.slice(2);
