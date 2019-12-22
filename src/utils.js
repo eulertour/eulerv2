@@ -610,8 +610,6 @@ export function getManimToTwoTransformationMatrix(
  * in Manim coordinates.
  */
 export function normalizePath(path) {
-  let oldPoints = logMatrixMappedPoints(path);
-
   let matrix = Two.Utils.getComputedMatrix(path);
   let anchors = [], leftHandles = [], rightHandles = [], commands = [];
   commands = path.vertices.map(v => v.command);
@@ -641,56 +639,5 @@ export function normalizePath(path) {
   newPath.matrix.manual = true;
   let manim2two = getManimToTwoTransformationMatrix();
   newPath.matrix.set(...manim2two.toArray().flat());
-
-  let newPoints = logMatrixMappedPoints(newPath);
-  for (let i = 0; i < oldPoints.length; i++) {
-    let oldPoint = oldPoints[i];
-    let newPoint = newPoints[i];
-    if (oldPoint.command !== newPoint.command) {
-      console.log("commands don't match", i, oldPoint.command, newPoint.command);
-    }
-    if (!arrayEqualsWithError(oldPoint.point, newPoint.point)) {
-      console.log("points don't match", i, oldPoint.point, newPoint.point);
-    }
-    if (!arrayEqualsWithError(oldPoint.left, newPoint.left)) {
-      console.log("lefts don't match", i, oldPoint.left, newPoint.left);
-    }
-    if (!arrayEqualsWithError(oldPoint.right, newPoint.right)) {
-      console.log("rights don't match", i, oldPoint.right, newPoint.right);
-    }
-  }
   return newPath;
-}
-
-export function mappedPointsEqual(path1, path2) {
-  let points1 = logMatrixMappedPoints(path1);
-  let points2 = logMatrixMappedPoints(path2);
-  for (let i = 0; i < points1.length; i++) {
-    let oldPoint = points1[i];
-    let newPoint = points2[i];
-    if (oldPoint.command !== newPoint.command) {
-      console.log("commands don't match", i, oldPoint.command, newPoint.command);
-    }
-    if (!arrayEqualsWithError(oldPoint.point, newPoint.point)) {
-      console.log("points don't match", i, oldPoint.point, newPoint.point);
-    }
-    if (!arrayEqualsWithError(oldPoint.left, newPoint.left)) {
-      console.log("lefts don't match", i, oldPoint.left, newPoint.left);
-    }
-    if (!arrayEqualsWithError(oldPoint.right, newPoint.right)) {
-      console.log("rights don't match", i, oldPoint.right, newPoint.right);
-    }
-  }
-}
-
-export function arrayEqualsWithError(arr1, arr2, e=0.1) {
-  if (arr1.length !== arr2.length) {
-    return false;
-  }
-  for (let i = 0; i < arr1.length; i++) {
-    if (Math.abs(arr1[i] - arr2[i]) > e) {
-      return false;
-    }
-  }
-  return true;
 }

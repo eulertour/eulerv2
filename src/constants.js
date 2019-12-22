@@ -230,5 +230,8 @@ processed from manim.`
 // ¯\_(ツ)_/¯.
 export const strokeWidthConstant = (290 - 100) / (4 * 451);
 
-// Height of an a in manim space.
+// Height of a latex a in Manim space.
 export const aHeightManim = 0.22565395;
+
+// Height of a latex a in Two space.
+export const aHeightTwo = 10.15442775;
