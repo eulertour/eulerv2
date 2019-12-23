@@ -535,10 +535,6 @@ export function integerInterpolate(start, end, alpha) {
   }
 }
 
-export function getBoundingClientRectCenter(rect) {
-  return [rect.left + rect.width / 2, rect.top + rect.height / 2];
-}
-
 export function reflectionMatrixAcrossVector(vector) {
   if (vector[0] === 0 && vector[1] === 0) {
     // eslint-disable-next-line
@@ -638,49 +634,7 @@ export function normalizePath(path) {
   leftHandles = newLeftHandles;
   rightHandles = newRightHandles;
 
-  // const heirarchyMatrix = Two.Utils.getComputedMatrix(path);
-  // commands = path.vertices.map(v => v.command);
-  // path.vertices.forEach(v => {
-  //   let mappedAnchorObj = heirarchyMatrix.multiply(v.x, v.y, 1);
-  //   let mappedLeftControlObj = heirarchyMatrix.multiply(v.controls.left.x, v.controls.left.y, 1);
-  //   let mappedRightControlObj = heirarchyMatrix.multiply(v.controls.right.x, v.controls.right.y, 1);
-  //   anchors = [...anchors, [mappedAnchorObj.x, mappedAnchorObj.y]];
-  //   leftHandles = [...leftHandles, [mappedLeftControlObj.x, mappedLeftControlObj.y]];
-  //   rightHandles = [...rightHandles, [mappedRightControlObj.x, mappedRightControlObj.y]];
-  // });
-
-  // // Handle scaling
-  // const scaleMatrix = getHeirarchicalScaleMatrix(path);
-  // zippedAnchors = anchors.map((_, i) => [anchors[i], leftHandles[i], rightHandles[i]]);
-  // newAnchors = [], newLeftHandles = [], newRightHandles = [];
-  // zippedAnchors.forEach(v => {
-  //   let [a, l, r] = v;
-  //   let aManimObj = scaleMatrix.multiply(...a, 1);
-  //   let lManimObj = scaleMatrix.multiply(...l, 1);
-  //   let rManimObj = scaleMatrix.multiply(...r, 1);
-  //   newAnchors =      [...newAnchors,      [aManimObj.x, aManimObj.y]];
-  //   newLeftHandles =  [...newLeftHandles,  [lManimObj.x, lManimObj.y]];
-  //   newRightHandles = [...newRightHandles, [rManimObj.x, rManimObj.y]];
-  // });
-  // anchors = newAnchors;
-  // leftHandles = newLeftHandles;
-  // rightHandles = newRightHandles;
-
-  // return pathFromAnchors(anchors, leftHandles, rightHandles, commands);
-
-  // top level only?
-  // zippedAnchors = anchors.map((_, i) => [anchors[i], leftHandles[i], rightHandles[i]]);
-  // newAnchors = [], newLeftHandles = [], newRightHandles = [];
-  // zippedAnchors.forEach(v => {
-  //   let [a, l, r] = v;
-  //   newAnchors =      [...newAnchors,      [a[0] + translation.x, a[1] + translation.y]];
-  //   newLeftHandles =  [...newLeftHandles,  [l[0] + translation.x, l[1] + translation.y]];
-  //   newRightHandles = [...newRightHandles, [r[0] + translation.x, r[1] + translation.y]];
-  // });
-  // anchors = newAnchors;
-  // leftHandles = newLeftHandles;
-  // rightHandles = newRightHandles;
-
+  // Transform to Manim coordinates
   let two2manim = getTwoToManimTransformationMatrix();
   zippedAnchors = anchors.map((_, i) => [anchors[i], leftHandles[i], rightHandles[i]]);
   let manimAnchors = [], manimLeftHandles = [], manimRightHandles = [];
@@ -697,71 +651,18 @@ export function normalizePath(path) {
   newPath.matrix.manual = true;
   let manim2two = getManimToTwoTransformationMatrix();
   newPath.matrix.set(...manim2two.toArray().flat());
-
   return newPath;
 }
 
 /* Converts a Two.Group with an arbitrary matrix heirarchy to an equivalent one
  * in Manim coordinates with two levels.
  */
-// TODO: Why is the linewidth and translation so weird?
-export function normalizeGroup(group, linewidth = 2 / 100) {
-  let translation = group.translation;
+export function normalizeGroup(group) {
   let normalizedPaths = extractPathsFromGroup(group)
-    .map(path => normalizePath(path, translation));
+    .map(path => normalizePath(path));
   let g = new Two.Group();
   g.add(normalizedPaths);
-  g.linewidth = linewidth;
   return g;
-}
-
-export function getViewBox(pathOrGroup) {
-  let currentElement = pathOrGroup;
-  while (!currentElement.hasOwnProperty("viewBox") && currentElement.hasOwnProperty("parent")) {
-    currentElement = currentElement.parent;
-  }
-  if (currentElement.hasOwnProperty("viewBox")) {
-    return currentElement.viewBox.split(" ").map(x => parseFloat(x));
-  } else {
-    return null;
-  }
-}
-
-export function getViewBoxTransformationMatrix(viewBox, twoWidth=640, twoHeight=360) {
-  const x = viewBox[0];
-  const y = viewBox[1];
-  const width = viewBox[2];
-  const height = viewBox[3];
-
-  const scale = Math.min(twoWidth / width, twoHeight / height);
-  const xTranslation = x * scale;
-  const yTranslation = y * scale;
-
-  return math.matrix([
-    [scale, 0, -xTranslation],
-    [0, scale, -yTranslation],
-    [0, 0, 1],
-  ]);
-}
-
-function updateScaleMatrixWithPath(matrix, path) {
-  if (path.scale === undefined) {
-    return matrix;
-  } else if (path.scale instanceof Two.Vector) {
-    return matrix.scale(path.scale.x, path.scale.y);
-  } else {
-    return matrix.scale(path.scale);
-  }
-}
-
-export function getHeirarchicalScaleMatrix(path) {
-  let ret = updateScaleMatrixWithPath(new Two.Matrix(), path);
-  let currentPath = path;
-  while (currentPath.hasOwnProperty("parent")) {
-    currentPath = currentPath.parent;
-    ret = updateScaleMatrixWithPath(ret, currentPath);
-  }
-  return ret;
 }
 
 function getTransformationMatrix(path) {
@@ -791,22 +692,4 @@ function getCurrentTransformationMatrix(path) {
     (prev, cur) => prev.multiply(...cur.elements),
     new Two.Matrix(),
   );
-}
-
-function updateTranslationMatrixWithPath(matrix, path) {
-  if (path.translation === undefined) {
-    return matrix;
-  } else {
-    return matrix.translate(path.translation.x, path.translation.y);
-  }
-}
-
-export function getHeirarchicalTranslationMatrix(path) {
-  let ret = updateTranslationMatrixWithPath(new Two.Matrix(), path);
-  let currentPath = path;
-  while (currentPath.hasOwnProperty("parent")) {
-    currentPath = currentPath.parent;
-    ret = updateTranslationMatrixWithPath(ret, currentPath);
-  }
-  return ret;
 }

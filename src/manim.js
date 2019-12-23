@@ -66,7 +66,6 @@ class Group extends Two.Group {
 
   moveTo(newCenter) {
     let oldCenter = this.getPointCenter();
-
     this.translateMobject([
       newCenter[0] - oldCenter[0],
       newCenter[1] - oldCenter[1],
@@ -266,33 +265,6 @@ class Group extends Two.Group {
       fillOpacity: fillChroma.alpha(),
       strokeWidth: this.linewidth * 100,
     };
-  }
-
-  normalizeToCanvas(
-    canvasWidth = 640,
-    canvasHeight = 360,
-    /*sceneWidth=consts.FRAME_WIDTH,*/
-    sceneHeight = consts.FRAME_HEIGHT,
-  ) {
-    this.children[0].matrix.manual = true;
-    this.children[0].matrix.identity()
-      .translate(canvasWidth / 2, canvasHeight / 2)
-      .scale(canvasHeight / sceneHeight)
-      .multiply(
-        1, 0, 0, /* reflect over x axis */
-        0, -1, 0,
-        0, 0, 1,
-      );
-  }
-
-  suspendUpdating(recursive = true) {
-    this.updatingSuspended = true;
-    if (recursive) {
-      for (let submob of this.children.slice(1)) {
-        submob.suspendUpdating(recursive);
-      }
-    }
-    return this;
   }
 
   setAnchorsFromPoints(points) {
@@ -541,15 +513,12 @@ class Group extends Two.Group {
     );
 
     // TODO: Why doesn't this.path() work???
-    let newPath = this.children[0].clone();
+    let newPath = this.path().clone();
     let partialPath = utils.pathFromManimPoints(newPathCoeffs.flat(), vertexCommands);
     newPath.vertices = partialPath.vertices;
     newPath.closed = false;
     this.remove(this.children[0]);
     this.add(newPath);
-    if (!(this instanceof TexSymbol)) {
-      this.normalizeToCanvas();
-    }
     this.applyStyle(this.getStyleDict());
   }
 }
@@ -564,7 +533,8 @@ class Mobject extends Group {
       path = new Two.Path();
     }
     super([path].concat(submobjects), /*fillTopLevel=*/true);
-    this.normalizeToCanvas();
+    this.path().matrix.manual = true;
+    this.path().matrix.set(...utils.getManimToTwoTransformationMatrix().toArray().flat());
     this.applyStyle(Object.assign({}, DEFAULT_STYLE, style));
   }
 
@@ -910,11 +880,10 @@ class Square extends RegularPolygon {
 class TexSymbol extends Mobject {
   constructor(path, style) {
     super(path, [], style);
-    this.path = path;
   }
 
   clone(parent) {
-    let clone = new TexSymbol(this.path.clone(), this.getStyleDict());
+    let clone = new TexSymbol(this.path().clone(), this.getStyleDict());
 
     let children = Two.Utils.map(this.children, function (child) {
       return child.clone();
@@ -945,7 +914,7 @@ class TexSymbol extends Mobject {
   }
 }
 
-class StringTexMobject extends Mobject {
+class SingleStringTexMobject extends Mobject {
   constructor(
     texString,
     texSymbols,
@@ -957,100 +926,15 @@ class StringTexMobject extends Mobject {
     this.texString = texString;
   }
 
-  clone(parent) {
-    let clone = new StringTexMobject(this.texString, [], this.getStyleDict());
-
-    let children = Two.Utils.map(this.children, function (child) {
-      return child.clone();
-    });
-
-    clone.remove(clone.children);
-    clone.add(children);
-
-    clone.opacity = this.opacity;
-
-    if (this.mask) {
-      clone.mask = this.mask;
-    }
-
-    clone.translation.copy(this.translation);
-    clone.rotation = this.rotation;
-    clone.scale = this.scale;
-
-    if (this.matrix.manual) {
-      clone.matrix.copy(this.matrix);
-    }
-
-    if (parent) {
-      parent.add(clone);
-    }
-
-    return clone._update();
-  }
-
-  // TODO: should eventually take tex -> sstm
   static fromTexString(texString, style, scene) {
     let group = scene.texToSvgGroup(texString);
     group = utils.normalizeGroup(group);
     let texSymbols = group.children.map(path => new TexSymbol(path.clone(), style));
-    return new StringTexMobject(texString, texSymbols, style);
-  }
-
-  static fromNormalizedSVGGroup(texString, group, style) {
-    let texSymbols = group.children.map(path => new TexSymbol(path.clone()));
-    return new StringTexMobject(texString, texSymbols, style);
-  }
-
-  static fromSVGGroup(texString, group, style) {
-    let texSymbols = utils.extractPathsFromGroup(group).map(path => {
-      let newSymbol = new TexSymbol(utils.normalizePath(path));
-      newSymbol.applyStyle(Object.assign({}, DEFAULT_STYLE, style));
-      return newSymbol;
-    });
-    return new StringTexMobject(texString, texSymbols, style);
-  }
-
-  static fromSingleStringTexMobject(sstm, style) {
-    let newSymbols = sstm.submobjects().map(symbol => {
-      let newSymbol = new TexSymbol(utils.normalizePath(symbol.children[0]));
-      newSymbol.applyStyle(Object.assign({}, DEFAULT_STYLE, style));
-      return newSymbol;
-    });
-    let s = new StringTexMobject(sstm.texString, newSymbols, style);
-    return s;
-  }
-}
-
-class SingleStringTexMobject extends Mobject {
-  constructor(
-    texString,
-    group,
-    style = {strokeColor: consts.WHITE, fillColor: consts.WHITE, fillOpacity: 1}
-  ) {
-    let texSymbols = [];
-    for (let path of utils.extractPathsFromGroup(group)) {
-      let parent = path.parent;
-      parent.remove(path);
-      let texSymbol = new TexSymbol(path);
-      parent.add(texSymbol);
-      texSymbols.push(texSymbol);
-    }
-    super(null, [group], style);
-    this.texString = texString;
-    this.texSymbols = texSymbols;
-    this.viewBox = group.viewBox;
-  }
-
-  submobjects() {
-    return this.texSymbols;
+    return new SingleStringTexMobject(texString, texSymbols, style);
   }
 
   clone(parent) {
-    let clone = new SingleStringTexMobject(
-      _.cloneDeep(this.texString),
-      new Two.Group(),
-      this.getStyleDict()
-    );
+    let clone = new SingleStringTexMobject(this.texString, [], this.getStyleDict());
 
     let children = Two.Utils.map(this.children, function (child) {
       return child.clone();
@@ -1058,12 +942,6 @@ class SingleStringTexMobject extends Mobject {
 
     clone.remove(clone.children);
     clone.add(children);
-
-    let texSymbols = [];
-    for (let path of utils.extractPathsFromGroup(clone.children[1])) {
-      texSymbols.push(path.parent);
-    }
-    clone.texSymbols = texSymbols;
 
     clone.opacity = this.opacity;
 
@@ -1102,7 +980,7 @@ class TexMobject extends Mobject {
     endString = "",
   ) {
     // Scale and position the combined tex string.
-    let combinedTexString = StringTexMobject.fromTexString(
+    let combinedTexString = SingleStringTexMobject.fromTexString(
       `a${startString}${texStrings.join(' ')}${endString}`, style, scene,
     );
     const currentScalerHeight = combinedTexString.submobjects()[0].getDimensions().height;
@@ -1114,12 +992,12 @@ class TexMobject extends Mobject {
     // Align individual tex strings with the combined string.
     let wrappedTexStrings =
       texStrings.map(tex => `${startString}${tex}${endString}`);
-    let stringTexMobjects = [...wrappedTexStrings]
-      .map(tex => StringTexMobject.fromTexString(tex, style, scene));
+    let singleStringTexMobjects = [...wrappedTexStrings]
+      .map(tex => SingleStringTexMobject.fromTexString(tex, style, scene));
     let stringIndex = 0;
     let symbolIndex = 0;
     for (let targetSymbol of combinedTexString.submobjects()) {
-      let currentString = stringTexMobjects[stringIndex];
+      let currentString = singleStringTexMobjects[stringIndex];
       let currentSymbol = currentString.submobjects()[symbolIndex];
       let currentDimensions = currentSymbol.getDimensions();
       let targetDimensions = targetSymbol.getDimensions();
@@ -1136,7 +1014,8 @@ class TexMobject extends Mobject {
         symbolIndex += 1;
       }
     }
-    super(null, stringTexMobjects, style);
+
+    super(null, singleStringTexMobjects, style);
     this.texStrings = texStrings;
     this.scene = scene;
     this.startString = startString;
@@ -1216,7 +1095,6 @@ export {
   Rectangle,
   Square,
   TexSymbol,
-  SingleStringTexMobject,
   TexMobject,
   TextMobject,
   Animation,
