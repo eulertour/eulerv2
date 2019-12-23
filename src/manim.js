@@ -36,11 +36,23 @@ class Group extends Two.Group {
     }
   }
 
-  scaleMobject(factor) {
+  scaleRelativeToOrigin(factor) {
     utils.scalePath(factor, this.children[0]);
     for (let submob of this.submobjects()) {
-      submob.scaleMobject(factor);
+      submob.scaleRelativeToOrigin(factor);
     }
+    return this;
+  }
+
+  scaleMobject(factor) {
+    const dimensions = this.getDimensions();
+    if (dimensions === null) {
+      return;
+    }
+    let center = dimensions.center;
+    this.translateMobject(math.multiply(-1, center));
+    this.scaleRelativeToOrigin(factor);
+    this.translateMobject(center);
     return this;
   }
 
@@ -408,20 +420,17 @@ class Group extends Two.Group {
     if (xMin === Infinity) {
       return null;
     }
-    let center = {
-      x: (xMax + xMin) / 2,
-      y: (yMax + yMin) / 2,
-    };
+    let center = [(xMax + xMin) / 2, (yMax + yMin) / 2];
     let height = yMax - yMin;
     let width = xMax - xMin;
     return {
       center: center,
       height: height,
       width: width,
-      topLeft:     { x: center.x - width / 2, y: center.y - height / 2 },
-      topRight:    { x: center.x + width / 2, y: center.y - height / 2 },
-      bottomRight: { x: center.x + width / 2, y: center.y + height / 2 },
-      bottomLeft:  { x: center.x - width / 2, y: center.y + height / 2 },
+      topLeft:     math.add(center, [-width / 2, -height / 2]),
+      topRight:    math.add(center, [+width / 2, -height / 2]),
+      bottomRight: math.add(center, [+width / 2, +height / 2]),
+      bottomLeft:  math.add(center, [-width / 2, +height / 2]),
     };
   }
 
@@ -898,14 +907,14 @@ class Square extends RegularPolygon {
   }
 }
 
-class TexSymbol extends Group {
-  constructor(path) {
-    super([path], /*fillTopLevel=*/true);
+class TexSymbol extends Mobject {
+  constructor(path, style) {
+    super(path, [], style);
     this.path = path;
   }
 
   clone(parent) {
-    let clone = new TexSymbol(this.path.clone());
+    let clone = new TexSymbol(this.path.clone(), this.getStyleDict());
 
     let children = Two.Utils.map(this.children, function (child) {
       return child.clone();
@@ -940,13 +949,58 @@ class StringTexMobject extends Mobject {
   constructor(
     texString,
     texSymbols,
-    style = {strokeColor: consts.WHITE, fillColor: consts.WHITE, fillOpacity: 1}
+    style = {
+      strokeColor: consts.WHITE, fillColor: consts.WHITE, fillOpacity: 1, strokeWidth: 4
+    }
   ) {
     super(null, texSymbols, style);
     this.texString = texString;
   }
 
+  clone(parent) {
+    let clone = new StringTexMobject(this.texString, [], this.getStyleDict());
+
+    let children = Two.Utils.map(this.children, function (child) {
+      return child.clone();
+    });
+
+    clone.remove(clone.children);
+    clone.add(children);
+
+    clone.opacity = this.opacity;
+
+    if (this.mask) {
+      clone.mask = this.mask;
+    }
+
+    clone.translation.copy(this.translation);
+    clone.rotation = this.rotation;
+    clone.scale = this.scale;
+
+    if (this.matrix.manual) {
+      clone.matrix.copy(this.matrix);
+    }
+
+    if (parent) {
+      parent.add(clone);
+    }
+
+    return clone._update();
+  }
+
   // TODO: should eventually take tex -> sstm
+  static fromTexString(texString, style, scene) {
+    let group = scene.texToSvgGroup(texString);
+    group = utils.normalizeGroup(group);
+    let texSymbols = group.children.map(path => new TexSymbol(path.clone(), style));
+    return new StringTexMobject(texString, texSymbols, style);
+  }
+
+  static fromNormalizedSVGGroup(texString, group, style) {
+    let texSymbols = group.children.map(path => new TexSymbol(path.clone()));
+    return new StringTexMobject(texString, texSymbols, style);
+  }
+
   static fromSVGGroup(texString, group, style) {
     let texSymbols = utils.extractPathsFromGroup(group).map(path => {
       let newSymbol = new TexSymbol(utils.normalizePath(path));
@@ -1047,150 +1101,46 @@ class TexMobject extends Mobject {
     startString = "",
     endString = "",
   ) {
-    let submobLatex = [];
-    let submobLatexLengths = [];
-    let newSubmobLatex = [];
+    // Scale and position the combined tex string.
+    let combinedTexString = StringTexMobject.fromTexString(
+      `a${startString}${texStrings.join(' ')}${endString}`, style, scene,
+    );
+    const currentScalerHeight = combinedTexString.submobjects()[0].getDimensions().height;
+    combinedTexString.scaleMobject(consts.aHeightManim / currentScalerHeight);
+    combinedTexString.remove(combinedTexString.submobjects()[0]);
+    let center = combinedTexString.getDimensions().center;
+    combinedTexString.translateMobject(math.multiply(-1, center));
 
-    // Prepend an (unwrapped) a for scaling later.
-    let wrappedTexString = "a";
-    let group = scene.texToSvgGroup(wrappedTexString);
-    newSubmobLatex.push(StringTexMobject.fromSVGGroup(wrappedTexString, group, style));
-    submobLatex.push(new SingleStringTexMobject(wrappedTexString, group, style));
-    submobLatexLengths.push(utils.extractPathsFromGroup(group).length);
-
-    for (let texString of texStrings) {
-      let wrappedTexString = `${startString}${texString}${endString}`;
-      let group = scene.texToSvgGroup(wrappedTexString);
-      newSubmobLatex.push(StringTexMobject.fromSVGGroup(wrappedTexString, group, style));
-      submobLatex.push(new SingleStringTexMobject(wrappedTexString, group, style));
-      submobLatexLengths.push(utils.extractPathsFromGroup(group).length);
+    // Align individual tex strings with the combined string.
+    let wrappedTexStrings =
+      texStrings.map(tex => `${startString}${tex}${endString}`);
+    let stringTexMobjects = [...wrappedTexStrings]
+      .map(tex => StringTexMobject.fromTexString(tex, style, scene));
+    let stringIndex = 0;
+    let symbolIndex = 0;
+    for (let targetSymbol of combinedTexString.submobjects()) {
+      let currentString = stringTexMobjects[stringIndex];
+      let currentSymbol = currentString.submobjects()[symbolIndex];
+      let currentDimensions = currentSymbol.getDimensions();
+      let targetDimensions = targetSymbol.getDimensions();
+      if (targetDimensions !== null) { // Skip blank spaces
+        const {height: currentHeight, center: currentCenter} = currentDimensions;
+        const {height: targetHeight, center: targetCenter} = targetDimensions;
+        currentSymbol.translateMobject(math.subtract(targetCenter, currentCenter));
+        currentSymbol.scaleMobject(targetHeight / currentHeight);
+      }
+      if (symbolIndex === currentString.submobjects().length - 1) {
+        stringIndex += 1;
+        symbolIndex = 0;
+      } else {
+        symbolIndex += 1;
+      }
     }
-    let combinedTexString = `a${startString}${texStrings.join(' ')}${endString}`;
-    let combinedLatexGroup = scene.texToSvgGroup(combinedTexString);
-
-    let g = utils.normalizeGroup(combinedLatexGroup.clone())
-    console.log(g);
-    scene.add(g);
-
-    // let combinedLatex = StringTexMobject.fromSVGGroup(combinedTexString, combinedLatexGroup);
-    let combinedLatex = new SingleStringTexMobject(combinedTexString, combinedLatexGroup);
-
-    // // Scale the SingleStringTexMobjects within this TexMobject.
-    // combinedLatex.getBoundingClientRect();
-    // for (let submob of submobLatex) {
-    //   submob.getBoundingClientRect();
-    // }
-    // let currentIndex = 0;
-    // for (let i = 0; i < submobLatex.length; i++) {
-    //   let submob = submobLatex[i];
-    //   let submobScalingMob = submob.submobjects()[0];
-    //   // TODO: Why are these calls necessary? The only modification seems to be
-    //   // that _update() is called on each mobject in the heirarchy.
-    //   submob.getBoundingClientRect();
-    //   combinedLatex.getBoundingClientRect();
-    //   submob.scaleMobject(
-    //     combinedLatex.submobjects()[currentIndex].getBoundingClientRect().height /
-    //     submobScalingMob.getBoundingClientRect().height
-    //   );
-    //   currentIndex += submobLatexLengths[i];
-    // }
-
-    // // Translate the SingleStringTexMobjects within this TexMobject.
-    // let currentTexStringIndex = 0;
-    // let currentTexSymbolIndex = 0;
-    // for (let i = 0; i < combinedLatex.submobjects().length; i++) {
-    //   let combinedTexSymbol = combinedLatex.submobjects()[i];
-    //   let currentTexString = submobLatex[currentTexStringIndex];
-    //   let currentTexSymbol = currentTexString.submobjects()[currentTexSymbolIndex];
-    //   let combinedSymbolCenter = utils.getBoundingClientRectCenter(combinedTexSymbol.getBoundingClientRect());
-    //   let currentSymbolCenter = utils.getBoundingClientRectCenter(currentTexSymbol.getBoundingClientRect());
-    //   let currentSymbolMatrix = Two.Utils.getComputedMatrix(currentTexSymbol.children[0]);
-    //   // TODO: Use actual matrix multiplication
-    //   utils.translatePath(
-    //     [
-    //       (combinedSymbolCenter[0] - currentSymbolCenter[0]) * 1/currentSymbolMatrix.elements[0],
-    //       (combinedSymbolCenter[1] - currentSymbolCenter[1]) * 1/currentSymbolMatrix.elements[4],
-    //     ],
-    //     currentTexSymbol.children[0],
-    //   );
-    //   if (currentTexSymbolIndex === currentTexString.submobjects().length - 1) {
-    //     currentTexStringIndex += 1;
-    //     currentTexSymbolIndex = 0;
-    //   } else {
-    //     currentTexSymbolIndex += 1;
-    //   }
-    // }
-
-    submobLatex = submobLatex.map(sstm => StringTexMobject.fromSingleStringTexMobject(sstm, style));
-    combinedLatex = StringTexMobject.fromSingleStringTexMobject(combinedLatex, style);
-
-    super(null, submobLatex, style);
-
-    // Center the TexMobject
-    const dimensions = this.getDimensions();
-    Mobject.prototype.translateMobject.call(this, [-dimensions.center.x, -dimensions.center.y]);
-
-    // Scale the TexMobject to the proper size
-    const scalerHeight = submobLatex[0].getBoundingClientRect().height;
-    const scalingRatio = consts.aHeightTwo / scalerHeight;
-    this.scaleMobject(scalingRatio);
-
-    // Remove the scaler
-    this.remove(this.submobjects()[0]);
-
+    super(null, stringTexMobjects, style);
     this.texStrings = texStrings;
     this.scene = scene;
     this.startString = startString;
     this.endString = endString;
-  }
-
-  translateMobject(manimVector) {
-    let manim2two = utils.getManimToTwoTransformationMatrix();
-    let twoVector = math.multiply(manim2two, manimVector).toArray().slice(0, 2);
-    for (let singleStringTexMobject of this.submobjects()) {
-      for (let texSymbol of singleStringTexMobject.submobjects()) {
-        if (texSymbol.children[0].vertices.length === 0) {
-          continue;
-        }
-        let matrix = Two.Utils.getComputedMatrix(texSymbol.children[0]);
-        let mappedTranslation = [
-          twoVector[0] / matrix.elements[0],
-          twoVector[1] / matrix.elements[4],
-        ];
-        utils.translatePath(mappedTranslation, texSymbol.children[0]);
-      }
-    }
-  }
-
-  getMobjectHeirarchy() {
-    let ret = [this];
-    for (let submob of this.submobjects()) {
-      ret.push(submob);
-      for (let texSymbol of submob.submobjects()) {
-        ret.push(texSymbol);
-      }
-    }
-    return ret;
-  }
-
-  applyStyle(style) {
-    for (let submob of this.submobjects()) {
-      if ("strokeWidth" in style && submob.hasOwnProperty("viewBox")) {
-        let styleCopy = Object.assign({}, style);
-        let viewBoxFields = submob.viewBox.split(" ").map(x => parseInt(x));
-        let [width, height] = viewBoxFields.slice(2);
-        let majorDimension = Math.max(width, height);
-        if (majorDimension < 400) {
-          // eslint-disable-next-line
-          console.warn(`The latex for ${submob.texString} is too small to guess accurately. strokeWidth may be inconsistent`);
-        }
-        let convertedStrokeWidth = style["strokeWidth"] * majorDimension * consts.strokeWidthConstant;
-        styleCopy["strokeWidth"] = convertedStrokeWidth;
-        submob.applyStyle(styleCopy);
-      } else {
-        submob.applyStyle(style);
-      }
-    }
   }
 
   clone(parent) {
