@@ -610,18 +610,38 @@ export function getManimToTwoTransformationMatrix(
  * in Manim coordinates.
  */
 export function normalizePath(path) {
-  let matrix = Two.Utils.getComputedMatrix(path);
+  const computedMatrix = Two.Utils.getComputedMatrix(path);
   let anchors = [], leftHandles = [], rightHandles = [], commands = [];
   commands = path.vertices.map(v => v.command);
   path.vertices.forEach(v => {
-    let mappedAnchorObj = matrix.multiply(v.x, v.y, 1);
-    let mappedLeftControlObj = matrix.multiply(v.controls.left.x, v.controls.left.y, 1);
-    let mappedRightControlObj = matrix.multiply(v.controls.right.x, v.controls.right.y, 1);
+    let mappedAnchorObj = computedMatrix.multiply(v.x, v.y, 1);
+    let mappedLeftControlObj = computedMatrix.multiply(v.controls.left.x, v.controls.left.y, 1);
+    let mappedRightControlObj = computedMatrix.multiply(v.controls.right.x, v.controls.right.y, 1);
 
     anchors = [...anchors, [mappedAnchorObj.x, mappedAnchorObj.y]];
     leftHandles = [...leftHandles, [mappedLeftControlObj.x, mappedLeftControlObj.y]];
     rightHandles = [...rightHandles, [mappedRightControlObj.x, mappedRightControlObj.y]];
   });
+
+  // It seems like applying the viewBox isn't necessary?
+  // let viewBox = getViewBox(path);
+  // if (viewBox !== null) {
+  //   let viewBoxMatrix = getViewBoxTransformationMatrix(viewBox);
+  //   let zippedAnchors = anchors.map((_, i) => [anchors[i], leftHandles[i], rightHandles[i]]);
+  //   let newAnchors = [], newLeftHandles = [], newRightHandles = [];
+  //   zippedAnchors.forEach(v => {
+  //     let [a, l, r] = v;
+  //     let aManim = math.multiply(viewBoxMatrix, [...a, 1]).toArray().slice(0, 2);
+  //     let lManim = math.multiply(viewBoxMatrix, [...l, 1]).toArray().slice(0, 2);
+  //     let rManim = math.multiply(viewBoxMatrix, [...r, 1]).toArray().slice(0, 2);
+  //     newAnchors = [...newAnchors, aManim];
+  //     newLeftHandles = [...newLeftHandles, lManim];
+  //     newRightHandles = [...newRightHandles, rManim];
+  //   });
+  //   anchors = newAnchors;
+  //   leftHandles = newLeftHandles;
+  //   rightHandles = newRightHandles;
+  // }
 
   let two2manim = getTwoToManimTransformationMatrix();
   let zippedAnchors = anchors.map((_, i) => [anchors[i], leftHandles[i], rightHandles[i]]);
@@ -640,4 +660,46 @@ export function normalizePath(path) {
   let manim2two = getManimToTwoTransformationMatrix();
   newPath.matrix.set(...manim2two.toArray().flat());
   return newPath;
+}
+
+/* Converts a Two.Group with an arbitrary matrix heirarchy to an equivalent one
+ * in Manim coordinates with two levels.
+ */
+// TODO: Why is the linewidth so weird?
+export function normalizeGroup(group, linewidth = 2 / 100) {
+  let normalizedPaths = extractPathsFromGroup(group)
+    .map(path => normalizePath(path));
+  let g = new Two.Group();
+  g.add(normalizedPaths);
+  g.linewidth = linewidth;
+  return g;
+}
+
+export function getViewBox(pathOrGroup) {
+  let currentElement = pathOrGroup;
+  while (!currentElement.hasOwnProperty("viewBox") && currentElement.hasOwnProperty("parent")) {
+    currentElement = currentElement.parent;
+  }
+  if (currentElement.hasOwnProperty("viewBox")) {
+    return currentElement.viewBox.split(" ").map(x => parseFloat(x));
+  } else {
+    return null;
+  }
+}
+
+export function getViewBoxTransformationMatrix(viewBox, twoWidth=640, twoHeight=360) {
+  const x = viewBox[0];
+  const y = viewBox[1];
+  const width = viewBox[2];
+  const height = viewBox[3];
+
+  const scale = Math.min(twoWidth / width, twoHeight / height);
+  const xTranslation = x * scale;
+  const yTranslation = y * scale;
+
+  return math.matrix([
+    [scale, 0, -xTranslation],
+    [0, scale, -yTranslation],
+    [0, 0, 1],
+  ]);
 }
