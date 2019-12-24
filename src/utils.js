@@ -122,10 +122,10 @@ export function getManimPoints(mobject) {
   for (let i = 0; i < length - 1; i++) {
     let curV = mobject.children[0].vertices[i];
     let nextV = mobject.children[0].vertices[i + 1];
-    ret.push([curV.x, curV.y]);
-    ret.push([curV.controls.right.x, curV.controls.right.y]);
-    ret.push([nextV.controls.left.x, nextV.controls.left.y]);
-    ret.push([nextV.x, nextV.y]);
+    ret.push([curV.x, curV.y, 0]);
+    ret.push([curV.controls.right.x, curV.controls.right.y, 0]);
+    ret.push([nextV.controls.left.x, nextV.controls.left.y, 0]);
+    ret.push([nextV.x, nextV.y, 0]);
   }
   return ret;
 }

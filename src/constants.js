@@ -163,7 +163,7 @@ class SquareToCircle(WebScene):
 class WriteA(WebScene):
     def construct(self):
       a = TexMobject("a")
-      self.play(Write(a))
+      print(a.get_width(), a.get_height())
       self.wait()
 
 
@@ -176,10 +176,9 @@ class WriteStuff(WebScene):
         example_tex = TexMobject(
             "\\sum_{k=1}^\\infty {1 \\over k^2} = {\\pi^2 \\over 6}",
         )
-        example_tex.shift(2 * DOWN)
-        # group = VGroup(example_text, example_tex)
-        # group.arrange(DOWN)
-        # group.set_width(FRAME_WIDTH - 2 * LARGE_BUFF)
+        group = VGroup(example_text, example_tex)
+        group.arrange(DOWN)
+        group.set_width(FRAME_WIDTH - 2 * LARGE_BUFF)
 
         self.play(Write(example_text))
         self.play(FadeIn(example_tex))

@@ -223,6 +223,7 @@ export default {
         window.pyodide.runPython("import manimlib");
         window.pyodide.runPython("import numpy");
         window.manimlib = window.pyodide.pyimport("manimlib");
+        window.texToPaths = tex => Manim.SingleStringTexMobject.texToPaths(tex, this.scene);
         // Initialize Mobjects, Animations, and scene diffs
         for (let mobjectName of Object.keys(this.initialMobjects)) {
           let data = _.cloneDeep(this.initialMobjects[mobjectName]);

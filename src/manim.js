@@ -533,8 +533,10 @@ class Mobject extends Group {
       path = new Two.Path();
     }
     super([path].concat(submobjects), /*fillTopLevel=*/true);
-    this.path().matrix.manual = true;
-    this.path().matrix.set(...utils.getManimToTwoTransformationMatrix().toArray().flat());
+    if (path !== null) {
+      this.path().matrix.manual = true;
+      this.path().matrix.set(...utils.getManimToTwoTransformationMatrix().toArray().flat());
+    }
     this.applyStyle(Object.assign({}, DEFAULT_STYLE, style));
   }
 
@@ -567,6 +569,12 @@ class Mobject extends Group {
     }
 
     return clone._update();
+  }
+}
+
+class VMobject extends Mobject {
+  constructor() {
+    super(null, [], {});
   }
 }
 
@@ -927,10 +935,36 @@ class SingleStringTexMobject extends Mobject {
   }
 
   static fromTexString(texString, style, scene) {
-    let group = scene.texToSvgGroup(texString);
+    // Create the Mobject with an a prepended for scaling later.
+    let group = scene.texToSvgGroup(`a${texString}`);
     group = utils.normalizeGroup(group);
     let texSymbols = group.children.map(path => new TexSymbol(path.clone(), style));
-    return new SingleStringTexMobject(texString, texSymbols, style);
+    let mob = new SingleStringTexMobject(texString, texSymbols, style);
+
+    // Scale and center the Mobject.
+    const currentScalerHeight = mob.submobjects()[0].getDimensions().height;
+    mob.scaleMobject(consts.aHeightManim / currentScalerHeight);
+    mob.remove(mob.submobjects()[0]);
+    let center = mob.getDimensions().center;
+    mob.translateMobject(math.multiply(-1, center));
+
+    return mob;
+  }
+
+  static texToPaths(tex, scene, dumpToFile=false) {
+    let points = SingleStringTexMobject
+      .fromTexString(tex, {}, scene)
+      .submobjects()
+      .map(texSymbol => utils.getManimPoints(texSymbol));
+
+    if (dumpToFile) {
+      let f = new File([JSON.stringify(points)], `${tex}.txt`, {type: "text/plain"});
+      let url = URL.createObjectURL(f);
+      // eslint-disable-next-line
+      console.info(`Dumped points for ${tex} to ${url}`);
+    }
+
+    return points;
   }
 
   clone(parent) {
@@ -981,15 +1015,11 @@ class TexMobject extends Mobject {
   ) {
     // Scale and position the combined tex string.
     let combinedTexString = SingleStringTexMobject.fromTexString(
-      `a${startString}${texStrings.join(' ')}${endString}`, style, scene,
+      `${startString}${texStrings.join(' ')}${endString}`, style, scene,
     );
-    const currentScalerHeight = combinedTexString.submobjects()[0].getDimensions().height;
-    combinedTexString.scaleMobject(consts.aHeightManim / currentScalerHeight);
-    combinedTexString.remove(combinedTexString.submobjects()[0]);
-    let center = combinedTexString.getDimensions().center;
-    combinedTexString.translateMobject(math.multiply(-1, center));
 
     // Align individual tex strings with the combined string.
+    // TODO: Perform translation per-string rather than per-symbol.
     let wrappedTexStrings =
       texStrings.map(tex => `${startString}${tex}${endString}`);
     let singleStringTexMobjects = [...wrappedTexStrings]
@@ -1002,10 +1032,9 @@ class TexMobject extends Mobject {
       let currentDimensions = currentSymbol.getDimensions();
       let targetDimensions = targetSymbol.getDimensions();
       if (targetDimensions !== null) { // Skip blank spaces
-        const {height: currentHeight, center: currentCenter} = currentDimensions;
-        const {height: targetHeight, center: targetCenter} = targetDimensions;
+        const {center: currentCenter} = currentDimensions;
+        const {center: targetCenter} = targetDimensions;
         currentSymbol.translateMobject(math.subtract(targetCenter, currentCenter));
-        currentSymbol.scaleMobject(targetHeight / currentHeight);
       }
       if (symbolIndex === currentString.submobjects().length - 1) {
         stringIndex += 1;
@@ -1082,6 +1111,7 @@ class TextMobject extends TexMobject {
 export {
   Group,
   Mobject,
+  VMobject,
   Arc,
   Circle,
   Polygon,
@@ -1095,6 +1125,7 @@ export {
   Rectangle,
   Square,
   TexSymbol,
+  SingleStringTexMobject,
   TexMobject,
   TextMobject,
   Animation,
