@@ -36,11 +36,23 @@ class Group extends Two.Group {
     }
   }
 
-  scaleMobject(factor) {
+  scaleRelativeToOrigin(factor) {
     utils.scalePath(factor, this.children[0]);
     for (let submob of this.submobjects()) {
-      submob.scaleMobject(factor);
+      submob.scaleRelativeToOrigin(factor);
     }
+    return this;
+  }
+
+  scaleMobject(factor) {
+    const dimensions = this.getDimensions();
+    if (dimensions === null) {
+      return;
+    }
+    let center = dimensions.center;
+    this.translateMobject(math.multiply(-1, center));
+    this.scaleRelativeToOrigin(factor);
+    this.translateMobject(center);
     return this;
   }
 
@@ -54,7 +66,6 @@ class Group extends Two.Group {
 
   moveTo(newCenter) {
     let oldCenter = this.getPointCenter();
-
     this.translateMobject([
       newCenter[0] - oldCenter[0],
       newCenter[1] - oldCenter[1],
@@ -256,33 +267,6 @@ class Group extends Two.Group {
     };
   }
 
-  normalizeToCanvas(
-    canvasWidth = 640,
-    canvasHeight = 360,
-    /*sceneWidth=consts.FRAME_WIDTH,*/
-    sceneHeight = consts.FRAME_HEIGHT,
-  ) {
-    this.children[0].matrix.manual = true;
-    this.children[0].matrix.identity()
-      .translate(canvasWidth / 2, canvasHeight / 2)
-      .scale(canvasHeight / sceneHeight)
-      .multiply(
-        1, 0, 0, /* reflect over x axis */
-        0, -1, 0,
-        0, 0, 1,
-      );
-  }
-
-  suspendUpdating(recursive = true) {
-    this.updatingSuspended = true;
-    if (recursive) {
-      for (let submob of this.children.slice(1)) {
-        submob.suspendUpdating(recursive);
-      }
-    }
-    return this;
-  }
-
   setAnchorsFromPoints(points) {
     let anchors = [];
     for (let i = 0; i < points.length / 4 + 1; i++) {
@@ -372,7 +356,7 @@ class Group extends Two.Group {
   getPointCenter() {
     if (this.__proto__ === TexMobject.prototype) {
       // eslint-disable-next-line
-      console.warning("getPointCenter() doesn't work on latex");
+      console.warn("getPointCenter() doesn't work on latex");
     }
     if (this.points().length === 0) {
       return [0, 0];
@@ -408,20 +392,17 @@ class Group extends Two.Group {
     if (xMin === Infinity) {
       return null;
     }
-    let center = {
-      x: (xMax + xMin) / 2,
-      y: (yMax + yMin) / 2,
-    };
+    let center = [(xMax + xMin) / 2, (yMax + yMin) / 2];
     let height = yMax - yMin;
     let width = xMax - xMin;
     return {
       center: center,
       height: height,
       width: width,
-      topLeft:     { x: center.x - width / 2, y: center.y - height / 2 },
-      topRight:    { x: center.x + width / 2, y: center.y - height / 2 },
-      bottomRight: { x: center.x + width / 2, y: center.y + height / 2 },
-      bottomLeft:  { x: center.x - width / 2, y: center.y + height / 2 },
+      topLeft:     math.add(center, [-width / 2, -height / 2]),
+      topRight:    math.add(center, [+width / 2, -height / 2]),
+      bottomRight: math.add(center, [+width / 2, +height / 2]),
+      bottomLeft:  math.add(center, [-width / 2, +height / 2]),
     };
   }
 
@@ -532,15 +513,12 @@ class Group extends Two.Group {
     );
 
     // TODO: Why doesn't this.path() work???
-    let newPath = this.children[0].clone();
+    let newPath = this.path().clone();
     let partialPath = utils.pathFromManimPoints(newPathCoeffs.flat(), vertexCommands);
     newPath.vertices = partialPath.vertices;
     newPath.closed = false;
     this.remove(this.children[0]);
     this.add(newPath);
-    if (!(this instanceof TexSymbol)) {
-      this.normalizeToCanvas();
-    }
     this.applyStyle(this.getStyleDict());
   }
 }
@@ -555,7 +533,10 @@ class Mobject extends Group {
       path = new Two.Path();
     }
     super([path].concat(submobjects), /*fillTopLevel=*/true);
-    this.normalizeToCanvas();
+    if (path !== null) {
+      this.path().matrix.manual = true;
+      this.path().matrix.set(...utils.getManimToTwoTransformationMatrix().toArray().flat());
+    }
     this.applyStyle(Object.assign({}, DEFAULT_STYLE, style));
   }
 
@@ -588,6 +569,12 @@ class Mobject extends Group {
     }
 
     return clone._update();
+  }
+}
+
+class VMobject extends Mobject {
+  constructor() {
+    super(null, [], {});
   }
 }
 
@@ -898,14 +885,13 @@ class Square extends RegularPolygon {
   }
 }
 
-class TexSymbol extends Group {
-  constructor(path) {
-    super([path], /*fillTopLevel=*/true);
-    this.path = path;
+class TexSymbol extends Mobject {
+  constructor(path, style) {
+    super(path, [], style);
   }
 
   clone(parent) {
-    let clone = new TexSymbol(this.path.clone());
+    let clone = new TexSymbol(this.path().clone(), this.getStyleDict());
 
     let children = Two.Utils.map(this.children, function (child) {
       return child.clone();
@@ -936,37 +922,53 @@ class TexSymbol extends Group {
   }
 }
 
-// TODO: This probably needs to override clone()
 class SingleStringTexMobject extends Mobject {
   constructor(
     texString,
-    group,
-    style = {strokeColor: consts.WHITE, fillColor: consts.WHITE, fillOpacity: 1}
-  ) {
-    let texSymbols = [];
-    for (let path of utils.extractPathsFromGroup(group)) {
-      let parent = path.parent;
-      parent.remove(path);
-      let texSymbol = new TexSymbol(path);
-      parent.add(texSymbol);
-      texSymbols.push(texSymbol);
+    texSymbols,
+    style = {
+      strokeColor: consts.WHITE, fillColor: consts.WHITE, fillOpacity: 1, strokeWidth: 4
     }
-    super(null, [group], style);
+  ) {
+    super(null, texSymbols, style);
     this.texString = texString;
-    this.texSymbols = texSymbols;
-    this.viewBox = group.viewBox;
   }
 
-  submobjects() {
-    return this.texSymbols;
+  static fromTexString(texString, style, scene) {
+    // Create the Mobject with an a prepended for scaling later.
+    let group = scene.texToSvgGroup(`a${texString}`);
+    group = utils.normalizeGroup(group);
+    let texSymbols = group.children.map(path => new TexSymbol(path.clone(), style));
+    let mob = new SingleStringTexMobject(texString, texSymbols, style);
+
+    // Scale and center the Mobject.
+    const currentScalerHeight = mob.submobjects()[0].getDimensions().height;
+    mob.scaleMobject(consts.aHeightManim / currentScalerHeight);
+    mob.remove(mob.submobjects()[0]);
+    let center = mob.getDimensions().center;
+    mob.translateMobject(math.multiply(-1, center));
+
+    return mob;
+  }
+
+  static texToPaths(tex, scene, dumpToFile=false) {
+    let points = SingleStringTexMobject
+      .fromTexString(tex, {}, scene)
+      .submobjects()
+      .map(texSymbol => utils.getManimPoints(texSymbol));
+
+    if (dumpToFile) {
+      let f = new File([JSON.stringify(points)], `${tex}.txt`, {type: "text/plain"});
+      let url = URL.createObjectURL(f);
+      // eslint-disable-next-line
+      console.info(`Dumped points for ${tex} to ${url}`);
+    }
+
+    return points;
   }
 
   clone(parent) {
-    let clone = new SingleStringTexMobject(
-      _.cloneDeep(this.texString),
-      new Two.Group(),
-      this.getStyleDict()
-    );
+    let clone = new SingleStringTexMobject(this.texString, [], this.getStyleDict());
 
     let children = Two.Utils.map(this.children, function (child) {
       return child.clone();
@@ -974,12 +976,6 @@ class SingleStringTexMobject extends Mobject {
 
     clone.remove(clone.children);
     clone.add(children);
-
-    let texSymbols = [];
-    for (let path of utils.extractPathsFromGroup(clone.children[1])) {
-      texSymbols.push(path.parent);
-    }
-    clone.texSymbols = texSymbols;
 
     clone.opacity = this.opacity;
 
@@ -1017,132 +1013,53 @@ class TexMobject extends Mobject {
     startString = "",
     endString = "",
   ) {
-    let submobLatex = [];
-    let submobLatexLengths = [];
+    // Scale and position the combined tex string.
+    let combinedTexString = SingleStringTexMobject.fromTexString(
+      `${startString}${texStrings.join(' ')}${endString}`, style, scene,
+    );
 
-    // Prepend an (unwrapped) a for scaling later.
-    let wrappedTexString = "a";
-    let group = scene.texToSvgGroup(wrappedTexString);
-    submobLatex.push(new SingleStringTexMobject(wrappedTexString, group, style));
-    submobLatexLengths.push(utils.extractPathsFromGroup(group).length);
-
-    for (let texString of texStrings) {
-      let wrappedTexString = `${startString}${texString}${endString}`;
-      let group = scene.texToSvgGroup(wrappedTexString);
-      submobLatex.push(new SingleStringTexMobject(wrappedTexString, group, style));
-      submobLatexLengths.push(utils.extractPathsFromGroup(group).length);
-    }
-    let combinedTexString = `a${startString}${texStrings.join(' ')}${endString}`;
-    // let combinedTexString = `${startString}${texStrings.join(' ')}${endString}`;
-    let combinedLatexGroup = scene.texToSvgGroup(combinedTexString);
-    let combinedLatex = new SingleStringTexMobject(combinedTexString, combinedLatexGroup);
-
-    // Scale the SingleStringTexMobjects within this TexMobject.
-    let currentIndex = 0;
-    for (let i = 0; i < submobLatex.length; i++) {
-      let submob = submobLatex[i];
-      let submobScalingMob = submob.submobjects()[0];
-      // TODO: Why are these calls necessary? The only modification seems to be
-      // that _update() is called on each mobject in the heirarchy.
-      submob.getBoundingClientRect();
-      combinedLatex.getBoundingClientRect();
-      submob.scaleMobject(
-        combinedLatex.submobjects()[currentIndex].getBoundingClientRect().height /
-        submobScalingMob.getBoundingClientRect().height
-      );
-      currentIndex += submobLatexLengths[i];
-    }
-
-    // Translate the SingleStringTexMobjects within this TexMobject.
-    let currentTexStringIndex = 0;
-    let currentTexSymbolIndex = 0;
-    for (let i = 0; i < combinedLatex.submobjects().length; i++) {
-      let combinedTexSymbol = combinedLatex.submobjects()[i];
-      let currentTexString = submobLatex[currentTexStringIndex];
-      let currentTexSymbol = currentTexString.submobjects()[currentTexSymbolIndex];
-      let combinedSymbolCenter = utils.getBoundingClientRectCenter(combinedTexSymbol.getBoundingClientRect());
-      let currentSymbolCenter = utils.getBoundingClientRectCenter(currentTexSymbol.getBoundingClientRect());
-      let currentSymbolMatrix = Two.Utils.getComputedMatrix(currentTexSymbol.children[0]);
-      // TODO: Use actual matrix multiplication
-      currentTexSymbol.translateMobject([
-        (combinedSymbolCenter[0] - currentSymbolCenter[0]) * 1/currentSymbolMatrix.elements[0],
-        (combinedSymbolCenter[1] - currentSymbolCenter[1]) * 1/currentSymbolMatrix.elements[4],
-      ]);
-      if (currentTexSymbolIndex === currentTexString.submobjects().length - 1) {
-        currentTexStringIndex += 1;
-        currentTexSymbolIndex = 0;
+    // Align individual tex strings with the combined string.
+    // TODO: Perform translation per-string rather than per-symbol.
+    let wrappedTexStrings =
+      texStrings.map(tex => `${startString}${tex}${endString}`);
+    let singleStringTexMobjects = [...wrappedTexStrings]
+      .map(tex => SingleStringTexMobject.fromTexString(tex, style, scene));
+    let stringIndex = 0;
+    let symbolIndex = 0;
+    for (let targetSymbol of combinedTexString.submobjects()) {
+      let currentString = singleStringTexMobjects[stringIndex];
+      let currentSymbol = currentString.submobjects()[symbolIndex];
+      let currentDimensions = currentSymbol.getDimensions();
+      let targetDimensions = targetSymbol.getDimensions();
+      if (targetDimensions !== null) { // Skip blank spaces
+        const {center: currentCenter} = currentDimensions;
+        const {center: targetCenter} = targetDimensions;
+        currentSymbol.translateMobject(math.subtract(targetCenter, currentCenter));
+      }
+      if (symbolIndex === currentString.submobjects().length - 1) {
+        stringIndex += 1;
+        symbolIndex = 0;
       } else {
-        currentTexSymbolIndex += 1;
+        symbolIndex += 1;
       }
     }
 
-
-    super(null, submobLatex, style);
-    // Scale the TexMobject to the proper size
-    let manim2two = utils.getManimToTwoTransformationMatrix();
-    const targetScalerHeight = math.multiply(manim2two, [0, -consts.aHeightManim, 0])
-                           .toArray()[1];
-    const scalerHeight = submobLatex[0].getBoundingClientRect().height;
-    const scalingRatio = targetScalerHeight / scalerHeight;
-    this.matrix.manual = true;
-    this.matrix.scale(scalingRatio);
-
-    // Center the TexMobject
-    const boundingRect = this.getBoundingClientRect();
-    const texCenter = [
-      boundingRect.left + boundingRect.width / 2,
-      boundingRect.top + boundingRect.height / 2,
-    ];
-    const clientCenter = [scene.width / 2, scene.height / 2];
-    const translation = [clientCenter[0] - texCenter[0], clientCenter[1] - texCenter[1]];
-    for (let singleStringTexMobject of this.submobjects()) {
-      for (let texSymbol of singleStringTexMobject.submobjects()) {
-        console.log(Two.Utils.getComputedMatrix(texSymbol).elements);
-      }
-    }
-
-
+    super(null, singleStringTexMobjects, style);
     this.texStrings = texStrings;
     this.scene = scene;
-  }
-
-  getMobjectHeirarchy() {
-    let ret = [this];
-    for (let submob of this.submobjects()) {
-      ret.push(submob);
-      for (let texSymbol of submob.submobjects()) {
-        ret.push(texSymbol);
-      }
-    }
-    return ret;
-  }
-
-  applyStyle(style) {
-    for (let submob of this.submobjects()) {
-      submob.applyStyle(style);
-      if ("strokeWidth" in style) {
-        let styleCopy = Object.assign({}, style);
-        let viewBoxFields = submob.viewBox.split(" ").map(x => parseInt(x));
-        let [width, height] = viewBoxFields.slice(2);
-        let majorDimension = Math.max(width, height);
-        if (majorDimension < 400) {
-          // eslint-disable-next-line
-          console.warn(`The latex for ${submob.texString} is too small to guess accurately. strokeWidth may be inconsistent`);
-        }
-        let convertedStrokeWidth = style["strokeWidth"] * majorDimension * consts.strokeWidthConstant;
-        styleCopy["strokeWidth"] = convertedStrokeWidth;
-        submob.applyStyle(styleCopy);
-      } else {
-        submob.applyStyle(style);
-      }
-    }
+    this.startString = startString;
+    this.endString = endString;
   }
 
   clone(parent) {
     // TODO: This is very wasteful, since the children are removed later
-    let clone = new TexMobject(_.cloneDeep(this.texStrings), this.scene);
-    clone.startString = this.startString;
-    clone.endString = this.endString;
+    let clone = new TexMobject(
+      _.cloneDeep(this.texStrings),
+      this.scene,
+      this.getStyleDict(),
+      this.startString,
+      this.endString,
+    );
 
     let children = Two.Utils.map(this.children, function (child) {
       return child.clone();
@@ -1194,6 +1111,7 @@ class TextMobject extends TexMobject {
 export {
   Group,
   Mobject,
+  VMobject,
   Arc,
   Circle,
   Polygon,

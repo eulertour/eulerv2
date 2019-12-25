@@ -122,10 +122,10 @@ export function getManimPoints(mobject) {
   for (let i = 0; i < length - 1; i++) {
     let curV = mobject.children[0].vertices[i];
     let nextV = mobject.children[0].vertices[i + 1];
-    ret.push([curV.x, curV.y]);
-    ret.push([curV.controls.right.x, curV.controls.right.y]);
-    ret.push([nextV.controls.left.x, nextV.controls.left.y]);
-    ret.push([nextV.x, nextV.y]);
+    ret.push([curV.x, curV.y, 0]);
+    ret.push([curV.controls.right.x, curV.controls.right.y, 0]);
+    ret.push([nextV.controls.left.x, nextV.controls.left.y, 0]);
+    ret.push([nextV.x, nextV.y, 0]);
   }
   return ret;
 }
@@ -535,10 +535,6 @@ export function integerInterpolate(start, end, alpha) {
   }
 }
 
-export function getBoundingClientRectCenter(rect) {
-  return [rect.left + rect.width / 2, rect.top + rect.height / 2];
-}
-
 export function reflectionMatrixAcrossVector(vector) {
   if (vector[0] === 0 && vector[1] === 0) {
     // eslint-disable-next-line
@@ -604,4 +600,96 @@ export function getManimToTwoTransformationMatrix(
     [0, -twoHeight/manimHeight, twoHeight/2],
     [0, 0, 1],
   ]);
+}
+
+/* Converts a Two.Path with an arbitrary matrix heirarchy to an equivalent one
+ * in Manim coordinates.
+ */
+export function normalizePath(path) {
+  let anchors = [], leftHandles = [], rightHandles = [];
+  let commands = path.vertices.map(v => v.command);
+  let newAnchors, newLeftHandles, newRightHandles;
+  let zippedAnchors;
+
+  path.vertices.forEach(v => {
+    anchors =      [...anchors,      [v.x, v.y]];
+    leftHandles =  [...leftHandles,  [v.controls.left.x, v.controls.left.y]];
+    rightHandles = [...rightHandles, [v.controls.right.x, v.controls.right.y]];
+  });
+
+  // Handle matrix transformations
+  const transformationMatrix = getCurrentTransformationMatrix(path);
+  zippedAnchors = anchors.map((_, i) => [anchors[i], leftHandles[i], rightHandles[i]]);
+  newAnchors = [], newLeftHandles = [], newRightHandles = [];
+  zippedAnchors.forEach(v => {
+    let [a, l, r] = v;
+    let aManimObj = transformationMatrix.multiply(...a, 1);
+    let lManimObj = transformationMatrix.multiply(...l, 1);
+    let rManimObj = transformationMatrix.multiply(...r, 1);
+    newAnchors =      [...newAnchors,      [aManimObj.x, aManimObj.y]];
+    newLeftHandles =  [...newLeftHandles,  [lManimObj.x, lManimObj.y]];
+    newRightHandles = [...newRightHandles, [rManimObj.x, rManimObj.y]];
+  });
+  anchors = newAnchors;
+  leftHandles = newLeftHandles;
+  rightHandles = newRightHandles;
+
+  // Transform to Manim coordinates
+  let two2manim = getTwoToManimTransformationMatrix();
+  zippedAnchors = anchors.map((_, i) => [anchors[i], leftHandles[i], rightHandles[i]]);
+  let manimAnchors = [], manimLeftHandles = [], manimRightHandles = [];
+  zippedAnchors.forEach(v => {
+    let [a, l, r] = v;
+    let aManim = math.multiply(two2manim, [...a, 1]).toArray().slice(0, 2);
+    let lManim = math.multiply(two2manim, [...l, 1]).toArray().slice(0, 2);
+    let rManim = math.multiply(two2manim, [...r, 1]).toArray().slice(0, 2);
+    manimAnchors =      [...manimAnchors, aManim];
+    manimLeftHandles =  [...manimLeftHandles, lManim];
+    manimRightHandles = [...manimRightHandles, rManim];
+  });
+  let newPath = pathFromAnchors(manimAnchors, manimLeftHandles, manimRightHandles, commands);
+  newPath.matrix.manual = true;
+  let manim2two = getManimToTwoTransformationMatrix();
+  newPath.matrix.set(...manim2two.toArray().flat());
+  return newPath;
+}
+
+/* Converts a Two.Group with an arbitrary matrix heirarchy to an equivalent one
+ * in Manim coordinates with two levels.
+ */
+export function normalizeGroup(group) {
+  let normalizedPaths = extractPathsFromGroup(group)
+    .map(path => normalizePath(path));
+  let g = new Two.Group();
+  g.add(normalizedPaths);
+  return g;
+}
+
+function getTransformationMatrix(path) {
+  let M = new Two.Matrix();
+  if (path.translation !== undefined) {
+    M.translate(path.translation.x, path.translation.y);
+  }
+  if (path.scale !== undefined) {
+    if (path.scale instanceof Two.Vector) {
+      M.scale(path.scale.x, path.scale.y);
+    } else {
+      M.scale(path.scale);
+    }
+  }
+  return M;
+}
+
+function getCurrentTransformationMatrix(path) {
+  let matrices = [getTransformationMatrix(path)];
+  let currentPath = path;
+  while (currentPath.hasOwnProperty("parent")) {
+    currentPath = currentPath.parent;
+    matrices.push(getTransformationMatrix(currentPath));
+  }
+  matrices.reverse();
+  return matrices.reduce(
+    (prev, cur) => prev.multiply(...cur.elements),
+    new Two.Matrix(),
+  );
 }

@@ -74,9 +74,7 @@ class Scene extends Two {
     let svgNode = window.MathJax.tex2svg(texString).children[0];
     let svgGroup = this.interpret(svgNode);
     this.remove(svgGroup);
-    svgGroup.viewBox = svgNode.getAttribute("viewBox");
-    svgGroup = utils.convertSVGGroup(svgGroup);
-    return svgGroup;
+    return utils.convertSVGGroup(svgGroup);
   }
 }
 
