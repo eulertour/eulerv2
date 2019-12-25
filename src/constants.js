@@ -220,14 +220,10 @@ class AlignDataExample(WebScene):
 */
 
 export const RELEASE_NOTES =
-`This is the first version which allows rendering scenes that are written in
-python and processed by vanilla manim. It only works for scenes whose mobjects
-and animations have web implementations, and only on the data which is exposed
-to javascript in
-<a href="https://github.com/eulertour/manim/blob/master/manimlib/web/utils.py"
-   target="_blank">manimlib.web.utils</a>. At the time of writing, only the
-FadeIn and FadeOut Animations and the Circle and Square Mobjects can be
-processed from manim.`
+`Implemented the entire Latex pipeline across MathJax, Manim and Two. The web
+Latex implementation circumvents Manim's svg renderer entirely in favor of the
+one in two.js. Also implemented a crude forwarding of transformations  (
+rotation and scale) from Manim.`;
 
 // Height of a latex a in Manim space.
 export const aHeightManim = 0.22565395;
