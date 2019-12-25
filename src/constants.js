@@ -168,7 +168,7 @@ class WriteStuff(WebScene):
         )
         example_tex = TexMobject(
             "\\sum_{k=1}^\\infty {1 \\over k^2} = {\\pi^2 \\over 6}",
-            # "\\int_{-\\infty}^\\infty {e^{x^{-2}}} = {\\sqrt{\\pi}}",
+            # "\\int_{-\\infty}^\\infty {e^{x^{-2}}}dx= {\\sqrt{\\pi}}",
         )
         group = VGroup(example_text, example_tex)
         group.arrange(DOWN)
