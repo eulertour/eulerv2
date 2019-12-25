@@ -7,6 +7,7 @@ import {
   Wait,
   ReplacementTransform,
   ShowCreation,
+  // ApplyPointwiseFunction,
   Write,
   FadeOut,
   FadeIn,
@@ -529,6 +530,15 @@ class Group extends Two.Group {
     this.remove(this.children[0]);
     this.add(newPath);
     this.applyStyle(this.getStyleDict());
+  }
+
+  applyFunction(func) {
+    for (let vertex of this.path().vertices) {
+      [vertex.x, vertex.y] = func([vertex.x, vertex.y]);
+      [vertex.controls.left.x, vertex.controls.left.y] = func([vertex.controls.left.x, vertex.controls.left.y]);
+      [vertex.controls.right.x, vertex.controls.right.y] = func([vertex.controls.right.x, vertex.controls.right.y]);
+    }
+    return this;
   }
 }
 
@@ -1156,6 +1166,7 @@ export {
   Animation,
   ReplacementTransform,
   ShowCreation,
+  // ApplyPointwiseFunction,
   Write,
   FadeOut,
   FadeIn,

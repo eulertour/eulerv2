@@ -138,7 +138,7 @@ export default {
       displayCode: true,
       playingSingleAnimation: null,
       sceneChoices: [],
-      chosenScene: "WriteStuff",
+      chosenScene: "SquareToCircle",
       scene: null,
       sceneLoaded: false,
       mobjectChoices: [
@@ -299,7 +299,8 @@ export default {
       let newAnimationList = _.cloneDeep(scene.animation_list);
       for (let i = 0; i < scene.animation_list.length; i++) {
         if ("args" in scene.animation_list[i]) {
-          newAnimationList[i].args = scene.animation_list[i].args.map(
+          let currentAnimation = scene.animation_list[i];
+          newAnimationList[i].args = currentAnimation.args.map(
             id => mobjectIdsToNames[id],
           );
         }
@@ -462,7 +463,11 @@ export default {
         });
         args.push(data.mobject);
       }
-      return new Manim[this.currentAnimation.className](...args);
+      if (this.currentAnimation.className === "ApplyPointwiseFunction") {
+        return new Manim[this.currentAnimation.className](this.currentAnimation.func, ...args);
+      } else {
+        return new Manim[this.currentAnimation.className](...args);
+      }
     },
     chainNextAnimation: function() {
       if (this.animationIndex === this.animations.length - 1) {

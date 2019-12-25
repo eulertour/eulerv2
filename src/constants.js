@@ -160,13 +160,6 @@ class SquareToCircle(WebScene):
         self.play(FadeOut(circle))
 
 
-class WriteA(WebScene):
-    def construct(self):
-      a = TexMobject("a")
-      print(a.get_width(), a.get_height())
-      self.wait()
-
-
 class WriteStuff(WebScene):
     def construct(self):
         example_text = TextMobject(
@@ -183,6 +176,17 @@ class WriteStuff(WebScene):
 
         self.play(Write(example_text))
         self.play(Write(example_tex))
+        self.wait()
+`;
+
+/*
+class WarpSquare(WebScene):
+    def construct(self):
+        square = Square()
+        self.play(ApplyPointwiseFunction(
+            lambda point: complex_to_R3(np.exp(R3_to_complex(point))),
+            square
+        ))
         self.wait()
 
 
@@ -213,7 +217,7 @@ class AlignDataExample(WebScene):
       c2 = Circle().shift(RIGHT + 2 * DOWN)
       self.play(FadeIn(g1))
       self.play(ReplacementTransform(g1, c2))
-`;
+*/
 
 export const RELEASE_NOTES =
 `This is the first version which allows rendering scenes that are written in

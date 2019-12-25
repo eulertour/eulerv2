@@ -151,6 +151,7 @@
         </v-dialog>
       </div>
     </div>
+    <!--
     <div class="d-flex justify-center align-center">
       <div class="mr-7">
         <div class="d-flex justify-center">
@@ -171,6 +172,7 @@
         v-bind:visible="debug"
       />
     </div>
+    -->
   </div>
 </template>
 
