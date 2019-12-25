@@ -562,6 +562,13 @@ export function rotationMatrixByAngle(angle) {
   ]);
 }
 
+export function getRotationMatrix(axis, angle) {
+  let manimlib = window.pyodide.pyimport("manimlib");
+  let matrix = manimlib.utils.space_ops.rotation_matrix(axis, angle)
+    .map(arr => [].slice.call(arr));
+  return math.matrix(matrix);
+}
+
 /* Returns a matrix for transforming points in two space to points in manim
  * space. Given tx ty in two space and matrix M returned from this function, the
  * corresponding point mx my in manim space is given by

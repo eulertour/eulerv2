@@ -175,13 +175,14 @@ class WriteStuff(WebScene):
         )
         example_tex = TexMobject(
             "\\sum_{k=1}^\\infty {1 \\over k^2} = {\\pi^2 \\over 6}",
+            # "\\int_{-\\infty}^\\infty {e^{x^{-2}}} = {\\sqrt{\\pi}}",
         )
         group = VGroup(example_text, example_tex)
         group.arrange(DOWN)
         group.set_width(FRAME_WIDTH - 2 * LARGE_BUFF)
 
         self.play(Write(example_text))
-        self.play(FadeIn(example_tex))
+        self.play(Write(example_tex))
         self.wait()
 
 
@@ -224,14 +225,5 @@ to javascript in
 FadeIn and FadeOut Animations and the Circle and Square Mobjects can be
 processed from manim.`
 
-// When rendered to latex, the a character has a viewBox height of 451 and
-// closely matches a strokeWidth of 4 when given a strokeWidth of 290. That
-// constant is a bit too large, so arbitrarily subtract from the numerator
-// ¯\_(ツ)_/¯.
-export const strokeWidthConstant = (290 - 100) / (4 * 451);
-
 // Height of a latex a in Manim space.
 export const aHeightManim = 0.22565395;
-
-// Height of a latex a in Two space.
-export const aHeightTwo = 10.15442775;
