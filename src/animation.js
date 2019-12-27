@@ -121,6 +121,11 @@ class Animation {
     return this.mobject.clone();
   }
 
+  static interpolateSubmobject() {
+    // eslint-disable-next-line
+    console.error(`${this.name} does not override interpolateSubmobject()`);
+  }
+
   static getDiff() {
     // eslint-disable-next-line
     console.error(`${this.name} does not override getDiff()`);
@@ -228,6 +233,36 @@ class Write extends Animation {
   }
 }
 
+// class ApplyPointwiseFunction extends Animation {
+//   constructor(func, mobject) {
+//     super(mobject);
+//     this.func = func;
+//   }
+// 
+//   begin() {
+//     console.log(this.mobject.path().vertices.slice(0, 4).map(v => [v.x, v.y]));
+//     this.transformedMobject = this.mobject.clone();
+//     console.log(this.mobject.path().vertices.slice(0, 4).map(v => [v.x, v.y]));
+//     // this.transformedMobject.applyFunction(this.func);
+//     // this.transformedMobject.path().vertices[0].x = 500;
+//     console.log(this.mobject.path().vertices.slice(0, 4).map(v => [v.x, v.y]));
+//     Animation.prototype.begin.call(this);
+//   }
+// 
+//   interpolateSubmobject(alpha, submob, transformed) {
+//     submob.interpolate(submob, transformed, alpha);
+//   }
+// 
+//   getCopiesForInterpolation() {
+//     return [this.mobject, this.transformedMobject];
+//   }
+// 
+//   static getDiff() {
+//     // TODO: Add modify diff
+//     return {};
+//   }
+// }
+
 class FadeIn extends Animation {
   interpolateSubmobject(alpha, mob, startingMob) {
     let style1 = startingMob.getStyleDict();
@@ -289,6 +324,7 @@ export {
   Wait,
   ReplacementTransform,
   ShowCreation,
+  // ApplyPointwiseFunction,
   Write,
   FadeOut,
   FadeIn,

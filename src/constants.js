@@ -160,13 +160,6 @@ class SquareToCircle(WebScene):
         self.play(FadeOut(circle))
 
 
-class WriteA(WebScene):
-    def construct(self):
-      a = TexMobject("a")
-      print(a.get_width(), a.get_height())
-      self.wait()
-
-
 class WriteStuff(WebScene):
     def construct(self):
         example_text = TextMobject(
@@ -175,13 +168,25 @@ class WriteStuff(WebScene):
         )
         example_tex = TexMobject(
             "\\sum_{k=1}^\\infty {1 \\over k^2} = {\\pi^2 \\over 6}",
+            # "\\int_{-\\infty}^\\infty {e^{x^{-2}}}dx= {\\sqrt{\\pi}}",
         )
         group = VGroup(example_text, example_tex)
         group.arrange(DOWN)
         group.set_width(FRAME_WIDTH - 2 * LARGE_BUFF)
 
         self.play(Write(example_text))
-        self.play(FadeIn(example_tex))
+        self.play(Write(example_tex))
+        self.wait()
+`;
+
+/*
+class WarpSquare(WebScene):
+    def construct(self):
+        square = Square()
+        self.play(ApplyPointwiseFunction(
+            lambda point: complex_to_R3(np.exp(R3_to_complex(point))),
+            square
+        ))
         self.wait()
 
 
@@ -212,26 +217,13 @@ class AlignDataExample(WebScene):
       c2 = Circle().shift(RIGHT + 2 * DOWN)
       self.play(FadeIn(g1))
       self.play(ReplacementTransform(g1, c2))
-`;
+*/
 
 export const RELEASE_NOTES =
-`This is the first version which allows rendering scenes that are written in
-python and processed by vanilla manim. It only works for scenes whose mobjects
-and animations have web implementations, and only on the data which is exposed
-to javascript in
-<a href="https://github.com/eulertour/manim/blob/master/manimlib/web/utils.py"
-   target="_blank">manimlib.web.utils</a>. At the time of writing, only the
-FadeIn and FadeOut Animations and the Circle and Square Mobjects can be
-processed from manim.`
-
-// When rendered to latex, the a character has a viewBox height of 451 and
-// closely matches a strokeWidth of 4 when given a strokeWidth of 290. That
-// constant is a bit too large, so arbitrarily subtract from the numerator
-// ¯\_(ツ)_/¯.
-export const strokeWidthConstant = (290 - 100) / (4 * 451);
+`Implemented the entire Latex pipeline across MathJax, Manim and Two. The web
+Latex implementation circumvents Manim's svg renderer entirely in favor of the
+one in two.js. Also implemented a crude forwarding of transformations  (
+rotation and scale) from Manim.`;
 
 // Height of a latex a in Manim space.
 export const aHeightManim = 0.22565395;
-
-// Height of a latex a in Two space.
-export const aHeightTwo = 10.15442775;

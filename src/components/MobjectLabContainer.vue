@@ -138,7 +138,7 @@ export default {
       displayCode: true,
       playingSingleAnimation: null,
       sceneChoices: [],
-      chosenScene: "WriteStuff",
+      chosenScene: "SquareToCircle",
       scene: null,
       sceneLoaded: false,
       mobjectChoices: [
@@ -222,8 +222,7 @@ export default {
       window.pyodide.loadPackage("manimlib").then(() => {
         window.pyodide.runPython("import manimlib");
         window.pyodide.runPython("import numpy");
-        window.manimlib = window.pyodide.pyimport("manimlib");
-        window.texToPaths = tex => Manim.SingleStringTexMobject.texToPaths(tex, this.scene);
+        window.texToPaths = tex => Manim.SingleStringTexMobject.texToPoints(tex, this.scene);
         // Initialize Mobjects, Animations, and scene diffs
         for (let mobjectName of Object.keys(this.initialMobjects)) {
           let data = _.cloneDeep(this.initialMobjects[mobjectName]);
@@ -242,13 +241,13 @@ export default {
         );
         this.refreshSceneChoices();
         this.sceneLoaded = true;
-        this.runManim();
       });
     });
   },
   methods: {
     runManim: function() {
-      let scene = window.manimlib.get_scene(this.code, [this.chosenScene]);
+      let manimlib = window.pyodide.pyimport("manimlib");
+      let scene = manimlib.get_scene(this.code, [this.chosenScene]);
       scene.render();
 
       /* scene.scenes_before_animation:
@@ -300,7 +299,8 @@ export default {
       let newAnimationList = _.cloneDeep(scene.animation_list);
       for (let i = 0; i < scene.animation_list.length; i++) {
         if ("args" in scene.animation_list[i]) {
-          newAnimationList[i].args = scene.animation_list[i].args.map(
+          let currentAnimation = scene.animation_list[i];
+          newAnimationList[i].args = currentAnimation.args.map(
             id => mobjectIdsToNames[id],
           );
         }
@@ -421,10 +421,11 @@ export default {
         let s = new Manim[mobjectData.className](
           mobjectData.params.tex_strings,
           this.scene,
+          mobjectData.params.tex_to_color_map !== undefined
+            ? mobjectData.params.tex_to_color_map : {},
         );
         s.applyTransformations(mobjectData.transformations);
         s.translateMobject(mobjectData.position);
-        s.applyStyle(mobjectData.style);
         mobjectData.mobject = s;
       } else if (!utils.isGroupData(mobjectData)) {
         let s = new Manim[mobjectData.className](mobjectData.params);
@@ -462,7 +463,11 @@ export default {
         });
         args.push(data.mobject);
       }
-      return new Manim[this.currentAnimation.className](...args);
+      if (this.currentAnimation.className === "ApplyPointwiseFunction") {
+        return new Manim[this.currentAnimation.className](this.currentAnimation.func, ...args);
+      } else {
+        return new Manim[this.currentAnimation.className](...args);
+      }
     },
     chainNextAnimation: function() {
       if (this.animationIndex === this.animations.length - 1) {
@@ -790,7 +795,8 @@ export default {
       }
     },
     refreshSceneChoices: function() {
-      this.sceneChoices = window.manimlib.get_scene_choices(this.code);
+      let manimlib = window.pyodide.pyimport("manimlib")
+      this.sceneChoices = manimlib.get_scene_choices(this.code);
     },
     diffIsValidForScene: function(diff, scene) {
       let namesInScene = this.getNamesInScene(scene);

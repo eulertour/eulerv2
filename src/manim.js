@@ -7,6 +7,7 @@ import {
   Wait,
   ReplacementTransform,
   ShowCreation,
+  // ApplyPointwiseFunction,
   Write,
   FadeOut,
   FadeIn,
@@ -206,7 +207,19 @@ class Group extends Two.Group {
    * and applies it to the Mobject.
    */
   applyStyle(style) {
-    if (this.__proto__ === Group.prototype) {
+    // TODO: Consider a parent Mobject which has never been styled directly and
+    // which contains children that have been styled independently of the
+    // parent. When the parent is styled with a partial style dict, the
+    // attributes missing from the style dict will be set on the child mobjects
+    // to the default values from two.js. This is because getStyleDict() can't
+    // distinguish between an unset value and a default value from two.js. As a
+    // workaround, simply never style a parent Mobject which isn't styled during
+    // initialization.
+    if (
+      this.__proto__ === Group.prototype ||
+      this.__proto__ === TexMobject.prototype ||
+      this.__proto__ === TextMobject.prototype
+    ) {
       this.submobjects().forEach(submob => submob.applyStyle(style));
       return;
     }
@@ -229,9 +242,7 @@ class Group extends Two.Group {
     );
     for (let anchor of this.children[0].vertices) {
       for (let vector of [anchor, anchor.controls.left, anchor.controls.right]) {
-        const mappedVector = (matrixDimensions[1] === 2)
-          ? math.multiply(matrix, [vector.x, vector.y]).toArray()
-          : math.multiply(matrix, [vector.x, vector.y].concat(1)).toArray();
+        const mappedVector = math.multiply(matrix, [vector.x, vector.y].concat(0)).toArray();
         vector.x = mappedVector[0];
         vector.y = mappedVector[1];
       }
@@ -242,12 +253,11 @@ class Group extends Two.Group {
     for (let i = 0; i < transformations.length; i++) {
       let command = transformations[i][0];
       let args = transformations[i].slice(1);
-      if (command === 'flip') {
-        let reflectionMatrix = utils.reflectionMatrixAcrossVector(args[0]);
-        this.transformWithMatrix(reflectionMatrix);
-      } else if (command === 'rotate') {
-        let rotationMatrix = utils.rotationMatrixByAngle(args[0]);
+      if (command === 'rotate') {
+        let rotationMatrix = utils.getRotationMatrix(...args);
         this.transformWithMatrix(rotationMatrix);
+      } else if (command === 'scale') {
+        this.scaleMobject(args[0]);
       } else {
         // eslint-disable-next-line
         console.error(`Unknown transformation ${command} with args ${args}`);
@@ -521,6 +531,15 @@ class Group extends Two.Group {
     this.add(newPath);
     this.applyStyle(this.getStyleDict());
   }
+
+  applyFunction(func) {
+    for (let vertex of this.path().vertices) {
+      [vertex.x, vertex.y] = func([vertex.x, vertex.y]);
+      [vertex.controls.left.x, vertex.controls.left.y] = func([vertex.controls.left.x, vertex.controls.left.y]);
+      [vertex.controls.right.x, vertex.controls.right.y] = func([vertex.controls.right.x, vertex.controls.right.y]);
+    }
+    return this;
+  }
 }
 
 class Mobject extends Group {
@@ -537,7 +556,9 @@ class Mobject extends Group {
       this.path().matrix.manual = true;
       this.path().matrix.set(...utils.getManimToTwoTransformationMatrix().toArray().flat());
     }
-    this.applyStyle(Object.assign({}, DEFAULT_STYLE, style));
+    if (style !== null) {
+      this.applyStyle(Object.assign({}, DEFAULT_STYLE, style));
+    }
   }
 
   clone(parent) {
@@ -927,8 +948,12 @@ class SingleStringTexMobject extends Mobject {
     texString,
     texSymbols,
     style = {
-      strokeColor: consts.WHITE, fillColor: consts.WHITE, fillOpacity: 1, strokeWidth: 4
-    }
+      fillColor: consts.WHITE,
+      fillOpacity: 1,
+      strokeColor: consts.WHITE,
+      strokeOpacity: 1,
+      strokeWidth: 1,
+    },
   ) {
     super(null, texSymbols, style);
     this.texString = texString;
@@ -951,7 +976,7 @@ class SingleStringTexMobject extends Mobject {
     return mob;
   }
 
-  static texToPaths(tex, scene, dumpToFile=false) {
+  static texToPoints(tex, scene, dumpToFile=false) {
     let points = SingleStringTexMobject
       .fromTexString(tex, {}, scene)
       .submobjects()
@@ -1003,6 +1028,7 @@ class TexMobject extends Mobject {
   constructor(
     texStrings,
     scene,
+    texToColorMap = {},
     style = {
       fillColor: consts.WHITE,
       fillOpacity: 1,
@@ -1019,36 +1045,43 @@ class TexMobject extends Mobject {
     );
 
     // Align individual tex strings with the combined string.
-    // TODO: Perform translation per-string rather than per-symbol.
-    let wrappedTexStrings =
-      texStrings.map(tex => `${startString}${tex}${endString}`);
-    let singleStringTexMobjects = [...wrappedTexStrings]
-      .map(tex => SingleStringTexMobject.fromTexString(tex, style, scene));
-    let stringIndex = 0;
-    let symbolIndex = 0;
-    for (let targetSymbol of combinedTexString.submobjects()) {
-      let currentString = singleStringTexMobjects[stringIndex];
-      let currentSymbol = currentString.submobjects()[symbolIndex];
+    let singleStringTexMobjects = texStrings.map(tex => {
+      let wrappedString = `${startString}${tex}${endString}`;
+      let stringStyle = {...style};
+      if (tex in texToColorMap) {
+        stringStyle["fillColor"] = texToColorMap[tex];
+      }
+      return [wrappedString, stringStyle];
+    }).map(texStringWithStyle =>
+      SingleStringTexMobject.fromTexString(...texStringWithStyle, scene)
+    );
+
+    let combinedIndex = 0;
+    for (let texString of singleStringTexMobjects) {
+      let currentSymbol = texString.submobjects()[0];
+      let targetSymbol = combinedTexString.submobjects()[combinedIndex];
       let currentDimensions = currentSymbol.getDimensions();
       let targetDimensions = targetSymbol.getDimensions();
-      if (targetDimensions !== null) { // Skip blank spaces
-        const {center: currentCenter} = currentDimensions;
-        const {center: targetCenter} = targetDimensions;
-        currentSymbol.translateMobject(math.subtract(targetCenter, currentCenter));
-      }
-      if (symbolIndex === currentString.submobjects().length - 1) {
-        stringIndex += 1;
-        symbolIndex = 0;
-      } else {
-        symbolIndex += 1;
+      const {center: currentCenter} = currentDimensions;
+      const {center: targetCenter} = targetDimensions;
+      texString.translateMobject(math.subtract(targetCenter, currentCenter));
+      combinedIndex += texString.submobjects().length;
+
+      // Skip blank spaces.
+      if (combinedIndex < combinedTexString.submobjects().length) {
+        while (combinedTexString.submobjects()[combinedIndex].path().vertices.length === 0) {
+          combinedIndex += 1;
+        }
       }
     }
 
-    super(null, singleStringTexMobjects, style);
+    super(null, singleStringTexMobjects, null);
+    this.texString = texStrings.join(" ");
     this.texStrings = texStrings;
     this.scene = scene;
     this.startString = startString;
     this.endString = endString;
+    this.texToColorMap = texToColorMap;
   }
 
   clone(parent) {
@@ -1056,6 +1089,7 @@ class TexMobject extends Mobject {
     let clone = new TexMobject(
       _.cloneDeep(this.texStrings),
       this.scene,
+      _.cloneDeep(this.texToColorMap),
       this.getStyleDict(),
       this.startString,
       this.endString,
@@ -1094,6 +1128,7 @@ class TextMobject extends TexMobject {
   constructor(
     texStrings,
     scene,
+    texToColorMap = {},
     style = {
       fillColor: consts.WHITE,
       fillOpacity: 1,
@@ -1104,7 +1139,7 @@ class TextMobject extends TexMobject {
     startString = "\\textrm{",
     endString = "}",
   ) {
-    super(texStrings, scene, style, startString, endString);
+    super(texStrings, scene, texToColorMap, style, startString, endString);
   }
 }
 
@@ -1131,6 +1166,7 @@ export {
   Animation,
   ReplacementTransform,
   ShowCreation,
+  // ApplyPointwiseFunction,
   Write,
   FadeOut,
   FadeIn,
