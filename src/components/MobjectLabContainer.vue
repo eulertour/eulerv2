@@ -385,7 +385,28 @@ export default {
         );
       }
 
+      // Initialize Mobjects.
+      for (let mobjectData of Object.values(scene.initial_mobject_serializations)) {
+        // Convert position from a Float64Array to a regular array.
+        if ('position' in mobjectData) {
+          mobjectData.position = [].slice.call(mobjectData.position);
+        }
+        if (!utils.isGroupData(mobjectData)) {
+          this.buildMobject(mobjectData);
+        }
+      }
+      console.log(newMobjects);
+      console.log(scene.initial_mobject_serializations);
+
+      console.log(newAnimationList);
+      console.log(scene.animation_info_list);
+
+
+      // requires setting this.animations
+      // this.mobjects = scene.initial_mobject_serializations;
       this.mobjects = newMobjects;
+      // requires setting this.currentAnimation.animation
+      // this.animations = scene.animation_info_list;
       this.animations = newAnimationList;
       this.animationDiffs = newAnimationDiffs;
       this.sceneDiffs = newSceneDiffs;
@@ -450,6 +471,20 @@ export default {
         mobjectData.mobject = g;
       }
     },
+    buildMobject: function(mobjectData) {
+      if (mobjectData.className === "TexMobject" || mobjectData.className === "TextMobject") {
+        // ???
+      } else if (!utils.isGroupData(mobjectData)) {
+        console.log(mobjectData);
+        let m = new Manim[mobjectData.className](mobjectData.config);
+        m.applyTransformations(mobjectData.transformations);
+        // TODO: Changes to position should be passed from manim.
+        m.applyStyle(mobjectData.style);
+        mobjectData.mobject = m;
+      } else {
+        // Build the Group.
+      }
+    },
     buildCurrentAnimation: function() {
       let args = [];
       for (let mobjectName of this.currentAnimation.args) {
@@ -468,6 +503,9 @@ export default {
       } else {
         return new Manim[this.currentAnimation.className](...args);
       }
+    },
+    buildCurrentAnimationTwo: function() {
+        return new Manim[this.currentAnimation.className](...this.currentAnimation.args);
     },
     chainNextAnimation: function() {
       if (this.animationIndex === this.animations.length - 1) {
