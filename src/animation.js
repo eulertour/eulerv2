@@ -4,14 +4,19 @@ import * as _ from 'lodash';
 class Animation {
   constructor(
     mobject,
-    rateFunc=utils.smooth,
-    lagRatio=0,
-    runtime=1,
+    config = {},
   ) {
+    const fullConfig = Object.assign({}, Animation.defaultConfig(), config);
+    Object.assign(this, fullConfig);
     this.mobject = mobject;
-    this.rateFunc = rateFunc;
-    this.lagRatio = lagRatio;
-    this.runtime = runtime;
+  }
+
+  static defaultConfig() {
+    return {
+      rateFunc: utils.smooth,
+      lagRatio: 0,
+      runtime: 1,
+    };
   }
 
   /* This is called right as an animation is being
@@ -166,6 +171,18 @@ class ReplacementTransform extends Animation {
 }
 
 class ShowCreation extends Animation {
+  constructor(mobject, config) {
+    const fullConfig = Object.assign({}, ShowCreation.defaultConfig(), config);
+    debugger;
+    super(mobject, fullConfig);
+  }
+
+  static defaultConfig() {
+    return {
+      lagRatio: 1,
+    };
+  }
+
   interpolateSubmobject(alpha, submob, startingSubmobject) {
     if (alpha > 0) {
       submob.pointwiseBecomePartial(startingSubmobject, 0, alpha);

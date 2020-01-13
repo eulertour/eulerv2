@@ -386,30 +386,29 @@ export default {
       }
 
       // Initialize Mobjects.
-      for (let mobjectData of Object.values(scene.initial_mobject_serializations)) {
-        // Convert position from a Float64Array to a regular array.
-        if ('position' in mobjectData) {
-          mobjectData.position = [].slice.call(mobjectData.position);
-        }
+      newMobjects = {};
+      for (let mobjectName of Object.keys(scene.initial_mobject_serializations)) {
+        const pythonData = scene.initial_mobject_serializations[mobjectName];
+        // TODO: _.cloneDeep() causes intermittent crashes here, perhaps due to
+        // copying Float64Arrays?
+        let mobjectData = {};
+        mobjectData.className = pythonData.className;
+        mobjectData.args = pythonData.args.slice();
+        mobjectData.config = Object.assign({}, pythonData.config);
+        mobjectData.position = pythonData.position.slice();
+        mobjectData.transformations = pythonData.transformations.slice();
+        mobjectData.submobjects = pythonData.submobjects.slice();
+        mobjectData.style = Object.assign({}, pythonData.style);
         if (!utils.isGroupData(mobjectData)) {
           this.buildMobject(mobjectData);
         }
+        newMobjects[mobjectName] = mobjectData;
       }
-      console.log(newMobjects);
-      console.log(scene.initial_mobject_serializations);
 
-      console.log(newAnimationList);
-      console.log(scene.animation_info_list);
-
-
-      // requires setting this.animations
-      // this.mobjects = scene.initial_mobject_serializations;
       this.mobjects = newMobjects;
-      // requires setting this.currentAnimation.animation
-      // this.animations = scene.animation_info_list;
-      this.animations = newAnimationList;
-      this.animationDiffs = newAnimationDiffs;
-      this.sceneDiffs = newSceneDiffs;
+      this.animations = _.cloneDeep(scene.animation_info_list);
+      this.animationDiffs = _.cloneDeep(scene.animation_diffs);
+      this.sceneDiffs = _.cloneDeep(scene.scene_diffs);
       this.animationIndex = 0;
       this.animationOffset = 0;
       this.scene.clear();
@@ -472,10 +471,9 @@ export default {
       }
     },
     buildMobject: function(mobjectData) {
-      if (mobjectData.className === "TexMobject" || mobjectData.className === "TextMobject") {
+      if (utils.isTexData(mobjectData)) {
         // ???
       } else if (!utils.isGroupData(mobjectData)) {
-        console.log(mobjectData);
         let m = new Manim[mobjectData.className](mobjectData.config);
         m.applyTransformations(mobjectData.transformations);
         // TODO: Changes to position should be passed from manim.
@@ -486,23 +484,13 @@ export default {
       }
     },
     buildCurrentAnimation: function() {
-      let args = [];
-      for (let mobjectName of this.currentAnimation.args) {
-        let data = this.mobjects[mobjectName];
-        // eslint-disable-next-line
-        console.assert(data !== undefined, { name: mobjectName });
-        // eslint-disable-next-line
-        console.assert(data.mobject !== null, {
-          name: mobjectName,
-          mobjects: this.mobjects,
-        });
-        args.push(data.mobject);
-      }
-      if (this.currentAnimation.className === "ApplyPointwiseFunction") {
-        return new Manim[this.currentAnimation.className](this.currentAnimation.func, ...args);
-      } else {
-        return new Manim[this.currentAnimation.className](...args);
-      }
+      const { className, args, config } = this.currentAnimation;
+      let replaceMobjectNamesWithMobjects = (args) =>
+        args.map(arg => arg in this.mobjects ? this.mobjects[arg].mobject : arg);
+      return new Manim[className](
+        ...replaceMobjectNamesWithMobjects(args),
+        config,
+      );
     },
     buildCurrentAnimationTwo: function() {
         return new Manim[this.currentAnimation.className](...this.currentAnimation.args);

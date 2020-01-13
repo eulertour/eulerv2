@@ -700,3 +700,23 @@ function getCurrentTransformationMatrix(path) {
     new Two.Matrix(),
   );
 }
+
+export function styleFromConfigAndDefaults(defaults, config) {
+  let combinedStyle = {};
+  if ("strokeColor" in config || "strokeColor" in defaults) {
+    combinedStyle.strokeColor = config.strokeColor || defaults.strokeColor;
+  }
+  if ("strokeOpacity" in config || "strokeOpacity" in defaults) {
+    combinedStyle.strokeOpacity = config.strokeOpacity || defaults.strokeOpacity;
+  }
+  if ("strokeWidth" in config || "strokeWidth" in defaults) {
+    combinedStyle.strokeWidth = config.strokeWidth || defaults.strokeWidth;
+  }
+  if ("fillColor" in config || "fillColor" in defaults) {
+    combinedStyle.fillColor = config.fillColor || defaults.fillColor;
+  }
+  if ("fillOpacity" in config || "fillOpacity" in defaults) {
+    combinedStyle.fillOpacity = config.fillOpacity || defaults.fillOpacity;
+  }
+  return combinedStyle;
+}

@@ -600,13 +600,17 @@ class VMobject extends Mobject {
 }
 
 class Arc extends Mobject {
-  constructor({
-    startAngle = 0,
-    angle = consts.TAU / 4,
-    radius = 1.0,
-    numComponents = 9,
-    style = {},
-  } = {}) {
+  constructor(config = {}) {
+    let fullConfig = Object.assign(Arc.defaultConfig(), config);
+    fullConfig.style =
+      utils.styleFromConfigAndDefaults(Arc.defaultStyle(), config);
+    let {
+      startAngle,
+      angle,
+      radius,
+      numComponents,
+      style,
+    } = fullConfig;
     let np = window.pyodide.pyimport("numpy");
     let anchors = Array.from(np.linspace(
       startAngle,
@@ -648,21 +652,43 @@ class Arc extends Mobject {
     this.angle = angle;
     this.radius = radius;
   }
+
+  static defaultConfig() {
+    return {
+      startAngle: 0,
+      angle: consts.TAU / 4,
+      radius: 1.0,
+      numComponents: 9,
+      style: {},
+    };
+  }
+
+  static defaultStyle() {
+    return {};
+  }
 }
 
 class Circle extends Arc {
-  constructor({
-    radius = 1.0,
-    style = {strokeColor: consts.RED}
-  } = {}) {
-    super({
-      startAngle: 0,
-      angle: consts.TAU,
-      radius: radius,
-      numComponents: 9,
-      style: style,
-    });
-    this.radius = radius;
+  constructor(config = {}) {
+    let fullConfig = Object.assign(
+      Circle.defaultConfig(),
+      config,
+      { startAngle: 0, angle: consts.TAU, numComponents: 9 },
+    );
+    fullConfig.style =
+      utils.styleFromConfigAndDefaults(config, Circle.defaultStyle());
+    super(fullConfig);
+    this.radius = fullConfig.radius;
+  }
+
+  static defaultConfig() {
+    return {
+      radius: 1.0,
+    };
+  }
+
+  static defaultStyle() {
+    return { strokeColor: consts.RED };
   }
 
   clone(parent) {
