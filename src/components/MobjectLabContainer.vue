@@ -17,7 +17,9 @@
     v-bind:expanded-panel-prop="expandedPanel"
     v-bind:mobject-choices="mobjectChoices"
     v-bind:mobjects="mobjects"
-    v-bind:prior-scene="priorScene"
+    v-bind:pre-scene-mobjects="preSceneMobjects"
+    v-bind:post-scene-mobjects="postSceneMobjects"
+    v-bind:post-animation-mobjects="postAnimationMobjects"
     v-bind:release-notes-dialog-prop="releaseNotesDialog"
     v-bind:release-notes="releaseNotes"
     v-bind:scene-before-animation="sceneBeforeAnimation"
@@ -64,6 +66,100 @@ export default {
   components: {
     MobjectLab,
   },
+  data() {
+    return {
+      preSceneMobjects: [],
+      expandedPanel: [0, 1],
+      releaseNotes: consts.RELEASE_NOTES,
+      releaseNotesDialog: false,
+      debug: true, // setting to false triggers a bug
+      code: consts.EXAMPLE_CODE,
+      displayCode: false,
+      playingSingleAnimation: null,
+      sceneChoices: [],
+      chosenScene: "SquareToCircle",
+      scene: null,
+      sceneLoaded: false,
+      mobjectChoices: [
+        "Circle",
+        "Square",
+        "Triangle",
+        "Pentagon",
+        "Star",
+        "Hexagon",
+        "StarOfDavid",
+        "Octagon",
+      ],
+      animationIndex: 0,
+      animationOffset: 0,
+      animations: [
+        {
+          className: "ReplacementTransform",
+          description: "Morph one Mobject into another",
+          args: ["Square1", "Circle1"],
+          config: {},
+          argDescriptions: ["Start Mobject", "End Mobject"],
+          durationSeconds: 1,
+          animation: null,
+        },
+      ],
+      sceneDiffs: [
+        // TODO: This is wrong.
+        // diffs are of the form:
+        // {
+        //   Square1: {
+        //    'added': (false, true),
+        //    'transformations': ([], [('rotate', angle, vector, config)]),
+        //    'submobjects': ([], ['Circle1'],
+        //    ...
+        //   },
+        //   Circle1: {
+        //    ...
+        //   }
+        // }
+      ],
+      animationDiffs: [],
+      mobjects: {},
+      initialMobjects: {
+        Circle1: {
+          className: "Circle",
+          config: {},
+          position: [-1, 0],
+          transformations: [],
+          style: {
+            strokeColor: "#fc6255ff",
+            fillColor: "#00000000",
+            strokeWidth: 4,
+          },
+          mobject: null,
+        },
+        Square1: {
+          className: "Square",
+          config: {},
+          position: [1, 0],
+          transformations: [],
+          style: {
+            strokeColor: "#ffffffff",
+            fillColor: "#00000000",
+            strokeWidth: 4,
+          },
+          mobject: null,
+        },
+        Square2: {
+          className: "Square",
+          config: {},
+          position: [1, 0],
+          transformations: [],
+          style: {
+            strokeColor: "#00ff00ff",
+            fillColor: "#00000000",
+            strokeWidth: 4,
+          },
+          mobject: null,
+        },
+      },
+    };
+  },
   computed: {
     currentAnimation() {
       return this.animations[this.animationIndex];
@@ -109,7 +205,7 @@ export default {
       if (!this.sceneLoaded) {
         return false;
       }
-      return this.diffIsValidForScene(this.currentSceneDiff, this.priorScene);
+      return this.diffIsValidForScene(this.currentSceneDiff, this.preSceneMobjects);
     },
     animationIsValid() {
       if (!this.sceneLoaded) {
@@ -124,94 +220,20 @@ export default {
       if (!this.sceneLoaded) {
         return [];
       }
-      return this.diffPriorScene(this.priorScene, this.currentSceneDiff);
+      return this.diffPriorScene(this.preSceneMobjects, this.currentSceneDiff);
     },
-  },
-  data() {
-    return {
-      priorScene: [],
-      expandedPanel: [1],
-      releaseNotes: consts.RELEASE_NOTES,
-      releaseNotesDialog: false,
-      debug: true, // setting to false triggers a bug
-      code: consts.EXAMPLE_CODE,
-      displayCode: true,
-      playingSingleAnimation: null,
-      sceneChoices: [],
-      chosenScene: "SquareToCircle",
-      scene: null,
-      sceneLoaded: false,
-      mobjectChoices: [
-        "Circle",
-        "Square",
-        "Triangle",
-        "Pentagon",
-        "Star",
-        "Hexagon",
-        "StarOfDavid",
-        "Octagon",
-      ],
-      animationIndex: 0,
-      animationOffset: 0,
-      animations: [
-        {
-          className: "ReplacementTransform",
-          description: "Morph one Mobject into another",
-          args: ["mobject1", "mobject2"],
-          argDescriptions: ["Start Mobject", "End Mobject"],
-          durationSeconds: 1,
-          animation: null,
-        },
-      ],
-      sceneDiffs: [
-        // diffs are of the form:
-        // {
-        //   'add':    [mobject11, ...],
-        //   'remove': [mobject21, ...],
-        //   'modify': [[mobject31, forwardFunc, backwardFunc], ...],
-        // }
-      ],
-      animationDiffs: [],
-      mobjects: {},
-      initialMobjects: {
-        mobject1: {
-          className: "Circle",
-          params: {},
-          position: [-1, 0],
-          transformations: [],
-          style: {
-            strokeColor: "#fc6255ff",
-            fillColor: "#00000000",
-            strokeWidth: 4,
-          },
-          mobject: null,
-        },
-        mobject2: {
-          className: "Square",
-          params: {},
-          position: [1, 0],
-          transformations: [],
-          style: {
-            strokeColor: "#ffffffff",
-            fillColor: "#00000000",
-            strokeWidth: 4,
-          },
-          mobject: null,
-        },
-        mobject3: {
-          className: "Square",
-          params: {},
-          position: [1, 0],
-          transformations: [],
-          style: {
-            strokeColor: "#00ff00ff",
-            fillColor: "#00000000",
-            strokeWidth: 4,
-          },
-          mobject: null,
-        },
-      },
-    };
+    postSceneMobjects() {
+      if (!this.sceneLoaded) {
+        return [];
+      }
+      return this.updateMobjectListWithDiff(this.preSceneMobjects, this.currentSceneDiff);
+    },
+    postAnimationMobjects() {
+      if (!this.sceneLoaded) {
+        return [];
+      }
+      return this.updateMobjectListWithDiff(this.postSceneMobjects, this.currentAnimationDiff);
+    },
   },
   mounted() {
     this.scene = new Manim.Scene({ width: 640, height: 360 });
@@ -230,7 +252,7 @@ export default {
           this.$set(this.mobjects, mobjectName, data);
         }
         this.currentAnimation.animation = this.buildCurrentAnimation();
-        this.sceneDiffs = [{ add: ["mobject1"] }];
+        this.sceneDiffs = [{'Circle1': {'added': [false, true]}}];
         this.currentAnimationDiff = Manim[
           this.currentAnimation.className
         ].getDiff(...this.currentAnimation.args, this.mobjects);
@@ -415,14 +437,14 @@ export default {
       this.scene.clearAnimation();
       this.currentAnimation.animation = this.buildCurrentAnimation();
       this.scene.update();
-      this.priorScene = [];
+      this.preSceneMobjects = [];
       this.currentSceneDiff = this.sceneDiffs[0];
       this.applyDiff(
         this.currentSceneDiff,
         /*reverse=*/ false,
         /*moveCursor=*/ false,
       );
-      // this.toggleCode();
+      this.toggleCode();
       this.play(null, /*singleAnimationOnly=*/ false);
     },
     toggleCode: function() {
@@ -439,16 +461,16 @@ export default {
         return;
       } else if (mobjectData.className === "TexMobject" || mobjectData.className === "TextMobject") {
         let s = new Manim[mobjectData.className](
-          mobjectData.params.tex_strings,
+          mobjectData.config.tex_strings,
           this.scene,
-          mobjectData.params.tex_to_color_map !== undefined
-            ? mobjectData.params.tex_to_color_map : {},
+          mobjectData.config.tex_to_color_map !== undefined
+            ? mobjectData.config.tex_to_color_map : {},
         );
         s.applyTransformations(mobjectData.transformations);
         s.translateMobject(mobjectData.position);
         mobjectData.mobject = s;
       } else if (!utils.isGroupData(mobjectData)) {
-        let s = new Manim[mobjectData.className](mobjectData.params);
+        let s = new Manim[mobjectData.className](mobjectData.config);
         s.applyTransformations(mobjectData.transformations);
         s.translateMobject(mobjectData.position);
         s.applyStyle(mobjectData.style);
@@ -753,7 +775,7 @@ export default {
     newMobject: function() {
       let newMobjectData = {
         className: "Circle",
-        params: {},
+        config: {},
         position: [-1, 0],
         style: {
           strokeColor: "#fc6255ff",
@@ -878,7 +900,7 @@ export default {
       return ret;
     },
     stepPriorSceneForward: function() {
-      let newScene = _.cloneDeep(this.priorScene);
+      let newScene = _.cloneDeep(this.preSceneMobjects);
       newScene = this.diffPriorScene(
         newScene,
         utils.getFullDiff(this.currentSceneDiff),
@@ -887,10 +909,10 @@ export default {
         newScene,
         utils.getFullDiff(this.currentAnimationDiff),
       );
-      this.priorScene = newScene;
+      this.preSceneMobjects = newScene;
     },
     stepPriorSceneBackward: function() {
-      let newScene = _.cloneDeep(this.priorScene);
+      let newScene = _.cloneDeep(this.preSceneMobjects);
       newScene = this.diffPriorScene(
         newScene,
         utils.getReversedDiff(this.currentAnimationDiff),
@@ -899,7 +921,7 @@ export default {
         newScene,
         utils.getReversedDiff(this.currentSceneDiff),
       );
-      this.priorScene = newScene;
+      this.preSceneMobjects = newScene;
     },
     diffPriorScene: function(scene, diff) {
       diff = utils.getFullDiff(diff);
@@ -912,6 +934,13 @@ export default {
         _.difference(diff["remove"], utils.getMobjectsRemovedFromParent(diff)),
       );
       return scene;
+    },
+    updateMobjectListWithDiff(mobjectList, diff) {
+      let added = Object.keys(diff)
+        .filter(mobjectName => "added" in diff[mobjectName] && diff[mobjectName]["added"][1]);
+      let removed = Object.keys(diff)
+        .filter(mobjectName => "added" in diff[mobjectName] && !diff[mobjectName]["added"][1]);
+      return _.concat(_.difference(mobjectList, removed), added);
     },
   },
 };

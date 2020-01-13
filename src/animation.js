@@ -173,7 +173,6 @@ class ReplacementTransform extends Animation {
 class ShowCreation extends Animation {
   constructor(mobject, config) {
     const fullConfig = Object.assign({}, ShowCreation.defaultConfig(), config);
-    debugger;
     super(mobject, fullConfig);
   }
 

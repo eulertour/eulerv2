@@ -15,7 +15,7 @@
           </v-btn>
         </v-toolbar>
         <div v-if="sceneLoaded && !displayCode" class="expansion-panel-container">
-          <v-expansion-panels v-model="expandedPanel" multiple>
+          <v-expansion-panels v-model="expandedPanel" multiple accordion>
             <v-expansion-panel>
               <v-expansion-panel-header>
                 <span v-bind:style="sceneHeaderStyle">Scene</span>
@@ -27,6 +27,9 @@
                   v-bind:mobjects="mobjects"
                   v-bind:scene="scene"
                   v-bind:animating="animating"
+                  v-bind:pre-scene-mobjects="preSceneMobjects"
+                  v-bind:post-scene-mobjects="postSceneMobjects"
+                  v-bind:post-animation-mobjects="postAnimationMobjects"
                   v-on:update-setup="(action, newSelection)=>$emit('update-setup', action, newSelection)"
                 />
               </v-expansion-panel-content>
@@ -205,7 +208,9 @@ export default {
     mobjectChoices: Array,
     mobjects: Object,
     pause: Boolean,
-    priorScene: Array,
+    preSceneMobjects: Array,
+    postSceneMobjects: Array,
+    postAnimationMobjects: Array,
     releaseNotes: String,
     releaseNotesDialogProp: Boolean,
     scene: Object,
