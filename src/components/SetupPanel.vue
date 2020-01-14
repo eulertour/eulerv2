@@ -1,10 +1,18 @@
 <template>
   <div>
-    <div v-for="mobjectName in preSceneMobjects" v-bind:key="'preScene' + mobjectName">
-      {{ mobjectName }}
+    <div class="title mb-5">
+      Pre-Scene Mobjects:
+      <v-chip-group v-if="preSceneMobjects.length > 0">
+        <v-chip v-for="mobjectName in preSceneMobjects" v-bind:key="'preScene' + mobjectName">
+          {{ mobjectName }}
+        </v-chip>
+      </v-chip-group>
+      <div v-else>
+        None
+      </div>
     </div>
 
-    <div v-for="mobjectName in Object.keys(setup)" v-bind:key="mobjectName">
+    <div class="mb-5" v-for="mobjectName in Object.keys(setup)" v-bind:key="mobjectName">
       <v-chip>
         <v-avatar v-if="'added' in setup[mobjectName] && setup[mobjectName]['added'][1]" left color="red">
           <v-icon color="white">mdi-plus</v-icon>
@@ -28,8 +36,16 @@
       </div>
     </div>
 
-    <div v-for="mobjectName in postSceneMobjects" v-bind:key="'postScene' + mobjectName">
-      {{ mobjectName }}
+    <div class="title">
+      Post-Scene Mobjects:
+      <v-chip-group v-if="postSceneMobjects.length > 0">
+        <v-chip v-for="mobjectName in postSceneMobjects" v-bind:key="'postScene' + mobjectName">
+          {{ mobjectName }}
+        </v-chip>
+      </v-chip-group>
+      <div v-else>
+        None
+      </div>
     </div>
   </div>
 </template>
