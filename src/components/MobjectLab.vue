@@ -47,6 +47,7 @@
                   v-bind:scene="scene"
                   v-bind:setup="currentSceneDiff"
                   v-bind:animation-diff="currentAnimationDiff"
+                  v-bind:post-scene-mobjects="postSceneMobjects"
                   v-bind:scene-before-animation="sceneBeforeAnimation"
                   v-on:arg-change="(argNum, arg)=>$emit('handle-arg-change', argNum, arg)"
                   v-on:jump-to-end="$emit('jump-to-animation-end')"

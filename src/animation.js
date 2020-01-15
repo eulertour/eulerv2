@@ -138,9 +138,13 @@ class Animation {
 }
 
 class ReplacementTransform extends Animation {
-  constructor(mobject, targetMobject) {
-    super(mobject);
-    this.targetMobject = targetMobject;
+  constructor(mobject, config={}) {
+    const fullConfig = Object.assign({}, ReplacementTransform.defaultConfig(), config);
+    super(mobject, fullConfig);
+  }
+
+  static defaultConfig() {
+    return { targetMobject: null }
   }
 
   begin() {

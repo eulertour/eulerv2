@@ -1,5 +1,17 @@
 <template>
   <div>
+  <div class="title mb-5">
+    Post-Scene Mobjects:
+    <v-chip-group v-if="postSceneMobjects.length > 0">
+      <v-chip v-for="mobjectName in postSceneMobjects" v-bind:key="'postScene' + mobjectName">
+        {{ mobjectName }}
+      </v-chip>
+    </v-chip-group>
+    <div v-else>
+      None
+    </div>
+  </div>
+
   <div class="pa-0">
     <div class="display-1">{{ animationData.className }}</div>
   </div>
@@ -13,6 +25,7 @@
     v-bind:mobject-classes="mobjectClasses"
     v-bind:mobject-data="mobjectData"
     v-bind:scene-before-animation="sceneBeforeAnimation"
+    v-bind:post-scene-mobjects="postSceneMobjects"
     v-bind:scene="scene"
     v-bind:setup="setup"
     v-on:arg-change="(argNum, arg)=>$emit('arg-change', argNum, arg)"
@@ -75,6 +88,7 @@ export default {
     setup: Object,
     sceneBeforeAnimation: Array,
     animationDiff: Object,
+    postSceneMobjects: Array,
   },
   computed: {
     animationComponent: function() {

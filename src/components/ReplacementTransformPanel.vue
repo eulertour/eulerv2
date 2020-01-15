@@ -58,15 +58,16 @@ export default {
     setup: Object,
     sceneBeforeAnimation: Array,
     animationDiff: Object,
+    postSceneMobjects: Array,
   },
   computed: {
     startMobjectChoices() {
-      return this.sceneBeforeAnimation;
+      return this.postSceneMobjects;
     },
     endMobjectChoices() {
       return _.difference(
         Object.keys(this.mobjectData),
-        this.sceneBeforeAnimation,
+        this.postSceneMobjects,
       );
     },
     startError() {

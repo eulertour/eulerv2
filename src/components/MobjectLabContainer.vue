@@ -96,8 +96,8 @@ export default {
         {
           className: "ReplacementTransform",
           description: "Morph one Mobject into another",
-          args: ["Square1", "Circle1"],
-          config: {},
+          args: ["Square1"],
+          config: { targetMobject: "Circle1" },
           argDescriptions: ["Start Mobject", "End Mobject"],
           durationSeconds: 1,
           animation: null,
@@ -252,7 +252,7 @@ export default {
           this.$set(this.mobjects, mobjectName, data);
         }
         this.currentAnimation.animation = this.buildCurrentAnimation();
-        this.sceneDiffs = [{'Circle1': {'added': [false, true]}}];
+        this.sceneDiffs = [{'Square1': {'added': [false, true]}}];
         this.currentAnimationDiff = Manim[
           this.currentAnimation.className
         ].getDiff(...this.currentAnimation.args, this.mobjects);
@@ -507,11 +507,15 @@ export default {
     },
     buildCurrentAnimation: function() {
       const { className, args, config } = this.currentAnimation;
-      let replaceMobjectNamesWithMobjects = (args) =>
+      let replaceMobjectNamesArgs = (args) =>
         args.map(arg => arg in this.mobjects ? this.mobjects[arg].mobject : arg);
+      let replaceMobjectNamesConfig = (config) =>
+        Object.fromEntries(
+          Object.entries(config).map(pair =>[pair[0], pair[1] in this.mobjects ? this.mobjects[pair[1]].mobject : pair[1]])
+        );
       return new Manim[className](
-        ...replaceMobjectNamesWithMobjects(args),
-        config,
+        ...replaceMobjectNamesArgs(args),
+        replaceMobjectNamesConfig(config),
       );
     },
     buildCurrentAnimationTwo: function() {
