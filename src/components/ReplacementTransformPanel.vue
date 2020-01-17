@@ -96,7 +96,7 @@ export default {
   },
   mounted() {
     this.currentStartMobject = this.animationData.args[0];
-    this.currentEndMobject = this.animationData.args[1];
+    this.currentEndMobject = this.animationData.config.targetMobject;
   },
   watch: {
     currentStartMobject: function(newMobject, oldMobject) {
@@ -115,11 +115,15 @@ export default {
   methods: {
     mobjectIsAdded(mobjectName) {
       let diff = this.animationDiff;
-      return _.indexOf(diff['add'], mobjectName) !== -1;
+      return mobjectName in diff &&
+        "added" in diff[mobjectName] &&
+        diff[mobjectName]["added"][1];
     },
     mobjectIsRemoved(mobjectName) {
       let diff = this.animationDiff;
-      return _.indexOf(diff['remove'], mobjectName) !== -1;
+      return mobjectName in diff &&
+        "added" in diff[mobjectName] &&
+        !diff[mobjectName]["added"][1];
     }
   },
 }

@@ -26,12 +26,13 @@
     v-bind:mobject-data="mobjectData"
     v-bind:scene-before-animation="sceneBeforeAnimation"
     v-bind:post-scene-mobjects="postSceneMobjects"
+    v-bind:post-animation-mobjects="postAnimationMobjects"
     v-bind:scene="scene"
     v-bind:setup="setup"
     v-on:arg-change="(argNum, arg)=>$emit('arg-change', argNum, arg)"
   />
   <div class="mb-10"></div>
-  <div class="d-flex justify-center pa-0">
+  <div class="d-flex justify-center pa-0 mb-7">
     <v-btn fab v-on:click="$emit('jump-to-start')" class="mx-2">
       <v-icon color="black" x-large>mdi-skip-previous</v-icon>
     </v-btn>
@@ -57,6 +58,18 @@
     <v-btn fab v-on:click="$emit('jump-to-end')" class="mx-2">
       <v-icon color="black" x-large>mdi-skip-next</v-icon>
     </v-btn>
+  </div>
+
+  <div class="title">
+    Post-Animation Mobjects:
+    <v-chip-group v-if="postAnimationMobjects.length > 0">
+      <v-chip v-for="mobjectName in postAnimationMobjects" v-bind:key="'postAnimation' + mobjectName">
+        {{ mobjectName }}
+      </v-chip>
+    </v-chip-group>
+    <div v-else>
+      None
+    </div>
   </div>
   </div>
 </template>
@@ -89,6 +102,7 @@ export default {
     sceneBeforeAnimation: Array,
     animationDiff: Object,
     postSceneMobjects: Array,
+    postAnimationMobjects: Array,
   },
   computed: {
     animationComponent: function() {

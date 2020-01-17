@@ -234,6 +234,9 @@ export default {
       }
       return this.updateMobjectListWithDiff(this.postSceneMobjects, this.currentAnimationDiff);
     },
+    mobjectsInScene() {
+      return Object.keys(this.mobjects).filter(mobjectName => this.mobjects[mobjectName].added);
+    }
   },
   mounted() {
     this.scene = new Manim.Scene({ width: 640, height: 360 });
@@ -255,7 +258,12 @@ export default {
         this.sceneDiffs = [{'Square1': {'added': [false, true]}}];
         this.currentAnimationDiff = Manim[
           this.currentAnimation.className
-        ].getDiff(...this.currentAnimation.args, this.mobjects);
+        ].getDiff(
+          ...this.currentAnimation.args,
+          this.currentAnimation.config,
+          ['Square1'],
+          this.mobjects,
+        );
         this.applyDiff(
           this.currentSceneDiff,
           /*reverse=*/ false,
@@ -773,7 +781,7 @@ export default {
         argDescriptions: [],
       });
       this.sceneDiffs.push({});
-      this.animationDiffs.push(Manim["Wait"].getDiff([], this.mobjects));
+      this.animationDiffs.push(Manim["Wait"].getDiff([], {}, this.mobjects));
       this.stepForward();
     },
     newMobject: function() {
@@ -808,7 +816,11 @@ export default {
       this.currentAnimation.args = newArgs;
       this.currentAnimationDiff = Manim[
         this.currentAnimation.className
-      ].getDiff(...this.currentAnimation.args, this.mobjects);
+      ].getDiff(
+        ...this.currentAnimation.args,
+        this.currentAnimation.config,
+        this.mobjects,
+      );
       if (this.animationOffset === 1) {
         this.applyDiff(
           this.currentAnimationDiff,
