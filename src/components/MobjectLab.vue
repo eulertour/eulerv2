@@ -27,9 +27,12 @@
                   v-bind:mobjects="mobjects"
                   v-bind:scene="scene"
                   v-bind:animating="animating"
+                  v-bind:pre-scene="preScene"
                   v-bind:pre-scene-mobjects="preSceneMobjects"
                   v-bind:post-scene-mobjects="postSceneMobjects"
                   v-bind:post-animation-mobjects="postAnimationMobjects"
+                  v-on:jump-to-end="$emit('jump-to-setup-end')"
+                  v-on:jump-to-start="$emit('jump-to-setup-start')"
                   v-on:update-setup="(action, newSelection)=>$emit('update-setup', action, newSelection)"
                 />
               </v-expansion-panel-content>
@@ -51,8 +54,8 @@
                   v-bind:post-animation-mobjects="postAnimationMobjects"
                   v-bind:scene-before-animation="sceneBeforeAnimation"
                   v-on:arg-change="(argNum, arg)=>$emit('handle-arg-change', argNum, arg)"
-                  v-on:jump-to-end="$emit('jump-to-animation-end')"
                   v-on:jump-to-start="$emit('jump-to-animation-start')"
+                  v-on:jump-to-end="$emit('jump-to-animation-end')"
                   v-on:pause="(e)=>$emit('pause')"
                   v-on:play="(e)=>$emit('play')"
                   v-on:replay="(e)=>$emit('replay')"
@@ -210,6 +213,7 @@ export default {
     mobjectChoices: Array,
     mobjects: Object,
     pause: Boolean,
+    preScene: Boolean,
     preSceneMobjects: Array,
     postSceneMobjects: Array,
     postAnimationMobjects: Array,

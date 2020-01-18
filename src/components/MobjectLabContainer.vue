@@ -17,6 +17,7 @@
     v-bind:expanded-panel-prop="expandedPanel"
     v-bind:mobject-choices="mobjectChoices"
     v-bind:mobjects="mobjects"
+    v-bind:pre-scene="preScene"
     v-bind:pre-scene-mobjects="preSceneMobjects"
     v-bind:post-scene-mobjects="postSceneMobjects"
     v-bind:post-animation-mobjects="postAnimationMobjects"
@@ -37,6 +38,8 @@
     v-on:handle-new-animation="handleNewAnimation"
     v-on:jump-to-animation-end="jumpToAnimationEnd"
     v-on:jump-to-animation-start="jumpToAnimationStart"
+    v-on:jump-to-setup-end="jumpToSetupEnd"
+    v-on:jump-to-setup-start="jumpToSetupStart"
     v-on:new-mobject="newMobject"
     v-on:pause="pause"
     v-on:play="play"
@@ -90,6 +93,7 @@ export default {
         "StarOfDavid",
         "Octagon",
       ],
+      preScene: true,
       animationIndex: 0,
       animationOffset: 0,
       animations: [
@@ -604,65 +608,57 @@ export default {
       if (_.isEmpty(diff)) {
         return;
       }
-      let diffCopy = _.cloneDeep(diff);
-      diffCopy["add"] = diff["add"] || [];
-      diffCopy["remove"] = diff["remove"] || [];
-      diffCopy["modify"] = diff["modify"] || [];
-      if (reverse) {
-        diffCopy = utils.getReversedDiff(diff);
-      }
-      for (let mobjectName of diffCopy["add"]) {
-        let postponeUntilModify = utils
-          .getMobjectsAddedToParent(diffCopy)
-          .includes(mobjectName);
-        if (!postponeUntilModify) {
-          let mobjectData = this.mobjects[mobjectName];
-          this.setMobjectField(mobjectData);
-          this.scene.add(mobjectData.mobject);
-        }
-      }
-      for (let mobjectName of diffCopy["remove"]) {
-        let postponeUntilModify = utils
-          .getMobjectsRemovedFromParent(diffCopy)
-          .includes(mobjectName);
-        if (!postponeUntilModify) {
-          let mobjectData = this.mobjects[mobjectName];
-          this.scene.remove(mobjectData.mobject);
-          this.setMobjectField(mobjectData);
-        }
-      }
-      for (let [mobjectName, modifyFunc] of diffCopy["modify"]) {
-        let mobjectData = this.mobjects[mobjectName];
-        // eslint-disable-next-line
-        console.assert(
-          mobjectData.mobject && this.scene.contains(mobjectData.mobject),
-          `attempt to modify ${mobjectName} when it isn't in the scene`,
-        );
-
-        // Commands have the form "add mobject1", "remove mobject1", etc.
-        let removedMobjects = [];
-        let [command, arg] = modifyFunc.split(" ");
-        switch (command) {
-          case "add":
-            mobjectData.submobjects.push(arg);
-            break;
-          case "remove":
-            _.remove(mobjectData.submobjects, name => name === arg);
-            removedMobjects.push(arg);
-            break;
-          default:
-            // eslint-disable-next-line
-            console.error("Invalid modification command", modificationString);
-        }
-        this.scene.remove(mobjectData.mobject);
-        this.setMobjectField(mobjectData);
-        this.scene.add(mobjectData.mobject);
-        for (let mobjectName of removedMobjects) {
-          this.setMobjectField(this.mobjects[mobjectName]);
+      console.log(diff);
+      for (let name_diff of Object.entries(diff)) {
+        let [mobjectName, mobjectDiff] = name_diff;
+        for (let attr_change of Object.entries(mobjectDiff)) {
+          let [attr, [before, after]] = attr_change;
+          switch (attr) {
+            case "added":
+              this.applyAdd(mobjectName, before, after);
+              break;
+            default:
+              console.error(`Unknown diff attribute ${attr}`);
+          }
         }
       }
       this.scene.update();
     },
+    applyAdd(mobjectName, before, after) {
+      console.log(mobjectName, before, after);
+    },
+    /* Moves to the pre-scene stage of the current Animation. */
+    jumpToSetupStart: function() {
+      console.log('start');
+      if (this.preScene) {
+        return;
+      } else if (this.animationOffset === 0) {
+        // jump backward
+      } else {
+        this.jumpToAnimationStart();
+        // jump backward
+      }
+    },
+    /* Moves to the post-scene stage of the current Animation. */
+    jumpToSetupEnd: function() {
+      console.log('end');
+      if (this.preScene) {
+        // jump forward
+        console.log('do this');
+        this.applyDiff(
+          this.currentSceneDiff,
+          /*reverse=*/false,
+          /*moveCursor=*/false,
+        );
+        this.preScene = false;
+        return;
+      } else if (this.animationOffset === 0) {
+        return;
+      } else {
+        this.jumpToAnimationStart();
+      }
+    },
+    /* Moves to the post-scene stage of the current Animation. */
     jumpToAnimationStart: function() {
       if (this.animationOffset === 0) {
         return;
@@ -687,6 +683,7 @@ export default {
       }
       this.animationOffset = 0;
     },
+    /* Moves to the post-animation stage of the current Animation. */
     jumpToAnimationEnd: function() {
       if (this.animationOffset === 1) {
         return;
@@ -697,6 +694,7 @@ export default {
         this.applyDiff(this.currentAnimationDiff);
       }
     },
+    /* Moves to the post-scene stage of the following Animation. */
     stepForward: function() {
       if (!this.sceneIsValid || !this.animationIsValid) {
         return;
@@ -718,6 +716,7 @@ export default {
         }
       }
     },
+    /* Moves to the post-scene stage of the previous Animation. */
     stepBackward: function() {
       if (this.animationOffset !== 0) {
         this.jumpToAnimationStart();

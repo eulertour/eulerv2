@@ -1,7 +1,12 @@
 <template>
   <div>
     <div class="title mb-5">
-      Pre-Scene Mobjects:
+      <div
+        class="lighten-4 rounded px-2"
+        v-bind:class="{ blue: preScene }"
+      >
+        Pre-Scene Mobjects:
+      </div>
       <v-chip-group v-if="preSceneMobjects.length > 0">
         <v-chip v-for="mobjectName in preSceneMobjects" v-bind:key="'preScene' + mobjectName">
           {{ mobjectName }}
@@ -36,8 +41,22 @@
       </div>
     </div>
 
+    <div class="d-flex justify-center pa-0 mb-7">
+      <v-btn fab v-on:click="$emit('jump-to-start')" class="mx-2">
+        <v-icon color="black" x-large>mdi-skip-previous</v-icon>
+      </v-btn>
+      <v-btn fab v-on:click="$emit('jump-to-end')" class="mx-2">
+        <v-icon color="black" x-large>mdi-skip-next</v-icon>
+      </v-btn>
+    </div>
+
     <div class="title">
-      Post-Scene Mobjects:
+      <div
+        class="lighten-4 rounded px-2"
+        v-bind:class="{ blue: !preScene }"
+      >
+        Post-Scene Mobjects:
+      </div>
       <v-chip-group v-if="postSceneMobjects.length > 0">
         <v-chip v-for="mobjectName in postSceneMobjects" v-bind:key="'postScene' + mobjectName">
           {{ mobjectName }}
@@ -61,6 +80,7 @@ export default {
     mobjects: Object,
     scene: Object,
     animating: Boolean,
+    preScene: Boolean,
     preSceneMobjects: Array,
     postSceneMobjects: Array,
     postAnimationMobjects: Array,
@@ -129,4 +149,7 @@ export default {
 </script>
 
 <style>
+  .rounded {
+    border-radius: 8px;
+  }
 </style>
