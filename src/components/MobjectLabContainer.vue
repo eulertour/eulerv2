@@ -11,15 +11,17 @@
     v-bind:code="code"
     v-bind:current-animation-diff="currentAnimationDiff"
     v-bind:current-animation="currentAnimation"
-    v-bind:current-scene-diff="currentSceneDiff"
+    v-bind:current-scene-diff="currentSetupDiff"
     v-bind:debug="debug"
     v-bind:display-code="displayCode"
     v-bind:expanded-panel-prop="expandedPanel"
     v-bind:mobject-choices="mobjectChoices"
     v-bind:mobjects="mobjects"
-    v-bind:pre-scene="preScene"
-    v-bind:pre-scene-mobjects="preSceneMobjects"
-    v-bind:post-scene-mobjects="postSceneMobjects"
+    v-bind:pre-setup="preSetup"
+    v-bind:post-setup="postSetup"
+    v-bind:post-animation="postAnimation"
+    v-bind:pre-setup-mobjects="preSetupMobjects"
+    v-bind:post-setup-mobjects="postSetupMobjects"
     v-bind:post-animation-mobjects="postAnimationMobjects"
     v-bind:release-notes-dialog-prop="releaseNotesDialog"
     v-bind:release-notes="releaseNotes"
@@ -34,12 +36,12 @@
     v-on:debug-toggle="debug = !debug"
     v-on:expanded-panel-update="(val)=>{expandedPanel=val}"
     v-on:handle-arg-change="handleArgChange"
+    v-on:config-change="handleConfigChange"
     v-on:handle-mobject-update="handleMobjectUpdate"
     v-on:handle-new-animation="handleNewAnimation"
-    v-on:jump-to-animation-end="jumpToAnimationEnd"
-    v-on:jump-to-animation-start="jumpToAnimationStart"
-    v-on:jump-to-setup-end="jumpToSetupEnd"
-    v-on:jump-to-setup-start="jumpToSetupStart"
+    v-on:jump-pre-setup="jumpPreSetup"
+    v-on:jump-post-setup="jumpPostSetup"
+    v-on:jump-post-animation="jumpPostAnimation"
     v-on:new-mobject="newMobject"
     v-on:pause="pause"
     v-on:play="play"
@@ -71,7 +73,7 @@ export default {
   },
   data() {
     return {
-      preSceneMobjects: [],
+      preSetupMobjects: [],
       expandedPanel: [0, 1],
       releaseNotes: consts.RELEASE_NOTES,
       releaseNotesDialog: false,
@@ -93,7 +95,7 @@ export default {
         "StarOfDavid",
         "Octagon",
       ],
-      preScene: true,
+      preSetup: true,
       animationIndex: 0,
       animationOffset: 0,
       animations: [
@@ -168,7 +170,7 @@ export default {
     currentAnimation() {
       return this.animations[this.animationIndex];
     },
-    currentSceneDiff: {
+    currentSetupDiff: {
       get() {
         return this.sceneDiffs[this.animationIndex];
       },
@@ -209,7 +211,7 @@ export default {
       if (!this.sceneLoaded) {
         return false;
       }
-      return this.diffIsValidForScene(this.currentSceneDiff, this.preSceneMobjects);
+      return this.diffIsValidForScene(this.currentSetupDiff, this.preSetupMobjects);
     },
     animationIsValid() {
       if (!this.sceneLoaded) {
@@ -224,19 +226,25 @@ export default {
       if (!this.sceneLoaded) {
         return [];
       }
-      return this.diffPriorScene(this.preSceneMobjects, this.currentSceneDiff);
+      return this.diffPriorScene(this.preSetupMobjects, this.currentSetupDiff);
     },
-    postSceneMobjects() {
+    postSetup() {
+      return !this.preSetup && this.animationOffset != 1;
+    },
+    postAnimation() {
+      return !this.preSetup && this.animationOffset == 1;
+    },
+    postSetupMobjects() {
       if (!this.sceneLoaded) {
         return [];
       }
-      return this.updateMobjectListWithDiff(this.preSceneMobjects, this.currentSceneDiff);
+      return this.updateMobjectListWithDiff(this.preSetupMobjects, this.currentSetupDiff);
     },
     postAnimationMobjects() {
       if (!this.sceneLoaded) {
         return [];
       }
-      return this.updateMobjectListWithDiff(this.postSceneMobjects, this.currentAnimationDiff);
+      return this.updateMobjectListWithDiff(this.postSetupMobjects, this.currentAnimationDiff);
     },
     mobjectsInScene() {
       return Object.keys(this.mobjects).filter(mobjectName => this.mobjects[mobjectName].added);
@@ -255,7 +263,7 @@ export default {
         // Initialize Mobjects, Animations, and scene diffs
         for (let mobjectName of Object.keys(this.initialMobjects)) {
           let data = _.cloneDeep(this.initialMobjects[mobjectName]);
-          this.setMobjectField(data);
+          this.buildAndSetMobject(data);
           this.$set(this.mobjects, mobjectName, data);
         }
         this.currentAnimation.animation = this.buildCurrentAnimation();
@@ -268,11 +276,7 @@ export default {
           ['Square1'],
           this.mobjects,
         );
-        this.applyDiff(
-          this.currentSceneDiff,
-          /*reverse=*/ false,
-          /*moveCursor=*/ false,
-        );
+        this.jumpPostSetup();
         this.refreshSceneChoices();
         this.sceneLoaded = true;
       });
@@ -292,135 +296,135 @@ export default {
        *   A mapping of ids to Mobjects
        */
 
-      // Create a mapping from ids to human-readable names
-      let mobjectIdsToNames = {};
-      let mobjectIds = Object.keys(scene.initial_mobject_dict);
-      for (let i = 0; i < mobjectIds.length; i++) {
-        let id = mobjectIds[i];
-        let mobjectData = scene.initial_mobject_dict[id];
-        if (!utils.isGroupData(mobjectData)) {
-          mobjectIdsToNames[id] = "mobject" + (i + 1);
-        } else {
-          mobjectIdsToNames[id] = "group" + (i + 1);
-        }
-      }
+      // // Create a mapping from ids to human-readable names
+      // let mobjectIdsToNames = {};
+      // let mobjectIds = Object.keys(scene.initial_mobject_dict);
+      // for (let i = 0; i < mobjectIds.length; i++) {
+      //   let id = mobjectIds[i];
+      //   let mobjectData = scene.initial_mobject_dict[id];
+      //   if (!utils.isGroupData(mobjectData)) {
+      //     mobjectIdsToNames[id] = "mobject" + (i + 1);
+      //   } else {
+      //     mobjectIdsToNames[id] = "group" + (i + 1);
+      //   }
+      // }
 
-      // Assign human-readble names to the entries of the scene list
-      let renameScene = scene => {
-        let newScene = [];
-        for (let mobData of scene) {
-          let newMobData = {};
-          newMobData["name"] = mobjectIdsToNames[mobData["name"]];
-          newMobData["submobjects"] = renameScene(mobData["submobjects"]);
-          newScene.push(newMobData);
-        }
-        return newScene;
-      };
+      // // Assign human-readble names to the entries of the scene list
+      // let renameScene = scene => {
+      //   let newScene = [];
+      //   for (let mobData of scene) {
+      //     let newMobData = {};
+      //     newMobData["name"] = mobjectIdsToNames[mobData["name"]];
+      //     newMobData["submobjects"] = renameScene(mobData["submobjects"]);
+      //     newScene.push(newMobData);
+      //   }
+      //   return newScene;
+      // };
 
-      let renameSceneList = sceneList => {
-        let newSceneList = [];
-        for (let scene of sceneList) {
-          newSceneList.push(renameScene(scene));
-        }
-        return newSceneList;
-      };
+      // let renameSceneList = sceneList => {
+      //   let newSceneList = [];
+      //   for (let scene of sceneList) {
+      //     newSceneList.push(renameScene(scene));
+      //   }
+      //   return newSceneList;
+      // };
 
-      scene.scenes_before_animation = renameSceneList(
-        scene.scenes_before_animation,
-      );
+      // scene.scenes_before_animation = renameSceneList(
+      //   scene.scenes_before_animation,
+      // );
 
-      // Assign human-readable names to the arguments in the animation list
-      let newAnimationList = _.cloneDeep(scene.animation_list);
-      for (let i = 0; i < scene.animation_list.length; i++) {
-        if ("args" in scene.animation_list[i]) {
-          let currentAnimation = scene.animation_list[i];
-          newAnimationList[i].args = currentAnimation.args.map(
-            id => mobjectIdsToNames[id],
-          );
-        }
-      }
+      // // Assign human-readable names to the arguments in the animation list
+      // let newAnimationList = _.cloneDeep(scene.animation_list);
+      // for (let i = 0; i < scene.animation_list.length; i++) {
+      //   if ("args" in scene.animation_list[i]) {
+      //     let currentAnimation = scene.animation_list[i];
+      //     newAnimationList[i].args = currentAnimation.args.map(
+      //       id => mobjectIdsToNames[id],
+      //     );
+      //   }
+      // }
 
-      // Initialize Mobject data
-      let newMobjects = {};
-      for (let id of Object.keys(scene.initial_mobject_dict)) {
-        let mobjectData = scene.initial_mobject_dict[id];
-        if (utils.isGroupData(mobjectData) || utils.isTexData(mobjectData)) {
-          // TODO: Mobjects with top-level points can still function as Groups
-          let newSubmobjects = mobjectData.submobjects.map(
-            id => mobjectIdsToNames[id],
-          );
-          mobjectData.submobjects = newSubmobjects;
-        }
-        // Convert position from a Float64Array to a regular array.
-        if ('position' in mobjectData) {
-          mobjectData.position = [].slice.call(mobjectData.position);
-        }
-        newMobjects[mobjectIdsToNames[id]] = mobjectData;
-      }
+      // // Initialize Mobject data
+      // let newMobjects = {};
+      // for (let id of Object.keys(scene.initial_mobject_dict)) {
+      //   let mobjectData = scene.initial_mobject_dict[id];
+      //   if (utils.isGroupData(mobjectData) || utils.isTexData(mobjectData)) {
+      //     // TODO: Mobjects with top-level points can still function as Groups
+      //     let newSubmobjects = mobjectData.submobjects.map(
+      //       id => mobjectIdsToNames[id],
+      //     );
+      //     mobjectData.submobjects = newSubmobjects;
+      //   }
+      //   // Convert position from a Float64Array to a regular array.
+      //   if ('position' in mobjectData) {
+      //     mobjectData.position = [].slice.call(mobjectData.position);
+      //   }
+      //   newMobjects[mobjectIdsToNames[id]] = mobjectData;
+      // }
 
-      // Initialize TexMobjects
-      for (let mobjectName of Object.keys(newMobjects)) {
-        let data = newMobjects[mobjectName];
-        if (data.className === "TexMobject" || data.className === "TextMobject") {
-          this.setMobjectField(data);
-        }
-      }
+      // // Initialize TexMobjects
+      // for (let mobjectName of Object.keys(newMobjects)) {
+      //   let data = newMobjects[mobjectName];
+      //   if (data.className === "TexMobject" || data.className === "TextMobject") {
+      //     this.setMobjectField(data);
+      //   }
+      // }
 
-      // Initialize Mobjects
-      // Some Rectangles which in Manim were part of TexMobjects are initialized
-      // here even though they aren't part of Mobjects here.
-      let groupNames = [];
-      for (let mobjectName of Object.keys(newMobjects)) {
-        let data = newMobjects[mobjectName];
-        if (!utils.isGroupData(data) && !utils.isTexData(data)) {
-          this.setMobjectField(data);
-        } else if (utils.isGroupData(data)) {
-          groupNames.push(mobjectName);
-        }
-      }
+      // // Initialize Mobjects
+      // // Some Rectangles which in Manim were part of TexMobjects are initialized
+      // // here even though they aren't part of Mobjects here.
+      // let groupNames = [];
+      // for (let mobjectName of Object.keys(newMobjects)) {
+      //   let data = newMobjects[mobjectName];
+      //   if (!utils.isGroupData(data) && !utils.isTexData(data)) {
+      //     this.setMobjectField(data);
+      //   } else if (utils.isGroupData(data)) {
+      //     groupNames.push(mobjectName);
+      //   }
+      // }
 
-      // Initialize Groups
-      for (let groupName of groupNames) {
-        let data = newMobjects[groupName];
-        this.setMobjectField(data, /*allMobjectData=*/ newMobjects);
-      }
+      // // Initialize Groups
+      // for (let groupName of groupNames) {
+      //   let data = newMobjects[groupName];
+      //   this.setMobjectField(data, /*allMobjectData=*/ newMobjects);
+      // }
 
-      // Create mutable node dict for use when computing scene diffs
-      let nodeDict = {};
-      for (let mobjectName of Object.keys(newMobjects)) {
-        nodeDict[mobjectName] = {
-          name: mobjectName,
-          submobjects: newMobjects[mobjectName].submobjects,
-        };
-      }
+      // // Create mutable node dict for use when computing scene diffs
+      // let nodeDict = {};
+      // for (let mobjectName of Object.keys(newMobjects)) {
+      //   nodeDict[mobjectName] = {
+      //     name: mobjectName,
+      //     submobjects: newMobjects[mobjectName].submobjects,
+      //   };
+      // }
 
-      // Create scene diffs
-      // TODO: Transformations aren't diffed
-      let newAnimationDiffs = [];
-      let newSceneDiffs = [];
-      let tempScene = [];
-      for (let i = 0; i < scene.scenes_before_animation.length; i++) {
-        newSceneDiffs.push(
-          utils.getDiffFromTwoScenes(
-            tempScene,
-            scene.scenes_before_animation[i],
-          ),
-        );
+      // // Create scene diffs
+      // // TODO: Transformations aren't diffed
+      // let newAnimationDiffs = [];
+      // let newSetupDiffs = [];
+      // let tempScene = [];
+      // for (let i = 0; i < scene.scenes_before_animation.length; i++) {
+      //   newSetupDiffs.push(
+      //     utils.getDiffFromTwoScenes(
+      //       tempScene,
+      //       scene.scenes_before_animation[i],
+      //     ),
+      //   );
 
-        let diff = Manim[scene.animation_list[i].className].getDiff(
-          ...scene.animation_list[i].args.map(id => mobjectIdsToNames[id]),
-          newMobjects,
-        );
-        newAnimationDiffs.push(diff);
-        tempScene = utils.updateSceneWithDiff(
-          scene.scenes_before_animation[i],
-          diff,
-          nodeDict,
-        );
-      }
+      //   let diff = Manim[scene.animation_list[i].className].getDiff(
+      //     ...scene.animation_list[i].args.map(id => mobjectIdsToNames[id]),
+      //     newMobjects,
+      //   );
+      //   newAnimationDiffs.push(diff);
+      //   tempScene = utils.updateSceneWithDiff(
+      //     scene.scenes_before_animation[i],
+      //     diff,
+      //     nodeDict,
+      //   );
+      // }
 
       // Initialize Mobjects.
-      newMobjects = {};
+      let newMobjects = {};
       for (let mobjectName of Object.keys(scene.initial_mobject_serializations)) {
         const pythonData = scene.initial_mobject_serializations[mobjectName];
         // TODO: _.cloneDeep() causes intermittent crashes here, perhaps due to
@@ -434,7 +438,7 @@ export default {
         mobjectData.submobjects = pythonData.submobjects.slice();
         mobjectData.style = Object.assign({}, pythonData.style);
         if (!utils.isGroupData(mobjectData)) {
-          this.buildMobject(mobjectData);
+          this.buildAndSetMobject(mobjectData);
         }
         newMobjects[mobjectName] = mobjectData;
       }
@@ -449,15 +453,15 @@ export default {
       this.scene.clearAnimation();
       this.currentAnimation.animation = this.buildCurrentAnimation();
       this.scene.update();
-      this.preSceneMobjects = [];
-      this.currentSceneDiff = this.sceneDiffs[0];
+      this.preSetupMobjects = [];
+      this.currentSetupDiff = this.sceneDiffs[0];
       this.applyDiff(
-        this.currentSceneDiff,
+        this.currentSetupDiff,
         /*reverse=*/ false,
         /*moveCursor=*/ false,
       );
       this.toggleCode();
-      this.play(null, /*singleAnimationOnly=*/ false);
+      // this.play(null, /*singleAnimationOnly=*/ false);
     },
     toggleCode: function() {
       this.displayCode = !this.displayCode;
@@ -504,6 +508,9 @@ export default {
         mobjectData.mobject = g;
       }
     },
+    buildAndSetMobject: function(mobjectData) {
+      mobjectData.mobject = this.buildMobject(mobjectData);
+    },
     buildMobject: function(mobjectData) {
       if (utils.isTexData(mobjectData)) {
         // ???
@@ -512,7 +519,7 @@ export default {
         m.applyTransformations(mobjectData.transformations);
         // TODO: Changes to position should be passed from manim.
         m.applyStyle(mobjectData.style);
-        mobjectData.mobject = m;
+        return m;
       } else {
         // Build the Group.
       }
@@ -529,9 +536,6 @@ export default {
         ...replaceMobjectNamesArgs(args),
         replaceMobjectNamesConfig(config),
       );
-    },
-    buildCurrentAnimationTwo: function() {
-        return new Manim[this.currentAnimation.className](...this.currentAnimation.args);
     },
     chainNextAnimation: function() {
       if (this.animationIndex === this.animations.length - 1) {
@@ -558,6 +562,7 @@ export default {
         this.scene.play();
         return;
       }
+      this.jumpPostSetup();
       if (this.animationOffset === 1) {
         // eslint-disable-next-line
         console.assert(
@@ -582,7 +587,7 @@ export default {
     },
     replay: function(e, singleAnimationOnly = true) {
       if (singleAnimationOnly) {
-        this.jumpToAnimationStart();
+        this.jumpPostSetup();
       } else {
         while (this.animationIndex > 0 || this.animationOffset > 0) {
           this.stepBackward();
@@ -592,6 +597,29 @@ export default {
     },
     pause: function() {
       this.scene.pause();
+    },
+    applyAdd(mobjectName, presentBefore, presentAfter) {
+      let mobjectData = this.mobjects[mobjectName];
+      if (presentBefore && !presentAfter) {
+        let mobject = mobjectData.mobject;
+        // eslint-disable-next-line
+        console.assert(this.scene.contains(mobject));
+        this.scene.remove(mobject);
+      } else if (!presentBefore && presentAfter) {
+        // eslint-disable-next-line
+        console.assert(!this.scene.contains(mobjectData.mobject));
+        this.buildAndSetMobject(mobjectData);
+        this.scene.add(mobjectData.mobject);
+      } else {
+        // eslint-disable-next-line
+        console.error(
+          "Invalid add parameters",
+          mobjectName,
+          presentBefore,
+          presentAfter,
+        );
+      }
+      this.scene.update();
     },
     /*  Updates the mobjects in this.scene according to the diff. Diffs are of
      *  the form:
@@ -608,125 +636,164 @@ export default {
       if (_.isEmpty(diff)) {
         return;
       }
-      console.log(diff);
       for (let name_diff of Object.entries(diff)) {
         let [mobjectName, mobjectDiff] = name_diff;
         for (let attr_change of Object.entries(mobjectDiff)) {
-          let [attr, [before, after]] = attr_change;
+          let [attr, change] = attr_change;
+          let before, after;
+          if (!reverse) {
+            [before, after] = change;
+          } else {
+            [after, before] = change;
+          }
           switch (attr) {
             case "added":
               this.applyAdd(mobjectName, before, after);
               break;
-            default:
+            default: {
+              // eslint-disable-next-line
               console.error(`Unknown diff attribute ${attr}`);
+            }
           }
         }
       }
       this.scene.update();
     },
-    applyAdd(mobjectName, before, after) {
-      console.log(mobjectName, before, after);
-    },
-    /* Moves to the pre-scene stage of the current Animation. */
-    jumpToSetupStart: function() {
-      console.log('start');
-      if (this.preScene) {
+    /* Moves to the pre-setup stage of the current Animation. */
+    jumpPreSetup: function() {
+      if (this.preSetup) {
         return;
-      } else if (this.animationOffset === 0) {
-        // jump backward
-      } else {
-        this.jumpToAnimationStart();
-        // jump backward
-      }
-    },
-    /* Moves to the post-scene stage of the current Animation. */
-    jumpToSetupEnd: function() {
-      console.log('end');
-      if (this.preScene) {
-        // jump forward
-        console.log('do this');
-        this.applyDiff(
-          this.currentSceneDiff,
-          /*reverse=*/false,
-          /*moveCursor=*/false,
-        );
-        this.preScene = false;
-        return;
-      } else if (this.animationOffset === 0) {
-        return;
-      } else {
-        this.jumpToAnimationStart();
-      }
-    },
-    /* Moves to the post-scene stage of the current Animation. */
-    jumpToAnimationStart: function() {
-      if (this.animationOffset === 0) {
-        return;
-      } else if (this.animationOffset < 1) {
-        // eslint-disable-next-line
-        console.assert(this.animationIsValid);
-        this.scene.clearAnimation();
-        if (this.currentAnimation.args.length > 0) {
+      } else if (this.postSetup) {
+        if (this.animating) {
+          this.scene.clearAnimation();
+          // TODO: For groups, reset all mobjects in the group.
           let mobjectToRevertName = this.currentAnimation.args[0];
           let mobjectToRevertData = this.mobjects[mobjectToRevertName];
           this.scene.remove(mobjectToRevertData.mobject);
-          this.setMobjectField(mobjectToRevertData);
+          this.buildAndSetMobject(mobjectToRevertData);
+          this.scene.add(mobjectToRevertData.mobject);
+          this.scene.update();
+        }
+        this.applyDiff(
+          this.currentSetupDiff,
+          /*reverse=*/true,
+          /*moveCursor=*/false,
+        );
+      } else {
+        // eslint-disable-next-line
+        console.assert(this.postAnimation);
+        this.applyDiff(
+          this.currentAnimationDiff,
+          /*reverse=*/true,
+          /*moveCursor=*/false,
+        );
+        this.applyDiff(
+          this.currentSetupDiff,
+          /*reverse=*/true,
+          /*moveCursor=*/false,
+        );
+      }
+      this.preSetup = true;
+      this.animationOffset = 0;
+    },
+    /* Moves to the post-setup stage of the current Animation. */
+    jumpPostSetup: function() {
+      if (this.preSetup) {
+        this.applyDiff(
+          this.currentSetupDiff,
+          /*reverse=*/false,
+          /*moveCursor=*/false,
+        );
+      } else if (this.postSetup) {
+        if (this.animating) {
+          this.scene.clearAnimation();
+          // TODO: For groups, reset all mobjects in the group.
+          let mobjectToRevertName = this.currentAnimation.args[0];
+          let mobjectToRevertData = this.mobjects[mobjectToRevertName];
+          this.scene.remove(mobjectToRevertData.mobject);
+          this.buildAndSetMobject(mobjectToRevertData);
           this.scene.add(mobjectToRevertData.mobject);
           this.scene.update();
         }
       } else {
+        // eslint-disable-next-line
+        console.assert(this.postAnimation);
         this.applyDiff(
           this.currentAnimationDiff,
-          /*reverse=*/ true,
-          /*moveCursor=*/ true,
+          /*reverse=*/true,
+          /*moveCursor=*/false,
         );
       }
+      this.preSetup = false;
       this.animationOffset = 0;
     },
-    /* Moves to the post-animation stage of the current Animation. */
-    jumpToAnimationEnd: function() {
-      if (this.animationOffset === 1) {
+    jumpPostAnimation: function() {
+      if (this.preSetup) {
+        this.applyDiff(
+          this.currentSetupDiff,
+          /*reverse=*/false,
+          /*moveCursor=*/false,
+        );
+        this.applyDiff(
+          this.currentAnimationDiff,
+          /*reverse=*/false,
+          /*moveCursor=*/false,
+        );
+      } else if (this.postSetup) {
+        if (this.animating) {
+          this.scene.clearAnimation();
+          // TODO: For groups, reset all mobjects in the group.
+          let mobjectToRevertName = this.currentAnimation.args[0];
+          let mobjectToRevertData = this.mobjects[mobjectToRevertName];
+          this.scene.remove(mobjectToRevertData.mobject);
+          this.buildAndSetMobject(mobjectToRevertData);
+          this.scene.add(mobjectToRevertData.mobject);
+          this.scene.update();
+        }
+        this.applyDiff(
+          this.currentAnimationDiff,
+          /*reverse=*/false,
+          /*moveCursor=*/false,
+        );
+      } else {
         return;
-      } else if (this.animationOffset < 1) {
-        this.jumpToAnimationStart();
       }
-      if (this.animationIsValid && this.sceneIsValid) {
-        this.applyDiff(this.currentAnimationDiff);
-      }
+      this.preSetup = false;
+      this.animationOffset = 1;
     },
-    /* Moves to the post-scene stage of the following Animation. */
+    /* Moves to the post-setup stage of the following Animation. */
     stepForward: function() {
       if (!this.sceneIsValid || !this.animationIsValid) {
         return;
       }
       this.jumpToAnimationEnd();
       if (this.animationIndex < this.animations.length - 1) {
-        this.sceneDiffs[this.animationIndex] = this.currentSceneDiff;
+        this.sceneDiffs[this.animationIndex] = this.currentSetupDiff;
         this.stepPriorSceneForward();
         this.animationIndex += 1;
         this.animationOffset = 0;
         this.currentAnimation.animation = this.buildCurrentAnimation();
-        this.currentSceneDiff = this.sceneDiffs[this.animationIndex];
+        this.currentSetupDiff = this.sceneDiffs[this.animationIndex];
         if (this.sceneIsValid) {
           this.applyDiff(
-            this.currentSceneDiff,
+            this.currentSetupDiff,
             /*reverse=*/ false,
             /*moveCursor=*/ false,
           );
         }
       }
     },
-    /* Moves to the post-scene stage of the previous Animation. */
+    /* Moves to the post-setup stage of the previous Animation. */
     stepBackward: function() {
       if (this.animationOffset !== 0) {
         this.jumpToAnimationStart();
       } else if (this.animationIndex !== 0) {
         this.applyDiff(
-          this.currentSceneDiff,
+          this.currentSetupDiff,
           /*reverse=*/ true,
           /*moveCursor=*/ false,
         );
-        this.sceneDiffs[this.animationIndex] = this.currentSceneDiff;
+        this.sceneDiffs[this.animationIndex] = this.currentSetupDiff;
         this.animationIndex -= 1;
         this.animationOffset = 1;
         this.currentAnimation.animation = this.buildCurrentAnimation();
@@ -818,8 +885,38 @@ export default {
       ].getDiff(
         ...this.currentAnimation.args,
         this.currentAnimation.config,
+        this.postSetupMobjects,
         this.mobjects,
       );
+      if (this.animationOffset === 1) {
+        this.applyDiff(
+          this.currentAnimationDiff,
+          /*reverse=*/ false,
+          /*moveCursor=*/ false,
+        );
+      }
+    },
+    handleConfigChange(key, val) {
+      if (this.animationOffset === 1) {
+        this.applyDiff(
+          this.currentAnimationDiff,
+          /*reverse=*/ true,
+          /*moveCursor=*/ false,
+        );
+      }
+
+      let newConfig = _.cloneDeep(this.currentAnimation.config);
+      newConfig[key] = val;
+      this.currentAnimation.config = newConfig;
+      this.currentAnimationDiff = Manim[
+        this.currentAnimation.className
+      ].getDiff(
+        ...this.currentAnimation.args,
+        this.currentAnimation.config,
+        this.postSetupMobjects,
+        this.mobjects,
+      );
+
       if (this.animationOffset === 1) {
         this.applyDiff(
           this.currentAnimationDiff,
@@ -837,15 +934,15 @@ export default {
         );
       }
       this.applyDiff(
-        this.currentSceneDiff,
+        this.currentSetupDiff,
         /*reverse=*/ true,
         /*moveCursor=*/ false,
       );
-      let newDiff = _.cloneDeep(this.currentSceneDiff);
+      let newDiff = _.cloneDeep(this.currentSetupDiff);
       newDiff[action] = newSelection;
-      this.currentSceneDiff = newDiff;
+      this.currentSetupDiff = newDiff;
       this.applyDiff(
-        this.currentSceneDiff,
+        this.currentSetupDiff,
         /*reverse=*/ false,
         /*moveCursor=*/ false,
       );
@@ -915,7 +1012,7 @@ export default {
       return ret;
     },
     stepPriorSceneForward: function() {
-      let newScene = _.cloneDeep(this.preSceneMobjects);
+      let newScene = _.cloneDeep(this.preSetupMobjects);
       newScene = this.diffPriorScene(
         newScene,
         utils.getFullDiff(this.currentSceneDiff),
@@ -924,10 +1021,10 @@ export default {
         newScene,
         utils.getFullDiff(this.currentAnimationDiff),
       );
-      this.preSceneMobjects = newScene;
+      this.preSetupMobjects = newScene;
     },
     stepPriorSceneBackward: function() {
-      let newScene = _.cloneDeep(this.preSceneMobjects);
+      let newScene = _.cloneDeep(this.preSetupMobjects);
       newScene = this.diffPriorScene(
         newScene,
         utils.getReversedDiff(this.currentAnimationDiff),
@@ -936,7 +1033,7 @@ export default {
         newScene,
         utils.getReversedDiff(this.currentSceneDiff),
       );
-      this.preSceneMobjects = newScene;
+      this.preSetupMobjects = newScene;
     },
     diffPriorScene: function(scene, diff) {
       diff = utils.getFullDiff(diff);

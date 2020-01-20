@@ -603,7 +603,7 @@ class Arc extends Mobject {
   constructor(config = {}) {
     let fullConfig = Object.assign(Arc.defaultConfig(), config);
     fullConfig.style =
-      utils.styleFromConfigAndDefaults(Arc.defaultStyle(), config);
+      utils.styleFromConfigAndDefaults(config.style, Arc.defaultStyle());
     let {
       startAngle,
       angle,
@@ -676,9 +676,9 @@ class Circle extends Arc {
       { startAngle: 0, angle: consts.TAU, numComponents: 9 },
     );
     fullConfig.style =
-      utils.styleFromConfigAndDefaults(config, Circle.defaultStyle());
+      utils.styleFromConfigAndDefaults(config.style, Circle.defaultStyle());
     super(fullConfig);
-    this.radius = fullConfig.radius;
+    this.config = _.cloneDeep(config);
   }
 
   static defaultConfig() {
@@ -692,10 +692,7 @@ class Circle extends Arc {
   }
 
   clone(parent) {
-    let clone = new Circle({
-      radius: this.radius,
-      style: this.getStyleDict(),
-    });
+    let clone = new Circle(this.config);
 
     let children = Two.Utils.map(this.children, function (child) {
       return child.clone();

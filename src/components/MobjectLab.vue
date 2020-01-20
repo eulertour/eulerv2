@@ -18,7 +18,7 @@
           <v-expansion-panels v-model="expandedPanel" multiple accordion>
             <v-expansion-panel>
               <v-expansion-panel-header>
-                <span v-bind:style="sceneHeaderStyle">Scene</span>
+                <span v-bind:style="sceneHeaderStyle">Setup</span>
               </v-expansion-panel-header>
               <v-expansion-panel-content>
                 <SetupPanel
@@ -27,12 +27,13 @@
                   v-bind:mobjects="mobjects"
                   v-bind:scene="scene"
                   v-bind:animating="animating"
-                  v-bind:pre-scene="preScene"
-                  v-bind:pre-scene-mobjects="preSceneMobjects"
-                  v-bind:post-scene-mobjects="postSceneMobjects"
+                  v-bind:pre-setup="preSetup"
+                  v-bind:post-setup="postSetup"
+                  v-bind:pre-setup-mobjects="preSetupMobjects"
+                  v-bind:post-setup-mobjects="postSetupMobjects"
                   v-bind:post-animation-mobjects="postAnimationMobjects"
-                  v-on:jump-to-end="$emit('jump-to-setup-end')"
-                  v-on:jump-to-start="$emit('jump-to-setup-start')"
+                  v-on:jump-to-start="$emit('jump-pre-setup')"
+                  v-on:jump-to-end="$emit('jump-post-setup')"
                   v-on:update-setup="(action, newSelection)=>$emit('update-setup', action, newSelection)"
                 />
               </v-expansion-panel-content>
@@ -49,13 +50,16 @@
                   v-bind:mobject-data="mobjects"
                   v-bind:scene="scene"
                   v-bind:setup="currentSceneDiff"
+                  v-bind:post-setup="postSetup"
+                  v-bind:post-animation="postAnimation"
                   v-bind:animation-diff="currentAnimationDiff"
-                  v-bind:post-scene-mobjects="postSceneMobjects"
+                  v-bind:post-setup-mobjects="postSetupMobjects"
                   v-bind:post-animation-mobjects="postAnimationMobjects"
                   v-bind:scene-before-animation="sceneBeforeAnimation"
                   v-on:arg-change="(argNum, arg)=>$emit('handle-arg-change', argNum, arg)"
-                  v-on:jump-to-start="$emit('jump-to-animation-start')"
-                  v-on:jump-to-end="$emit('jump-to-animation-end')"
+                  v-on:config-change="(key, val)=>$emit('config-change', key, val)"
+                  v-on:jump-to-start="$emit('jump-post-setup')"
+                  v-on:jump-to-end="$emit('jump-post-animation')"
                   v-on:pause="(e)=>$emit('pause')"
                   v-on:play="(e)=>$emit('play')"
                   v-on:replay="(e)=>$emit('replay')"
@@ -213,9 +217,11 @@ export default {
     mobjectChoices: Array,
     mobjects: Object,
     pause: Boolean,
-    preScene: Boolean,
-    preSceneMobjects: Array,
-    postSceneMobjects: Array,
+    preSetup: Boolean,
+    postSetup: Boolean,
+    postAnimation: Boolean,
+    preSetupMobjects: Array,
+    postSetupMobjects: Array,
     postAnimationMobjects: Array,
     releaseNotes: String,
     releaseNotesDialogProp: Boolean,

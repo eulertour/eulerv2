@@ -58,16 +58,16 @@ export default {
     setup: Object,
     sceneBeforeAnimation: Array,
     animationDiff: Object,
-    postSceneMobjects: Array,
+    postSetupMobjects: Array,
   },
   computed: {
     startMobjectChoices() {
-      return this.postSceneMobjects;
+      return this.postSetupMobjects;
     },
     endMobjectChoices() {
       return _.difference(
         Object.keys(this.mobjectData),
-        this.postSceneMobjects,
+        this.postSetupMobjects,
       );
     },
     startError() {
@@ -108,7 +108,7 @@ export default {
     currentEndMobject: function(newMobject, oldMobject) {
       // ignore the initial mount
       if (oldMobject !== null) {
-        this.$emit('arg-change', 1, newMobject);
+        this.$emit('config-change', 'targetMobject', newMobject);
       }
     },
   },

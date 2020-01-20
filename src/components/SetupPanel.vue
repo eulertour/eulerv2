@@ -3,12 +3,12 @@
     <div class="title mb-5">
       <div
         class="lighten-4 rounded px-2"
-        v-bind:class="{ blue: preScene }"
+        v-bind:class="{ blue: preSetup }"
       >
-        Pre-Scene Mobjects:
+        Pre-Setup Mobjects:
       </div>
-      <v-chip-group v-if="preSceneMobjects.length > 0">
-        <v-chip v-for="mobjectName in preSceneMobjects" v-bind:key="'preScene' + mobjectName">
+      <v-chip-group v-if="preSetupMobjects.length > 0">
+        <v-chip v-for="mobjectName in preSetupMobjects" v-bind:key="'preSetup' + mobjectName">
           {{ mobjectName }}
         </v-chip>
       </v-chip-group>
@@ -17,35 +17,13 @@
       </div>
     </div>
 
-    <div class="mb-5" v-for="mobjectName in Object.keys(setup)" v-bind:key="mobjectName">
-      <v-chip>
-        <v-avatar v-if="'added' in setup[mobjectName] && setup[mobjectName]['added'][1]" left color="red">
-          <v-icon color="white">mdi-plus</v-icon>
-        </v-avatar>
-        <v-avatar v-else-if="'added' in setup[mobjectName] && !setup[mobjectName]['added'][1]" left color="blue">
-          <v-icon color="white">mdi-minus</v-icon>
-        </v-avatar>
-        <v-avatar v-else left color="purple">
-          <v-icon color="white">mdi-tilde</v-icon>
-        </v-avatar>
-        <span class="subtitle-1">{{ mobjectName }}</span>
-      </v-chip>
-      <div
-        v-for="attr in Object.keys(setup[mobjectName])"
-        v-bind:key="mobjectName + attr"
-        class="title ml-3"
-      >
-        {{ attr }}: {{ setup[mobjectName][attr][0] }}
-        <v-icon>mdi-arrow-right</v-icon>
-        {{ setup[mobjectName][attr][1] }}
-      </div>
-    </div>
+    <Diff v-bind:diff="setup"/>
 
     <div class="d-flex justify-center pa-0 mb-7">
-      <v-btn fab v-on:click="$emit('jump-to-start')" class="mx-2">
+      <v-btn fab v-on:click="$emit('jump-to-start')" class="mx-7">
         <v-icon color="black" x-large>mdi-skip-previous</v-icon>
       </v-btn>
-      <v-btn fab v-on:click="$emit('jump-to-end')" class="mx-2">
+      <v-btn fab v-on:click="$emit('jump-to-end')" class="mx-7">
         <v-icon color="black" x-large>mdi-skip-next</v-icon>
       </v-btn>
     </div>
@@ -53,12 +31,12 @@
     <div class="title">
       <div
         class="lighten-4 rounded px-2"
-        v-bind:class="{ blue: !preScene }"
+        v-bind:class="{ blue: postSetup }"
       >
-        Post-Scene Mobjects:
+        Post-Setup Mobjects:
       </div>
-      <v-chip-group v-if="postSceneMobjects.length > 0">
-        <v-chip v-for="mobjectName in postSceneMobjects" v-bind:key="'postScene' + mobjectName">
+      <v-chip-group v-if="postSetupMobjects.length > 0">
+        <v-chip v-for="mobjectName in postSetupMobjects" v-bind:key="'postSetup' + mobjectName">
           {{ mobjectName }}
         </v-chip>
       </v-chip-group>
@@ -71,6 +49,7 @@
 
 <script>
 import * as _ from 'lodash'
+import Diff from "./Diff.vue";
 
 export default {
   name: 'SetupPanel',
@@ -80,10 +59,14 @@ export default {
     mobjects: Object,
     scene: Object,
     animating: Boolean,
-    preScene: Boolean,
-    preSceneMobjects: Array,
-    postSceneMobjects: Array,
+    preSetup: Boolean,
+    postSetup: Boolean,
+    preSetupMobjects: Array,
+    postSetupMobjects: Array,
     postAnimationMobjects: Array,
+  },
+  components: {
+    Diff,
   },
   data() {
     return {
@@ -91,7 +74,7 @@ export default {
     }
   },
   mounted() {
-    // console.log(this.preSceneMobjects);
+    // console.log(this.preSetupMobjects);
   },
   computed: {
     mobjectNames() {
@@ -142,13 +125,10 @@ export default {
       }
     },
   },
-  watch: {
-
-  },
 }
 </script>
 
-<style>
+<style scoped>
   .rounded {
     border-radius: 8px;
   }

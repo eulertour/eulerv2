@@ -166,11 +166,11 @@ class ReplacementTransform extends Animation {
     submob.interpolate(start, targetCopy, alpha);
   }
 
-  static getDiff(mobject, config, mobjectsInScene, /* mobjectData */) {
+  static getDiff(startMobject, config, mobjectsInScene, /* mobjectData */) {
     let targetMobject = config.targetMobject;
     let ret = {};
-    if (mobjectsInScene.includes(mobject)) {
-      ret[mobject] = {"added": [true, false]};
+    if (mobjectsInScene.includes(startMobject)) {
+      ret[startMobject] = {"added": [true, false]};
     }
     ret[targetMobject] = {"added": [false, true]};
     return ret;

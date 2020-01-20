@@ -1,9 +1,14 @@
 <template>
   <div>
   <div class="title mb-5">
-    Post-Scene Mobjects:
-    <v-chip-group v-if="postSceneMobjects.length > 0">
-      <v-chip v-for="mobjectName in postSceneMobjects" v-bind:key="'postScene' + mobjectName">
+    <div
+      class="lighten-4 rounded px-2"
+      v-bind:class="{ blue: postSetup }"
+    >
+      Post-Setup Mobjects:
+    </div>
+    <v-chip-group v-if="postSetupMobjects.length > 0">
+      <v-chip v-for="mobjectName in postSetupMobjects" v-bind:key="'postSetup' + mobjectName">
         {{ mobjectName }}
       </v-chip>
     </v-chip-group>
@@ -25,13 +30,26 @@
     v-bind:mobject-classes="mobjectClasses"
     v-bind:mobject-data="mobjectData"
     v-bind:scene-before-animation="sceneBeforeAnimation"
-    v-bind:post-scene-mobjects="postSceneMobjects"
+    v-bind:post-setup-mobjects="postSetupMobjects"
     v-bind:post-animation-mobjects="postAnimationMobjects"
     v-bind:scene="scene"
     v-bind:setup="setup"
     v-on:arg-change="(argNum, arg)=>$emit('arg-change', argNum, arg)"
+    v-on:config-change="(key, val)=>$emit('config-change', key, val)"
   />
-  <div class="mb-10"></div>
+
+  <v-expansion-panels flat>
+    <v-expansion-panel>
+      <v-expansion-panel-header>
+        View Diff
+      </v-expansion-panel-header>
+      <v-expansion-panel-content>
+        <Diff v-bind:diff="animationDiff"/>
+      </v-expansion-panel-content>
+    </v-expansion-panel>
+  </v-expansion-panels>
+  <div class="mb-7"></div>
+
   <div class="d-flex justify-center pa-0 mb-7">
     <v-btn fab v-on:click="$emit('jump-to-start')" class="mx-2">
       <v-icon color="black" x-large>mdi-skip-previous</v-icon>
@@ -61,7 +79,12 @@
   </div>
 
   <div class="title">
-    Post-Animation Mobjects:
+    <div
+      class="lighten-4 rounded px-2"
+      v-bind:class="{ blue: postAnimation }"
+    >
+      Post-Animation Mobjects:
+    </div>
     <v-chip-group v-if="postAnimationMobjects.length > 0">
       <v-chip v-for="mobjectName in postAnimationMobjects" v-bind:key="'postAnimation' + mobjectName">
         {{ mobjectName }}
@@ -80,6 +103,7 @@ import WaitPanel from './WaitPanel.vue'
 import BlankPanel from './BlankPanel.vue'
 import FadeInPanel from './FadeInPanel.vue'
 import FadeOutPanel from './FadeOutPanel.vue'
+import Diff from './Diff.vue'
 import * as Manim from '../manim.js'
 
 export default {
@@ -90,6 +114,7 @@ export default {
     FadeOutPanel,
     WaitPanel,
     BlankPanel,
+    Diff,
   },
   props: {
     animationData: Object,
@@ -98,10 +123,12 @@ export default {
     mobjectData: Object,
     scene: Object,
     animating: Boolean,
+    postSetup: Boolean,
+    postAnimation: Boolean,
     setup: Object,
     sceneBeforeAnimation: Array,
     animationDiff: Object,
-    postSceneMobjects: Array,
+    postSetupMobjects: Array,
     postAnimationMobjects: Array,
   },
   computed: {
@@ -128,4 +155,7 @@ export default {
 </script>
 
 <style scoped>
+  .rounded {
+    border-radius: 8px;
+  }
 </style>
