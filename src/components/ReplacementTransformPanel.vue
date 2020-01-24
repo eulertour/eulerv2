@@ -10,12 +10,7 @@
       v-bind:hide-details="startError.length === 0"
     >
       <template v-slot:selection="{ item, index }">
-        <v-chip>
-          <v-avatar left color="blue" v-if="mobjectIsRemoved(item)">
-            <v-icon color="white">mdi-minus</v-icon>
-          </v-avatar>
-          {{ item }}
-        </v-chip>
+        <v-chip>{{ item }}</v-chip>
       </template>
     </v-select>
     <v-select
@@ -28,12 +23,7 @@
       class="mb-5"
     >
       <template v-slot:selection="{ item, index }">
-        <v-chip>
-          <v-avatar left color="red" v-if="mobjectIsAdded(item)">
-            <v-icon color="white">mdi-plus</v-icon>
-          </v-avatar>
-          {{ item }}
-        </v-chip>
+        <v-chip>{{ item }}</v-chip>
       </template>
     </v-select>
   </div>
@@ -113,18 +103,7 @@ export default {
     },
   },
   methods: {
-    mobjectIsAdded(mobjectName) {
-      let diff = this.animationDiff;
-      return mobjectName in diff &&
-        "added" in diff[mobjectName] &&
-        diff[mobjectName]["added"][1];
-    },
-    mobjectIsRemoved(mobjectName) {
-      let diff = this.animationDiff;
-      return mobjectName in diff &&
-        "added" in diff[mobjectName] &&
-        !diff[mobjectName]["added"][1];
-    }
+
   },
 }
 </script>

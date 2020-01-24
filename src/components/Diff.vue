@@ -16,7 +16,7 @@
       <div
         v-for="attr in Object.keys(diff[mobjectName])"
         v-bind:key="mobjectName + attr"
-        class="title ml-3"
+        class="headline ml-3"
       >
         {{ attr }}: {{ diff[mobjectName][attr][0] }}
         <v-icon>mdi-arrow-right</v-icon>
@@ -35,5 +35,5 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 </style>

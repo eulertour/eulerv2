@@ -360,7 +360,11 @@ class Group extends Two.Group {
   }
 
   points() {
-    return this.children[0].vertices;
+    if (this.children.length > 0) {
+      return this.children[0].vertices;
+    } else {
+      return [];
+    }
   }
 
   getPointCenter() {
@@ -496,6 +500,15 @@ class Group extends Two.Group {
 
   // TODO: Use a
   pointwiseBecomePartial(other, a, b) {
+    /* For some reason, putting only a single point in the Mobject's path causes
+     * Two to render a line from the origin to that point. As a workaround, set
+     * the opacity of the Mobject to 0 when no points should be visible.
+     */
+    if (a === b) {
+      this.opacity = 0;
+    } else {
+      this.opacity = 1;
+    }
     // eslint-disable-next-line
     console.assert(0 <= a && a <= 1 && 0 <= b && b <= 1 && a <= b, a, b);
     let bezierQuads = _.chunk(utils.getManimPoints(other), 4);
@@ -522,7 +535,6 @@ class Group extends Two.Group {
       newPathCoeffs.length,
     );
 
-    // TODO: Why doesn't this.path() work???
     let newPath = this.path().clone();
     let partialPath = utils.pathFromManimPoints(newPathCoeffs.flat(), vertexCommands);
     newPath.vertices = partialPath.vertices;
@@ -693,6 +705,7 @@ class Circle extends Arc {
 
   clone(parent) {
     let clone = new Circle(this.config);
+    clone.applyStyle(this.getStyleDict());
 
     let children = Two.Utils.map(this.children, function (child) {
       return child.clone();

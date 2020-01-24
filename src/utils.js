@@ -284,6 +284,21 @@ export function getReversedDiff(diff) {
   };
 }
 
+export function reverseDiff(diff) {
+  let ret = {};
+  for (let mobjectName of Object.keys(diff)) {
+    let mobjectDiff = diff[mobjectName];
+    ret[mobjectName] = {};
+    for (let attr of Object.keys(mobjectDiff)) {
+      ret[mobjectName][attr] = [
+        _.cloneDeep(diff[mobjectName][attr][1]),
+        _.cloneDeep(diff[mobjectName][attr][0]),
+      ];
+    }
+  }
+  return ret;
+}
+
 export function getMobjectsRemovedFromParent(diff) {
   let ret = [];
   for (let arr of diff["modify"]) {
@@ -719,4 +734,16 @@ export function styleFromConfigAndDefaults(defaults = {}, config) {
     combinedStyle.fillOpacity = config.fillOpacity || defaults.fillOpacity;
   }
   return combinedStyle;
+}
+
+function snakeToCamel(s) {
+  return s.replace(/(\_\w)/g, function(m){return m[1].toUpperCase();});
+}
+
+export function renameSnakeKeys(o) {
+  let ret = {};
+  for (let key of Object.keys(o)) {
+    ret[snakeToCamel(key)] = o[key];
+  }
+  return ret;
 }

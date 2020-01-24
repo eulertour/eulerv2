@@ -135,6 +135,11 @@ class Animation {
     // eslint-disable-next-line
     console.error(`${this.name} does not override getDiff()`);
   }
+
+  static getDescription() {
+    // eslint-disable-next-line
+    console.error(`${this.name} does not override getDescription()`);
+  }
 }
 
 class ReplacementTransform extends Animation {
@@ -175,6 +180,10 @@ class ReplacementTransform extends Animation {
     ret[targetMobject] = {"added": [false, true]};
     return ret;
   }
+
+  static getDescription() {
+    return "Morph one Mobject into another";
+  }
 }
 
 class ShowCreation extends Animation {
@@ -190,9 +199,7 @@ class ShowCreation extends Animation {
   }
 
   interpolateSubmobject(alpha, submob, startingSubmobject) {
-    if (alpha > 0) {
-      submob.pointwiseBecomePartial(startingSubmobject, 0, alpha);
-    }
+    submob.pointwiseBecomePartial(startingSubmobject, 0, alpha);
   }
 
   getCopiesForInterpolation() {
@@ -203,6 +210,10 @@ class ShowCreation extends Animation {
     return {
       'add': [mobject],
     };
+  }
+
+  static getDescription() {
+    return "Show a Mobject being created";
   }
 }
 
@@ -328,16 +339,24 @@ class FadeOut extends Animation {
     }
     return ret;
   }
+
+  static getDescription() {
+    return "Fade out a Mobject";
+  }
 }
 
 class Wait extends Animation {
   interpolateMobject() {}
 
+  createStartingMobject() {}
+
   static getDiff() {
     return {};
   }
 
-  createStartingMobject() {}
+  static getDescription() {
+    return "Hold a still frame";
+  }
 }
 
 // Any Animation exported here must also be exported in manim.js before it can

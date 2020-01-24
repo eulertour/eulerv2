@@ -1,12 +1,12 @@
 <template>
   <div>
-    <div class="title mb-5">
-      <div
-        class="lighten-4 rounded px-2"
-        v-bind:class="{ blue: preSetup }"
-      >
-        Pre-Setup Mobjects:
-      </div>
+    <div
+      class="headline lighten-4 rounded px-2"
+      v-bind:class="{ blue: preSetup }"
+    >
+      Pre-Setup Mobjects:
+    </div>
+    <div class="subtitle-1">
       <v-chip-group v-if="preSetupMobjects.length > 0">
         <v-chip v-for="mobjectName in preSetupMobjects" v-bind:key="'preSetup' + mobjectName">
           {{ mobjectName }}
@@ -17,32 +17,33 @@
       </div>
     </div>
 
-    <Diff v-bind:diff="setup"/>
+    <div class="headline my-6">
+      Setup Diff
+      <Diff v-bind:diff="setup"/>
+    </div>
 
     <div class="d-flex justify-center pa-0 mb-7">
-      <v-btn fab v-on:click="$emit('jump-to-start')" class="mx-7">
+      <v-btn fab v-on:click="$emit('jump-to-start')" class="mr-9">
         <v-icon color="black" x-large>mdi-skip-previous</v-icon>
       </v-btn>
-      <v-btn fab v-on:click="$emit('jump-to-end')" class="mx-7">
+      <v-btn fab v-on:click="$emit('jump-to-end')">
         <v-icon color="black" x-large>mdi-skip-next</v-icon>
       </v-btn>
     </div>
 
-    <div class="title">
-      <div
-        class="lighten-4 rounded px-2"
-        v-bind:class="{ blue: postSetup }"
-      >
-        Post-Setup Mobjects:
-      </div>
-      <v-chip-group v-if="postSetupMobjects.length > 0">
-        <v-chip v-for="mobjectName in postSetupMobjects" v-bind:key="'postSetup' + mobjectName">
-          {{ mobjectName }}
-        </v-chip>
-      </v-chip-group>
-      <div v-else>
-        None
-      </div>
+    <div
+      class="headline lighten-4 rounded px-2"
+      v-bind:class="{ blue: postSetup }"
+    >
+      Post-Setup Mobjects:
+    </div>
+    <v-chip-group v-if="postSetupMobjects.length > 0">
+      <v-chip v-for="mobjectName in postSetupMobjects" v-bind:key="'postSetup' + mobjectName">
+        {{ mobjectName }}
+      </v-chip>
+    </v-chip-group>
+    <div v-else>
+      None
     </div>
   </div>
 </template>

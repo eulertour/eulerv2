@@ -79,7 +79,7 @@ export default {
       releaseNotesDialog: false,
       debug: true, // setting to false triggers a bug
       code: consts.EXAMPLE_CODE,
-      displayCode: false,
+      displayCode: true,
       playingSingleAnimation: null,
       sceneChoices: [],
       chosenScene: "SquareToCircle",
@@ -101,16 +101,12 @@ export default {
       animations: [
         {
           className: "ReplacementTransform",
-          description: "Morph one Mobject into another",
           args: ["Square1"],
           config: { targetMobject: "Circle1" },
-          argDescriptions: ["Start Mobject", "End Mobject"],
-          durationSeconds: 1,
           animation: null,
         },
       ],
       sceneDiffs: [
-        // TODO: This is wrong.
         // diffs are of the form:
         // {
         //   Square1: {
@@ -432,7 +428,7 @@ export default {
         let mobjectData = {};
         mobjectData.className = pythonData.className;
         mobjectData.args = pythonData.args.slice();
-        mobjectData.config = Object.assign({}, pythonData.config);
+        mobjectData.config = utils.renameSnakeKeys(Object.assign({}, pythonData.config));
         mobjectData.position = pythonData.position.slice();
         mobjectData.transformations = pythonData.transformations.slice();
         mobjectData.submobjects = pythonData.submobjects.slice();
@@ -443,8 +439,17 @@ export default {
         newMobjects[mobjectName] = mobjectData;
       }
 
+      let newAnimations = [];
+      for (let animationData of scene.animation_info_list) {
+        let newData = {};
+        newData.className = animationData.className;
+        newData.args = animationData.args;
+        newData.config = utils.renameSnakeKeys(animationData.config);
+        newAnimations.push(newData);
+      }
+
       this.mobjects = newMobjects;
-      this.animations = _.cloneDeep(scene.animation_info_list);
+      this.animations = newAnimations;
       this.animationDiffs = _.cloneDeep(scene.animation_diffs);
       this.sceneDiffs = _.cloneDeep(scene.scene_diffs);
       this.animationIndex = 0;
@@ -461,7 +466,7 @@ export default {
         /*moveCursor=*/ false,
       );
       this.toggleCode();
-      // this.play(null, /*singleAnimationOnly=*/ false);
+      this.play(null, /*singleAnimationOnly=*/ false);
     },
     toggleCode: function() {
       this.displayCode = !this.displayCode;
@@ -766,39 +771,42 @@ export default {
       if (!this.sceneIsValid || !this.animationIsValid) {
         return;
       }
-      this.jumpToAnimationEnd();
-      if (this.animationIndex < this.animations.length - 1) {
-        this.sceneDiffs[this.animationIndex] = this.currentSetupDiff;
-        this.stepPriorSceneForward();
-        this.animationIndex += 1;
-        this.animationOffset = 0;
-        this.currentAnimation.animation = this.buildCurrentAnimation();
-        this.currentSetupDiff = this.sceneDiffs[this.animationIndex];
-        if (this.sceneIsValid) {
-          this.applyDiff(
-            this.currentSetupDiff,
-            /*reverse=*/ false,
-            /*moveCursor=*/ false,
-          );
-        }
+      this.jumpPostAnimation();
+      if (this.animationIndex === this.animations.length - 1) {
+        return;
+      }
+      this.preSetupMobjects = this.postAnimationMobjects;
+      this.animationIndex += 1;
+      this.animationOffset = 0;
+      this.currentAnimation.animation = this.buildCurrentAnimation();
+      if (this.sceneIsValid) {
+        this.jumpPostSetup();
       }
     },
     /* Moves to the post-setup stage of the previous Animation. */
     stepBackward: function() {
       if (this.animationOffset !== 0) {
-        this.jumpToAnimationStart();
-      } else if (this.animationIndex !== 0) {
-        this.applyDiff(
-          this.currentSetupDiff,
-          /*reverse=*/ true,
-          /*moveCursor=*/ false,
-        );
-        this.sceneDiffs[this.animationIndex] = this.currentSetupDiff;
-        this.animationIndex -= 1;
-        this.animationOffset = 1;
-        this.currentAnimation.animation = this.buildCurrentAnimation();
-        this.stepPriorSceneBackward();
-        this.jumpToAnimationStart();
+        this.jumpPostSetup();
+        return;
+      }
+      if (this.animationIndex === 0) {
+        return;
+      }
+      let postSetupMobs = this.updateMobjectListWithDiff(
+        this.preSetupMobjects,
+        utils.reverseDiff(this.animationDiffs[this.animationIndex - 1]),
+      );
+      let preSetupMobs = this.updateMobjectListWithDiff(
+        postSetupMobs,
+        utils.reverseDiff(this.sceneDiffs[this.animationIndex - 1]),
+      );
+      this.animationIndex -= 1;
+      this.animationOffset = 1;
+      this.preSetupMobjects = preSetupMobs;
+      this.preSetup = false;
+      this.currentAnimation.animation = this.buildCurrentAnimation();
+      if (this.sceneIsValid) {
+        this.jumpPostSetup();
       }
     },
     onAnimationStep: function(elapsedSeconds) {
@@ -841,10 +849,9 @@ export default {
       }
       this.animations.push({
         className: "Wait",
-        description: "Hold a still frame",
-        durationSeconds: 1,
         args: [],
-        argDescriptions: [],
+        config: {},
+        animation: null,
       });
       this.sceneDiffs.push({});
       this.animationDiffs.push(Manim["Wait"].getDiff([], {}, this.mobjects));

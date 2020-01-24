@@ -1,6 +1,6 @@
 <template>
   <div>
-  <div class="title mb-5">
+  <div class="headline mb-5">
     <div
       class="lighten-4 rounded px-2"
       v-bind:class="{ blue: postSetup }"
@@ -20,7 +20,7 @@
   <div class="pa-0">
     <div class="display-1">{{ animationData.className }}</div>
   </div>
-  <div class="subtitle-1 mb-2">{{ animationData.description }}</div>
+  <div class="subtitle-1 mb-2">{{ animationDescription }}</div>
   <component
     v-bind:animating="animating"
     v-bind:animation-data="animationData"
@@ -38,17 +38,10 @@
     v-on:config-change="(key, val)=>$emit('config-change', key, val)"
   />
 
-  <v-expansion-panels flat>
-    <v-expansion-panel>
-      <v-expansion-panel-header>
-        View Diff
-      </v-expansion-panel-header>
-      <v-expansion-panel-content>
-        <Diff v-bind:diff="animationDiff"/>
-      </v-expansion-panel-content>
-    </v-expansion-panel>
-  </v-expansion-panels>
-  <div class="mb-7"></div>
+  <div class="my-9">
+    Animation Diff
+    <Diff v-bind:diff="animationDiff"/>
+  </div>
 
   <div class="d-flex justify-center pa-0 mb-7">
     <v-btn fab v-on:click="$emit('jump-to-start')" class="mx-2">
@@ -78,7 +71,7 @@
     </v-btn>
   </div>
 
-  <div class="title">
+  <div class="headline">
     <div
       class="lighten-4 rounded px-2"
       v-bind:class="{ blue: postAnimation }"
@@ -140,16 +133,9 @@ export default {
         return "BlankPanel";
       }
     },
-    addedByAnimation() {
-      return Manim[this.animationData.className].getDiff(
-        ...this.animationData.args
-      )['add'];
-    },
-    removedByAnimation() {
-      return Manim[this.animationData.className].getDiff(
-        ...this.animationData.args
-      )['remove'];
-    },
+    animationDescription: function() {
+      return Manim[this.animationData.className].getDescription();
+    }
   },
 }
 </script>
@@ -157,5 +143,13 @@ export default {
 <style scoped>
   .rounded {
     border-radius: 8px;
+  }
+  .v-expansion-panel-header {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .v-expansion-panel-content >>> .v-expansion-panel-content__wrap {
+    padding-left: 0;
+    padding-right: 0;
   }
 </style>
