@@ -144,7 +144,7 @@ class Animation {
 
 class ReplacementTransform extends Animation {
   constructor(mobject, config={}) {
-    const fullConfig = Object.assign({}, ReplacementTransform.defaultConfig(), config);
+    const fullConfig = Object.assign(ReplacementTransform.defaultConfig(), config);
     super(mobject, fullConfig);
   }
 
@@ -219,23 +219,38 @@ class ShowCreation extends Animation {
 
 // TODO: This should start with a thick stroke width then fade to a thin one
 class Write extends Animation {
-  constructor(mobject, runtime=null, lagRatio=null) {
-    super(mobject, utils.linear, lagRatio, runtime);
-    if (runtime === null || lagRatio === null) {
-      this.setConfigFromLength(mobject.getMobjectHeirarchy().length);
-    }
+  constructor(mobject, config={}) {
+    let fullConfig = Object.assign(
+      {},
+      Write.defaultConfig(),
+      config,
+      { rateFunc: utils.linear }
+    );
+    Write.ensureLagRatioAndRuntime(
+      fullConfig,
+      mobject.getMobjectHeirarchy().length,
+    );
+    super(mobject, fullConfig);
   }
 
-  setConfigFromLength(length) {
-    if (this.runtime === null) {
+  // These will be set in setConfigFromLength().
+  static defaultConfig() {
+    return {
+      runtime: null,
+      lagRatio: null,
+    };
+  }
+
+  static ensureLagRatioAndRuntime(config, length) {
+    if (config.runtime === null) {
       if (length) {
-        this.runtime = 1;
+        config.runtime = 1;
       } else {
-        this.runtime = 2;
+        config.runtime = 2;
       }
     }
-    if (this.lagRatio === null) {
-      this.lagRatio = Math.min(4 / length, 0.2);
+    if (config.lagRatio === null) {
+      config.lagRatio = Math.min(4 / length, 0.2);
     }
   }
 
@@ -264,6 +279,10 @@ class Write extends Animation {
     return {
       'add': [mobject],
     };
+  }
+
+  static getDescription() {
+    return "Write in LaTeX";
   }
 }
 

@@ -1063,25 +1063,26 @@ class SingleStringTexMobject extends Mobject {
 class TexMobject extends Mobject {
   constructor(
     texStrings,
+    config = {},
     scene,
-    texToColorMap = {},
-    style = {
-      fillColor: consts.WHITE,
-      fillOpacity: 1,
-      strokeColor: consts.WHITE,
-      strokeOpacity: 1,
-      strokeWidth: 1,
-    },
-    startString = "",
-    endString = "",
   ) {
+    let fullConfig = Object.assign(
+      TexMobject.defaultConfig(),
+      config,
+    );
+    fullConfig.style =
+      utils.styleFromConfigAndDefaults(config.style, TexMobject.defaultStyle());
+
+    const { texToColorMap, startString, endString, style } = fullConfig;
+    let splitTexStrings = TexMobject.splitStringsWithMap(texStrings, texToColorMap);
+
     // Scale and position the combined tex string.
     let combinedTexString = SingleStringTexMobject.fromTexString(
-      `${startString}${texStrings.join(' ')}${endString}`, style, scene,
+      `${startString}${splitTexStrings.join(' ')}${endString}`, style, scene,
     );
 
     // Align individual tex strings with the combined string.
-    let singleStringTexMobjects = texStrings.map(tex => {
+    let singleStringTexMobjects = splitTexStrings.map(tex => {
       let wrappedString = `${startString}${tex}${endString}`;
       let stringStyle = {...style};
       if (tex in texToColorMap) {
@@ -1112,23 +1113,59 @@ class TexMobject extends Mobject {
     }
 
     super(null, singleStringTexMobjects, null);
-    this.texString = texStrings.join(" ");
-    this.texStrings = texStrings;
+    this.texStrings = _.cloneDeep(texStrings);
+    this.config = _.cloneDeep(config);
     this.scene = scene;
-    this.startString = startString;
-    this.endString = endString;
-    this.texToColorMap = texToColorMap;
+  }
+
+  static splitStringsWithMap(texStrings, texMap) {
+    if (_.isEmpty(texMap)) {
+      return _.clone(texStrings);
+    }
+    let ret = [];
+    for (let texString of texStrings) {
+      for (let key of Object.keys(texMap)) {
+        let split = texString.split(key);
+        if (split.length === 1) {
+          ret.push(...split);
+        } else {
+          if (split[0].length > 0) {
+            ret.push(split[0].trim());
+          }
+          ret.push(key);
+          if (split[1].length > 0) {
+            ret.push(split[1].trim());
+          }
+        }
+      }
+    }
+    return ret;
+  }
+
+  static defaultConfig() {
+    return {
+      texToColorMap: {},
+      startString: "",
+      endString: "",
+    };
+  }
+
+  static defaultStyle() {
+    return {
+      fillColor: consts.WHITE,
+      fillOpacity: 1,
+      strokeColor: consts.WHITE,
+      strokeOpacity: 1,
+      strokeWidth: 1,
+    };
   }
 
   clone(parent) {
     // TODO: This is very wasteful, since the children are removed later
     let clone = new TexMobject(
-      _.cloneDeep(this.texStrings),
+      this.texStrings,
+      this.config,
       this.scene,
-      _.cloneDeep(this.texToColorMap),
-      this.getStyleDict(),
-      this.startString,
-      this.endString,
     );
 
     let children = Two.Utils.map(this.children, function (child) {
@@ -1163,19 +1200,41 @@ class TexMobject extends Mobject {
 class TextMobject extends TexMobject {
   constructor(
     texStrings,
-    scene,
-    texToColorMap = {},
-    style = {
+    config = {},
+    scene = null,
+  ) {
+    // eslint-disable-next-line
+    console.assert(
+      scene !== null,
+      "Called TexMobject constructor without a scene",
+    );
+    let fullConfig = Object.assign(
+      TextMobject.defaultConfig(),
+      config,
+      { startString: "\\textrm{", endString: "}" },
+    );
+    fullConfig.style =
+      utils.styleFromConfigAndDefaults(config.style, TextMobject.defaultStyle());
+    super(texStrings, fullConfig, scene);
+    this.config = _.cloneDeep(config);
+    this.texStrings = _.cloneDeep(texStrings);
+    this.scene = scene;
+  }
+
+  static defaultConfig() {
+    return {
+      texToColorMap: {},
+    };
+  }
+
+  static defaultStyle() {
+    return {
       fillColor: consts.WHITE,
       fillOpacity: 1,
       strokeColor: consts.WHITE,
       strokeOpacity: 1,
       strokeWidth: 1,
-    },
-    startString = "\\textrm{",
-    endString = "}",
-  ) {
-    super(texStrings, scene, texToColorMap, style, startString, endString);
+    };
   }
 }
 

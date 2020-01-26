@@ -466,7 +466,7 @@ export default {
         /*moveCursor=*/ false,
       );
       this.toggleCode();
-      this.play(null, /*singleAnimationOnly=*/ false);
+      // this.play(null, /*singleAnimationOnly=*/ false);
     },
     toggleCode: function() {
       this.displayCode = !this.displayCode;
@@ -518,7 +518,12 @@ export default {
     },
     buildMobject: function(mobjectData) {
       if (utils.isTexData(mobjectData)) {
-        // ???
+        let m = new Manim[mobjectData.className](
+          mobjectData.args,
+          mobjectData.config,
+          this.scene,
+        );
+        return m;
       } else if (!utils.isGroupData(mobjectData)) {
         let m = new Manim[mobjectData.className](mobjectData.config);
         m.applyTransformations(mobjectData.transformations);
