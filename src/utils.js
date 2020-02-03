@@ -739,7 +739,7 @@ export function styleFromConfigAndDefaults(defaults = {}, config) {
 }
 
 function snakeToCamel(s) {
-  return s.replace(/(\_\w)/g, function(m){return m[1].toUpperCase();});
+  return s.replace(/(_\w)/g, function(m){return m[1].toUpperCase();});
 }
 
 export function renameSnakeKeys(o) {
