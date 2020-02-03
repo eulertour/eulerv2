@@ -5,7 +5,7 @@ import * as utils from './utils.js'
 class Scene extends Two {
   constructor(conf) {
     super(conf);
-    this.lastStoppingFrame = 0;
+    this.elapsedTime = 0;
     this.wrapper = null;
     this.onAnimationFinished = null;
   }
@@ -31,13 +31,15 @@ class Scene extends Two {
     this.beginAnimation(animation);
     this.update();
     this.onAnimationFinished = onAnimationFinished;
-    this.lastStoppingFrame = this.frameCount;
-    this.wrapper = function(frameCount) {
-      animation.interpolate((frameCount - this.lastStoppingFrame) / 60);
+    this.elapsedTime = 0;
+    this.wrapper = function(frameCount, timeDelta) {
+      this.elapsedTime += timeDelta;
+      let percentFinished = this.elapsedTime / animation.runtime;
+      animation.interpolate(percentFinished);
       if (onStep !== null) {
-        onStep((frameCount - this.lastStoppingFrame) / 60);
+        onStep(percentFinished);
       }
-      if (animation.isFinished((frameCount - this.lastStoppingFrame) / 60)) {
+      if (animation.isFinished(percentFinished)) {
         if (this.removeMobjectUponFinish) {
           this.remove(animation.mobject);
         }
