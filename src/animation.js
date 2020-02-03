@@ -6,7 +6,7 @@ class Animation {
     mobject,
     config = {},
   ) {
-    const fullConfig = Object.assign({}, Animation.defaultConfig(), config);
+    const fullConfig = Object.assign(Animation.defaultConfig(), config);
     Object.assign(this, fullConfig);
     this.mobject = mobject;
   }
@@ -188,7 +188,7 @@ class ReplacementTransform extends Animation {
 
 class ShowCreation extends Animation {
   constructor(mobject, config) {
-    const fullConfig = Object.assign({}, ShowCreation.defaultConfig(), config);
+    const fullConfig = Object.assign(ShowCreation.defaultConfig(), config);
     super(mobject, fullConfig);
   }
 
