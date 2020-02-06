@@ -15,7 +15,7 @@ class Animation {
     return {
       rateFunc: utils.smooth,
       lagRatio: 0,
-      runtime: 1,
+      runtime: 1000,
     };
   }
 
