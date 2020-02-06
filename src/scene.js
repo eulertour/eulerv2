@@ -39,8 +39,6 @@ class Scene extends Two {
       let percentFinishedFrames = (frameCount - this.lastStoppingFrame) / 60;
       let percentFinishedTime = this.elapsedTime / 1000;
       let percentFinished = percentFinishedTime;
-      console.log(percentFinishedFrames);
-      console.log(percentFinishedTime);
       animation.interpolate(percentFinished);
       if (onStep !== null) {
         onStep(percentFinished);
