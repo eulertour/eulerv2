@@ -74,9 +74,6 @@ export default {
       test: [1,2,3],
     }
   },
-  mounted() {
-    // console.log(this.preSetupMobjects);
-  },
   computed: {
     mobjectNames() {
       return Object.keys(this.mobjects);

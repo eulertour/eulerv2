@@ -2,12 +2,11 @@
   <div>
     <v-select
       label="Start Mobject"
-      v-bind:items="startMobjectChoices"
+      v-bind:items="postSetupMobjects"
       v-bind:readonly="animating"
       v-model="currentStartMobject"
-      v-bind:error-messages="startError"
       class="mb-5"
-      v-bind:hide-details="startError.length === 0"
+      hide-details
     >
       <template v-slot:selection="{ item, index }">
         <v-chip>
@@ -38,29 +37,9 @@ export default {
     scene: Object,
     animating: Boolean,
     setup: Object,
-    sceneBeforeAnimation: Array,
+    postSetupMobjects: Array,
+    postAnimationMobjects: Array,
     animationDiff: Object,
-  },
-  computed: {
-    startMobjectChoices() {
-      return this.sceneBeforeAnimation;
-    },
-    endMobjectChoices() {
-      return _.difference(
-        Object.keys(this.mobjectData),
-        this.sceneBeforeAnimation,
-      );
-    },
-    startError() {
-      if (!this.startMobjectChoices.includes(this.currentStartMobject)) {
-        return ["Start Mobject is required"];
-      } else {
-        return [];
-      }
-    },
-    isValid() {
-      return this.startError.length === 0;
-    }
   },
   data() {
     return {
@@ -79,13 +58,9 @@ export default {
     },
   },
   methods: {
-    mobjectIsAdded(mobjectName) {
-      let diff = this.animationDiff;
-      return _.indexOf(diff['add'], mobjectName) !== -1;
-    },
     mobjectIsRemoved(mobjectName) {
-      let diff = this.animationDiff;
-      return _.indexOf(diff['remove'], mobjectName) !== -1;
+      return this.postSetupMobjects.includes(mobjectName) &&
+        !this.postAnimationMobjects.includes(mobjectName);
     }
   },
 }

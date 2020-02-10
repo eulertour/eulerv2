@@ -1,8 +1,8 @@
 <template>
   <div>
-  <div class="headline mb-5">
+  <div class="mb-5">
     <div
-      class="lighten-4 rounded px-2"
+      class="headline lighten-4 rounded px-2"
       v-bind:class="{ blue: postSetup }"
     >
       Post-Setup Mobjects:
@@ -38,7 +38,7 @@
     v-on:config-change="(key, val)=>$emit('config-change', key, val)"
   />
 
-  <div class="my-9">
+  <div class="headline my-9">
     Animation Diff
     <Diff v-bind:diff="animationDiff"/>
   </div>
@@ -71,9 +71,9 @@
     </v-btn>
   </div>
 
-  <div class="headline">
+  <div>
     <div
-      class="lighten-4 rounded px-2"
+      class="headline lighten-4 rounded px-2"
       v-bind:class="{ blue: postAnimation }"
     >
       Post-Animation Mobjects:

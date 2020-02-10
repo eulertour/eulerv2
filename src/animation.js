@@ -126,6 +126,10 @@ class Animation {
     return this.mobject.clone();
   }
 
+  mobjectNameFromArgs(args) {
+    return args[0];
+  }
+
   static interpolateSubmobject() {
     // eslint-disable-next-line
     console.error(`${this.name} does not override interpolateSubmobject()`);
@@ -173,11 +177,11 @@ class ReplacementTransform extends Animation {
 
   static getDiff(startMobject, config, mobjectsInScene, /* mobjectData */) {
     let targetMobject = config.targetMobject;
-    let ret = {};
+    let ret = { mobjects: {}};
     if (mobjectsInScene.includes(startMobject)) {
-      ret[startMobject] = {"added": [true, false]};
+      ret['mobjects'][startMobject] = {"added": [true, false]};
     }
-    ret[targetMobject] = {"added": [false, true]};
+    ret['mobjects'][targetMobject] = {"added": [false, true]};
     return ret;
   }
 

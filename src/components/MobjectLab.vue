@@ -55,7 +55,6 @@
                   v-bind:animation-diff="currentAnimationDiff"
                   v-bind:post-setup-mobjects="postSetupMobjects"
                   v-bind:post-animation-mobjects="postAnimationMobjects"
-                  v-bind:scene-before-animation="sceneBeforeAnimation"
                   v-on:arg-change="(argNum, arg)=>$emit('handle-arg-change', argNum, arg)"
                   v-on:config-change="(key, val)=>$emit('config-change', key, val)"
                   v-on:jump-to-start="$emit('jump-post-setup')"

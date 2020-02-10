@@ -249,6 +249,15 @@ class Group extends Two.Group {
     }
   }
 
+  // Always assume rotation about the z axis.
+  rotate(angle, axis, config, reverse) {
+    if (reverse) {
+      angle *= -1;
+    }
+    let rotationMatrix = utils.getRotationMatrix(angle, axis);
+    this.transformWithMatrix(rotationMatrix);
+  }
+
   applyTransformations(transformations) {
     for (let i = 0; i < transformations.length; i++) {
       let command = transformations[i][0];
