@@ -418,16 +418,18 @@ export default {
       );
     },
     chainNextAnimation: function() {
-      if (this.animationIndex === this.animations.length - 1) {
+      this.stepForward();
+      if (this.animationIndex === this.animations.length - 1 && this.animationOffset === 1) {
         return;
       }
-      this.stepForward();
       if (this.animationIsValid && this.sceneIsValid) {
+        let currentAnimationMobject = this.currentAnimation.animation.mobject;
+        this.savedPreAnimationMobject = currentAnimationMobject.clone();
+        this.savedPreAnimationMobjectInScene = this.scene.contains(currentAnimationMobject);
         this.scene.playAnimation(
           this.currentAnimation.animation,
           /*onStep=*/ this.onAnimationStep,
           /*onAnimationFinished=*/ () => {
-            this.applyDiff(this.currentAnimationDiff);
             this.chainNextAnimation();
           },
         );
@@ -513,9 +515,9 @@ export default {
       let style = {};
       for (let styleAttr of Object.keys(styleDiff)) {
         if (!reverse) {
-          style[styleAttr] = styleDiff[styleAttr][0];
-        } else {
           style[styleAttr] = styleDiff[styleAttr][1];
+        } else {
+          style[styleAttr] = styleDiff[styleAttr][0];
         }
         this.mobjects[mobjectName].mobject.applyStyle(style);
       }
@@ -670,29 +672,26 @@ export default {
           /*reverse=*/false,
           /*moveCursor=*/false,
         );
-      } else if (this.postSetup) {
-        if (this.animating) {
-          // eslint-disable-next-line
-          console.assert(this.savedPreAnimationMobject !== null);
-          let savedPreAnimationMobjectName = this.currentAnimation.animation.mobjectNameFromArgs(
-            this.currentAnimation.args
-          );
-          this.scene.clearAnimation();
-          this.scene.remove(this.currentAnimation.animation.mobject);
-          if (this.savedPreAnimationMobjectInScene) {
-            this.scene.add(this.savedPreAnimationMobject);
-          }
-          this.mobjects[savedPreAnimationMobjectName].mobject = this.savedPreAnimationMobject;
-          this.savedPreAnimationMobject = null;
-          this.savedPreAnimationMobjectInScene = null;
+      } else if (this.savedPreAnimationMobject !== null) {
+        // TODO: All jumps need to handle the possiblity of animating.
+        // eslint-disable-next-line
+        console.assert(this.animationOffset >= 1);
+        let savedPreAnimationMobjectName = this.currentAnimation.animation.mobjectNameFromArgs(
+          this.currentAnimation.args
+        );
+        this.scene.clearAnimation();
+        this.scene.remove(this.currentAnimation.animation.mobject);
+        if (this.savedPreAnimationMobjectInScene) {
+          this.scene.add(this.savedPreAnimationMobject);
         }
+        this.mobjects[savedPreAnimationMobjectName].mobject = this.savedPreAnimationMobject;
+        this.savedPreAnimationMobject = null;
+        this.savedPreAnimationMobjectInScene = null;
         this.applyDiff(
           this.currentAnimationDiff,
           /*reverse=*/false,
           /*moveCursor=*/false,
         );
-      } else {
-        return;
       }
       this.preSetup = false;
       this.animationOffset = 1;
@@ -713,6 +712,7 @@ export default {
       this.currentAnimation.animation = this.buildCurrentAnimation();
       if (this.sceneIsValid) {
         this.jumpPostSetup();
+        this.preSetup = false;
       }
     },
     /* Moves to the post-setup stage of the previous Animation. */
