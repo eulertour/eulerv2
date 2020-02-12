@@ -1,10 +1,10 @@
 <template>
   <div class="pa-0">
     <v-select
-      label="End Mobject"
-      v-bind:items="endMobjectChoices"
+      label="Mobject"
+      v-bind:items="mobjectChoices"
       v-bind:readonly="animating"
-      v-model="currentEndMobject"
+      v-model="chosenMobject"
       v-bind:error-messages="endError"
       v-bind:hide-details="endError.length === 0"
       class="mb-5"
@@ -38,41 +38,37 @@ export default {
     scene: Object,
     animating: Boolean,
     setup: Object,
-    sceneBeforeAnimation: Array,
     animationDiff: Object,
+    postAnimationMobjects: Array,
   },
   computed: {
-    startMobjectChoices() {
-      return this.sceneBeforeAnimation;
-    },
-    endMobjectChoices() {
+    mobjectChoices() {
       return _.difference(
         Object.keys(this.mobjectData),
-        this.sceneBeforeAnimation,
+        this.postSetupMobjects,
       );
     },
-    endError() {
-      if (!this.endMobjectChoices.includes(this.currentEndMobject)) {
+    error() {
+      if (this.postAnimationMobjects.includes(this.chosenMobject)) {
         return ["End Mobject is required"];
       } else {
         return [];
       }
     },
-    isValid() {
+    valid() {
       return this.endError.length === 0;
     }
   },
   data() {
     return {
-      currentStartMobject: null,
-      currentEndMobject: null,
+      chosenMobject: null,
     }
   },
   mounted() {
-    this.currentEndMobject = this.animationData.args[0];
+    this.chosenMobject = this.animationData.args[0];
   },
   watch: {
-    currentEndMobject: function(newMobject, oldMobject) {
+    chosenMobject: function(newMobject, oldMobject) {
       // ignore the initial mount
       if (oldMobject !== null) {
         this.$emit('arg-change', 0, newMobject);
@@ -82,11 +78,15 @@ export default {
   methods: {
     mobjectIsAdded(mobjectName) {
       let diff = this.animationDiff;
-      return _.indexOf(diff['add'], mobjectName) !== -1;
+      return mobjectName in Object.keys(diff)
+        && 'added' in diff[mobjectName]
+        && diff[mobjectName]['added'][1];
     },
     mobjectIsRemoved(mobjectName) {
       let diff = this.animationDiff;
-      return _.indexOf(diff['remove'], mobjectName) !== -1;
+      return mobjectName in Object.keys(diff)
+        && 'added' in diff[mobjectName]
+        && !diff[mobjectName]['added'][1];
     }
   },
 }

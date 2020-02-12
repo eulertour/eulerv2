@@ -225,7 +225,6 @@ export default {
     releaseNotes: String,
     releaseNotesDialogProp: Boolean,
     scene: Object,
-    sceneBeforeAnimation: Array,
     sceneChoices: Array,
     sceneHeaderStyle: Object,
     sceneIsValid: Boolean,

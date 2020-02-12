@@ -25,7 +25,6 @@
     v-bind:post-animation-mobjects="postAnimationMobjects"
     v-bind:release-notes-dialog-prop="releaseNotesDialog"
     v-bind:release-notes="releaseNotes"
-    v-bind:scene-before-animation="sceneBeforeAnimation"
     v-bind:scene-choices="sceneChoices"
     v-bind:scene-header-style="sceneHeaderStyle"
     v-bind:scene-is-valid="sceneIsValid"
@@ -219,14 +218,8 @@ export default {
       }
       return this.diffIsValidForScene(
         this.currentAnimationDiff,
-        this.sceneBeforeAnimation,
+        this.postSetupMobjects,
       );
-    },
-    sceneBeforeAnimation() {
-      if (!this.sceneLoaded) {
-        return [];
-      }
-      return this.diffPriorScene(this.preSetupMobjects, this.currentSetupDiff);
     },
     postSetup() {
       return !this.preSetup && this.animationOffset === 0 && this.savedPreAnimationMobject === null;
@@ -302,13 +295,19 @@ export default {
         mobjectData.className = pythonData.className;
         mobjectData.args = pythonData.args.slice();
         mobjectData.config = utils.renameSnakeKeys(Object.assign({}, pythonData.config));
-        mobjectData.submobjects = pythonData.submobjects.slice();
-        mobjectData.style = Object.assign({}, pythonData.style);
+        if ('submobjects' in pythonData) {
+          mobjectData.submobjects = pythonData.submobjects.slice();
+        }
+        if ('style' in pythonData) {
+          mobjectData.style = Object.assign({}, pythonData.style);
+        }
         if (!utils.isGroupData(mobjectData)) {
           this.buildAndSetMobject(mobjectData);
         }
         newMobjects[mobjectName] = mobjectData;
       }
+
+      // Initialize Groups.
 
       let newAnimations = [];
       for (let animationData of scene.animation_info_list) {
@@ -954,34 +953,18 @@ export default {
       }
       return ret;
     },
-    diffPriorScene: function(scene, diff) {
-      diff = utils.getFullDiff(diff);
-      scene = _.concat(
-        scene,
-        _.difference(diff["add"], utils.getMobjectsAddedToParent(diff)),
-      );
-      scene = _.difference(
-        scene,
-        _.difference(diff["remove"], utils.getMobjectsRemovedFromParent(diff)),
-      );
-      return scene;
-    },
     updateMobjectListWithDiff(mobjectList, diff, reverse=false) {
       if (diff === undefined) {
         return _.clone(mobjectList);
       }
-      let added, removed;
+      let addedOrRemoved = Object.keys(diff).filter(mobjectName => "added" in diff[mobjectName]);
+      let added;
       if (!reverse) {
-        added = Object.keys(diff)
-          .filter(mobjectName => "added" in diff[mobjectName] && diff[mobjectName]["added"][1]);
-        removed = Object.keys(diff)
-          .filter(mobjectName => "added" in diff[mobjectName] && !diff[mobjectName]["added"][1]);
+        added = addedOrRemoved.filter(mobjectName => diff[mobjectName]["added"][1]);
       } else {
-        added = Object.keys(diff)
-          .filter(mobjectName => "added" in diff[mobjectName] && !diff[mobjectName]["added"][1]);
-        removed = Object.keys(diff)
-          .filter(mobjectName => "added" in diff[mobjectName] && diff[mobjectName]["added"][1]);
+        added = addedOrRemoved.filter(mobjectName => !diff[mobjectName]["added"][1]);
       }
+      let removed = _.difference(addedOrRemoved, added);
       return _.concat(_.difference(mobjectList, removed), added);
     },
   },

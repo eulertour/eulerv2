@@ -46,7 +46,6 @@ export default {
     scene: Object,
     animating: Boolean,
     setup: Object,
-    sceneBeforeAnimation: Array,
     animationDiff: Object,
     postSetupMobjects: Array,
   },

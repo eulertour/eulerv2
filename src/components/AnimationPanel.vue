@@ -29,7 +29,6 @@
     v-bind:is="animationComponent"
     v-bind:mobject-classes="mobjectClasses"
     v-bind:mobject-data="mobjectData"
-    v-bind:scene-before-animation="sceneBeforeAnimation"
     v-bind:post-setup-mobjects="postSetupMobjects"
     v-bind:post-animation-mobjects="postAnimationMobjects"
     v-bind:scene="scene"
@@ -119,7 +118,6 @@ export default {
     postSetup: Boolean,
     postAnimation: Boolean,
     setup: Object,
-    sceneBeforeAnimation: Array,
     animationDiff: Object,
     postSetupMobjects: Array,
     postAnimationMobjects: Array,
