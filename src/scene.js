@@ -9,6 +9,7 @@ class Scene extends Two {
     this.elapsedTime = 0;
     this.wrapper = null;
     this.onAnimationFinished = null;
+    this.paused = null;
   }
 
   clearAnimation() {
@@ -34,8 +35,17 @@ class Scene extends Two {
     this.onAnimationFinished = onAnimationFinished;
     this.lastStoppingFrame = this.frameCount;
     this.elapsedTime = 0;
+    this.paused = false;
     this.wrapper = function(frameCount, timeDelta) {
-      this.elapsedTime += timeDelta;
+      if (this.paused) {
+        // On the first call after being paused, timeDelta will typically be
+        // much larger than it should be. Ignore this large timeDelta and it
+        // will be fixed on the next call.
+        this.elapsedTime += 0;
+        this.paused = false;
+      } else {
+        this.elapsedTime += timeDelta;
+      }
       let percentFinishedFrames = (frameCount - this.lastStoppingFrame) / 60;
       let percentFinishedTime = this.elapsedTime / 1000;
       let percentFinished = percentFinishedTime;
@@ -54,6 +64,11 @@ class Scene extends Two {
       }
     };
     this.bind('update', this.wrapper).play();
+  }
+
+  pause() {
+    this.paused = true;
+    Two.prototype.pause.call(this);
   }
 
   contains(mobject) {

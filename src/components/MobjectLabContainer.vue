@@ -63,7 +63,6 @@ import * as _ from "lodash";
 import * as consts from "../constants.js";
 import * as Manim from "../manim.js";
 import * as utils from "../utils.js";
-
 import MobjectLab from "./MobjectLab.vue";
 
 export default {
@@ -192,7 +191,7 @@ export default {
       },
     },
     animating() {
-      return this.animationOffset !== 0 && this.animationOffset !== 1;
+      return this.savedPreAnimationMobject !== null;
     },
     sceneHeaderStyle() {
       let ret = {};
@@ -230,10 +229,10 @@ export default {
       return this.diffPriorScene(this.preSetupMobjects, this.currentSetupDiff);
     },
     postSetup() {
-      return !this.preSetup && this.animationOffset != 1;
+      return !this.preSetup && this.animationOffset === 0 && this.savedPreAnimationMobject === null;
     },
     postAnimation() {
-      return !this.preSetup && this.animationOffset == 1;
+      return !this.preSetup && this.animationOffset === 1 && this.savedPreAnimationMobject === null;
     },
     postSetupMobjects() {
       if (!this.sceneLoaded) {
@@ -591,21 +590,33 @@ export default {
       }
       this.scene.update();
     },
+    jumpPostSetupFromAnimating: function() {
+      // eslint-disable-next-line
+      console.assert(this.animating);
+      let savedPreAnimationMobjectName = this.currentAnimation.animation.mobjectNameFromArgs(
+        this.currentAnimation.args
+      );
+      this.scene.clearAnimation();
+      this.scene.remove(this.currentAnimation.animation.mobject);
+      if (this.savedPreAnimationMobjectInScene) {
+        this.scene.add(this.savedPreAnimationMobject);
+      }
+      this.mobjects[savedPreAnimationMobjectName].mobject = this.savedPreAnimationMobject;
+      this.savedPreAnimationMobject = null;
+      this.savedPreAnimationMobjectInScene = null;
+    },
     /* Moves to the pre-setup stage of the current Animation. */
     jumpPreSetup: function() {
       if (this.preSetup) {
         return;
-      } else if (this.postSetup) {
-        if (this.animating) {
-          this.scene.clearAnimation();
-          // TODO: For groups, reset all mobjects in the group.
-          let mobjectToRevertName = this.currentAnimation.args[0];
-          let mobjectToRevertData = this.mobjects[mobjectToRevertName];
-          this.scene.remove(mobjectToRevertData.mobject);
-          this.buildAndSetMobject(mobjectToRevertData);
-          this.scene.add(mobjectToRevertData.mobject);
-          this.scene.update();
-        }
+      } else if (this.savedPreAnimationMobject !== null) {
+        this.jumpPostSetupFromAnimating();
+        this.applyDiff(
+          this.currentSetupDiff,
+          /*reverse=*/true,
+          /*moveCursor=*/false,
+        );
+      } else if (this.animationOffset === 0) {
         this.applyDiff(
           this.currentSetupDiff,
           /*reverse=*/true,
@@ -625,6 +636,7 @@ export default {
           /*moveCursor=*/false,
         );
       }
+      this.scene.update();
       this.preSetup = true;
       this.animationOffset = 0;
     },
@@ -636,27 +648,19 @@ export default {
           /*reverse=*/false,
           /*moveCursor=*/false,
         );
-      } else if (this.postSetup) {
-        if (this.animating) {
-          this.scene.clearAnimation();
-          // TODO: For groups, reset all mobjects in the group.
-          let mobjectToRevertName = this.currentAnimation.args[0];
-          let mobjectToRevertData = this.mobjects[mobjectToRevertName];
-          this.scene.remove(mobjectToRevertData.mobject);
-          // TODO: Fix this
-          this.buildAndSetMobject(mobjectToRevertData);
-          this.scene.add(mobjectToRevertData.mobject);
-          this.scene.update();
-        }
-      } else {
+      } else if (this.savedPreAnimationMobject !== null) {
+        this.jumpPostSetupFromAnimating();
+      } else if (this.animationOffset === 0) {
         // eslint-disable-next-line
-        console.assert(this.postAnimation);
+        console.assert(this.postSetup);
+      } else {
         this.applyDiff(
           this.currentAnimationDiff,
           /*reverse=*/true,
-          /*moveCursor=*/false,
+          /*moveCursor=*/true,
         );
       }
+      this.scene.update();
       this.preSetup = false;
       this.animationOffset = 0;
     },
@@ -673,26 +677,23 @@ export default {
           /*moveCursor=*/false,
         );
       } else if (this.savedPreAnimationMobject !== null) {
-        // TODO: All jumps need to handle the possiblity of animating.
-        // eslint-disable-next-line
-        console.assert(this.animationOffset >= 1);
-        let savedPreAnimationMobjectName = this.currentAnimation.animation.mobjectNameFromArgs(
-          this.currentAnimation.args
-        );
-        this.scene.clearAnimation();
-        this.scene.remove(this.currentAnimation.animation.mobject);
-        if (this.savedPreAnimationMobjectInScene) {
-          this.scene.add(this.savedPreAnimationMobject);
-        }
-        this.mobjects[savedPreAnimationMobjectName].mobject = this.savedPreAnimationMobject;
-        this.savedPreAnimationMobject = null;
-        this.savedPreAnimationMobjectInScene = null;
+        this.jumpPostSetupFromAnimating();
         this.applyDiff(
           this.currentAnimationDiff,
           /*reverse=*/false,
           /*moveCursor=*/false,
         );
+      } else if (this.animationOffset === 0) {
+        this.applyDiff(
+          this.currentAnimationDiff,
+          /*reverse=*/false,
+          /*moveCursor=*/false,
+        );
+      } else {
+        // eslint-disable-next-line
+        console.assert(this.postAnimation);
       }
+      this.scene.update();
       this.preSetup = false;
       this.animationOffset = 1;
     },
@@ -717,11 +718,12 @@ export default {
     },
     /* Moves to the post-setup stage of the previous Animation. */
     stepBackward: function() {
-      if (this.animationOffset !== 0) {
+      if (
+        this.animating
+        || this.animationIndex === 0
+        || this.animationOffset !== 0
+      ) {
         this.jumpPostSetup();
-        return;
-      }
-      if (this.animationIndex === 0) {
         return;
       }
       let postSetupMobs = this.updateMobjectListWithDiff(
