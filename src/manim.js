@@ -250,12 +250,18 @@ class Group extends Two.Group {
   }
 
   // Always assume rotation about the z axis.
-  rotate(angle, axis, config, reverse) {
-    if (reverse) {
-      angle *= -1;
-    }
-    let rotationMatrix = utils.getRotationMatrix(angle, axis);
+  handleRotate(angle, axis, config, reverse) {
+    let rotationMatrix = utils.getRotationMatrix(reverse ? -angle : angle, axis);
     this.transformWithMatrix(rotationMatrix);
+  }
+
+  handleShift(vector, reverse) {
+    this.translateMobject(reverse ? vector.map(x => -x) : vector);
+  }
+
+  // Always assume scaling about the Mobject's center.
+  handleScale(factor, config, reverse) {
+    this.scaleMobject(reverse ? 1 / factor : factor);
   }
 
   applyTransformations(transformations) {

@@ -42,9 +42,15 @@
           case 'rotate':
             return this.rotationObj(transformationArgs);
             break;
+          case 'shift':
+            return this.shiftObj(transformationArgs);
+            break;
+          case 'scale':
+            return this.scaleObj(transformationArgs);
+            break;
           default: {
             // eslint-disable-next-line
-            console.error(`objectify() has no implementation for ${transformationType}`);
+            console.error(`objectify() has no implementation for ${transformationType}.`);
           }
         }
       },
@@ -52,7 +58,17 @@
         return {
           angle: rotationArgs[0].toFixed(5),
           axis: `[${rotationArgs[1]}]`,
-        }
+        };
+      },
+      shiftObj(shiftArgs) {
+        return {
+          vector: `[${shiftArgs[0].map(x => x.toFixed(3))}]`,
+        };
+      },
+      scaleObj(scaleArgs) {
+        return {
+          factor: scaleArgs[0].toFixed(5),
+        };
       }
     }
   }

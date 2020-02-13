@@ -191,7 +191,7 @@ class ReplacementTransform extends Animation {
 }
 
 class ShowCreation extends Animation {
-  constructor(mobject, config) {
+  constructor(mobject, config={}) {
     const fullConfig = Object.assign(ShowCreation.defaultConfig(), config);
     super(mobject, fullConfig);
   }
@@ -369,6 +369,22 @@ class FadeOut extends Animation {
 }
 
 class Wait extends Animation {
+  constructor(config={}) {
+    const fullConfig = Object.assign(Wait.defaultConfig(), config);
+    super(null, fullConfig);
+  }
+
+  static defaultConfig() {
+    return {
+      duration: 1,
+      stopCondition: undefined,
+    };
+  }
+
+  mobjectNameFromArgs(/*args*/) {
+    return null;
+  }
+
   interpolateMobject() {}
 
   createStartingMobject() {}

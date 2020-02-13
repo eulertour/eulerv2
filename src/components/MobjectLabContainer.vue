@@ -289,26 +289,27 @@ export default {
       let newMobjects = {};
       for (let mobjectName of Object.keys(scene.initial_mobject_serializations)) {
         const pythonData = scene.initial_mobject_serializations[mobjectName];
-        // TODO: _.cloneDeep() causes intermittent crashes here, perhaps due to
-        // copying Float64Arrays?
         let mobjectData = {};
         mobjectData.className = pythonData.className;
         mobjectData.args = pythonData.args.slice();
         mobjectData.config = utils.renameSnakeKeys(Object.assign({}, pythonData.config));
-        if ('submobjects' in pythonData) {
-          mobjectData.submobjects = pythonData.submobjects.slice();
-        }
+        mobjectData.submobjects = 'submobjects' in pythonData ? pythonData.submobjects.slice() : [];
         if ('style' in pythonData) {
           mobjectData.style = Object.assign({}, pythonData.style);
         }
-        if (!utils.isGroupData(mobjectData)) {
-          this.buildAndSetMobject(mobjectData);
-        }
+        this.buildAndSetMobject(mobjectData);
         newMobjects[mobjectName] = mobjectData;
       }
 
-      // Initialize Groups.
+      // Initialize submobjects.
+      for (let mobjectName of Object.keys(newMobjects)) {
+        let parentMob = newMobjects[mobjectName].mobject;
+        for (let submobjectName of newMobjects[mobjectName].submobjects) {
+          parentMob.add(newMobjects[submobjectName].mobject);
+        }
+      }
 
+      // Initialize Animations.
       let newAnimations = [];
       for (let animationData of scene.animation_info_list) {
         let newData = {};
@@ -329,9 +330,8 @@ export default {
       this.currentAnimation.animation = this.buildCurrentAnimation();
       this.scene.update();
       this.preSetupMobjects = [];
-      this.currentSetupDiff = this.sceneDiffs[0];
       this.applyDiff(
-        this.currentSetupDiff,
+        scene.scene_diffs[0],
         /*reverse=*/ false,
         /*moveCursor=*/ false,
       );
@@ -399,7 +399,7 @@ export default {
         m.applyStyle(mobjectData.style);
         return m;
       } else {
-        // Build the Group.
+        return new Manim.Group();
       }
     },
     buildCurrentAnimation: function() {
@@ -422,8 +422,13 @@ export default {
       }
       if (this.animationIsValid && this.sceneIsValid) {
         let currentAnimationMobject = this.currentAnimation.animation.mobject;
-        this.savedPreAnimationMobject = currentAnimationMobject.clone();
-        this.savedPreAnimationMobjectInScene = this.scene.contains(currentAnimationMobject);
+        if (currentAnimationMobject !== null) {
+          this.savedPreAnimationMobject = currentAnimationMobject.clone();
+          this.savedPreAnimationMobjectInScene = this.scene.contains(currentAnimationMobject);
+        } else {
+          // Must not be null in order for this.animating to compute correctly.
+          this.savedPreAnimationMobject = undefined;
+        }
         this.scene.playAnimation(
           this.currentAnimation.animation,
           /*onStep=*/ this.onAnimationStep,
@@ -564,25 +569,31 @@ export default {
             }
           }
         }
-        if ('transformations' in diff) {
-          for (let i = 0; i < diff.transformations.length; i++) {
-            let transformation;
-            if (!reverse) {
-              transformation = diff.transformations[i];
-            } else {
-              transformation = diff.transformations[diff.transformations.length - i - 1];
-            }
-            let mobjectName = transformation[1];
-            let transformationType = transformation[2];
-            let transformationArgs = transformation.slice(3);
-            switch (transformationType) {
-              case 'rotate':
-                this.mobjects[mobjectName].mobject.rotate(...transformationArgs, reverse);
-                break;
-              default: {
-                // eslint-disable-next-line
-                console.error(`Ignoring unknown transformation ${transformationType}`);
-              }
+      }
+      if ('transformations' in diff) {
+        for (let i = 0; i < diff.transformations.length; i++) {
+          let transformation;
+          if (!reverse) {
+            transformation = diff.transformations[i];
+          } else {
+            transformation = diff.transformations[diff.transformations.length - i - 1];
+          }
+          let mobjectName = transformation[1];
+          let transformationType = transformation[2];
+          let transformationArgs = transformation.slice(3);
+          switch (transformationType) {
+            case 'rotate':
+              this.mobjects[mobjectName].mobject.handleRotate(...transformationArgs, reverse);
+              break;
+            case 'shift':
+              this.mobjects[mobjectName].mobject.handleShift(...transformationArgs, reverse);
+              break;
+            case 'scale':
+              this.mobjects[mobjectName].mobject.handleScale(...transformationArgs, reverse);
+              break;
+            default: {
+              // eslint-disable-next-line
+              console.error(`Ignoring unknown transformation ${transformationType}`);
             }
           }
         }
@@ -592,15 +603,19 @@ export default {
     jumpPostSetupFromAnimating: function() {
       // eslint-disable-next-line
       console.assert(this.animating);
-      let savedPreAnimationMobjectName = this.currentAnimation.animation.mobjectNameFromArgs(
-        this.currentAnimation.args
-      );
       this.scene.clearAnimation();
-      this.scene.remove(this.currentAnimation.animation.mobject);
-      if (this.savedPreAnimationMobjectInScene) {
-        this.scene.add(this.savedPreAnimationMobject);
+      if (this.savedPreAnimationMobject !== undefined) {
+        this.scene.remove(this.currentAnimation.animation.mobject);
+        if (this.savedPreAnimationMobjectInScene) {
+          this.scene.add(this.savedPreAnimationMobject);
+        }
+        // TODO: Is there no better way to do this? Possibly binding the Mobject
+        // name to each Mobject?
+        let savedPreAnimationMobjectName = this.currentAnimation.animation.mobjectNameFromArgs(
+          this.currentAnimation.args
+        );
+        this.mobjects[savedPreAnimationMobjectName].mobject = this.savedPreAnimationMobject;
       }
-      this.mobjects[savedPreAnimationMobjectName].mobject = this.savedPreAnimationMobject;
       this.savedPreAnimationMobject = null;
       this.savedPreAnimationMobjectInScene = null;
     },
