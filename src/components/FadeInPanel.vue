@@ -5,8 +5,8 @@
       v-bind:items="mobjectChoices"
       v-bind:readonly="animating"
       v-model="chosenMobject"
-      v-bind:error-messages="endError"
-      v-bind:hide-details="endError.length === 0"
+      v-bind:error-messages="error"
+      v-bind:hide-details="error.length === 0"
       class="mb-5"
     >
       <template v-slot:selection="{ item, index }">
@@ -40,6 +40,7 @@ export default {
     setup: Object,
     animationDiff: Object,
     postAnimationMobjects: Array,
+    postSetupMobjects: Array,
   },
   computed: {
     mobjectChoices() {
@@ -49,8 +50,8 @@ export default {
       );
     },
     error() {
-      if (this.postAnimationMobjects.includes(this.chosenMobject)) {
-        return ["End Mobject is required"];
+      if (this.postSetupMobjects.includes(this.chosenMobject)) {
+        return ["Mobject must not be in the scene."];
       } else {
         return [];
       }

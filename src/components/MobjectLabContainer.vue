@@ -415,6 +415,16 @@ export default {
         replaceMobjectNamesConfig(config),
       );
     },
+    saveMobjectPreAnimation(mobject) {
+      if (mobject !== null) {
+        this.savedPreAnimationMobject = mobject.clone();
+        this.savedPreAnimationMobjectParent = mobject.parent;
+      } else {
+        // Must not be null in order for this.animating to compute correctly.
+        this.savedPreAnimationMobject = undefined;
+        this.savedPreAnimationMobjectParent = undefined;
+      }
+    },
     chainNextAnimation: function() {
       this.stepForward();
       if (this.animationIndex === this.animations.length - 1 && this.animationOffset === 1) {
@@ -423,8 +433,7 @@ export default {
       if (this.animationIsValid && this.sceneIsValid) {
         let currentAnimationMobject = this.currentAnimation.animation.mobject;
         if (currentAnimationMobject !== null) {
-          this.savedPreAnimationMobject = currentAnimationMobject.clone();
-          this.savedPreAnimationMobjectInScene = this.scene.contains(currentAnimationMobject);
+          this.saveMobjectPreAnimation(this.currentAnimation.animation.mobject);
         } else {
           // Must not be null in order for this.animating to compute correctly.
           this.savedPreAnimationMobject = undefined;
@@ -458,9 +467,7 @@ export default {
       }
       if (this.animationIsValid && this.sceneIsValid) {
         this.currentAnimation.animation = this.buildCurrentAnimation();
-        let currentAnimationMobject = this.currentAnimation.animation.mobject;
-        this.savedPreAnimationMobject = currentAnimationMobject.clone();
-        this.savedPreAnimationMobjectInScene = this.scene.contains(currentAnimationMobject);
+        this.saveMobjectPreAnimation(this.currentAnimation.animation.mobject);
         this.scene.playAnimation(
           this.currentAnimation.animation,
           /*onStep=*/ this.onAnimationStep,
@@ -486,7 +493,7 @@ export default {
     pause: function() {
       this.scene.pause();
     },
-    applyAdd: function(mobjectName, addDiff, reverse) {
+    applyAddDiff: function(mobjectName, addDiff, reverse) {
       let presentBefore, presentAfter;
       if (!reverse) {
         [presentBefore, presentAfter] = addDiff;
@@ -514,7 +521,7 @@ export default {
       }
       this.scene.update();
     },
-    applyStyle: function(mobjectName, styleDiff, reverse) {
+    applyStyleDiff: function(mobjectName, styleDiff, reverse) {
       let style = {};
       for (let styleAttr of Object.keys(styleDiff)) {
         if (!reverse) {
@@ -523,6 +530,35 @@ export default {
           style[styleAttr] = styleDiff[styleAttr][0];
         }
         this.mobjects[mobjectName].mobject.applyStyle(style);
+      }
+    },
+    applySubmobjectDiff: function(mobjectName, submobjectDiff, reverse) {
+      let startMobjects, endMobjects;
+      if (!reverse) {
+        startMobjects = submobjectDiff[0];
+        endMobjects  = submobjectDiff[1];
+      } else {
+        startMobjects = submobjectDiff[1];
+        endMobjects  = submobjectDiff[0];
+      }
+      if (endMobjects.includes(consts.UNKNOWN_MOBJECT)) {
+        // This is likely a ReplacementTransform that had to split the
+        // submobjects. Ignore the change.
+        // eslint-disable-next-line
+        console.assert(!reverse);
+        return;
+      }
+      if (startMobjects.includes(consts.UNKNOWN_MOBJECT)) {
+        // This change was ignored while going forware, so there's nothing to do
+        // now.
+        // eslint-disable-next-line
+        console.assert(reverse);
+        return;
+      }
+      let parentMob = this.mobjects[mobjectName].mobject;
+      parentMob.remove(parentMob.submobjects());
+      for (let mobjectName of endMobjects) {
+        parentMob.add(this.mobjects[mobjectName].mobject);
       }
     },
     /*  Updates the mobjects in this.scene according to the diff. Diffs have the
@@ -554,18 +590,19 @@ export default {
           let mobject = this.mobjects[mobjectName];
           for (let attr of Object.keys(mobjectDiff)) {
             switch(attr) {
-              case "added": {
-                this.applyAdd(mobjectName, mobjectDiff.added, reverse);
+              case "added":
+                this.applyAddDiff(mobjectName, mobjectDiff.added, reverse);
                 break;
-              }
-              case "style": {
-                this.applyStyle(mobjectName, mobjectDiff.style, reverse);
+              case "style":
+                this.applyStyleDiff(mobjectName, mobjectDiff.style, reverse);
                 break;
-              }
-              default: {
+              case "submobjects":
+                this.applySubmobjectDiff(mobjectName, mobjectDiff.submobjects, reverse);
+                break;
+              default:
                 // eslint-disable-next-line
+                console.log(mobjectDiff[attr]);
                 console.error(`Ignoring unknown Mobject diff attribute ${attr}`);
-              }
             }
           }
         }
@@ -600,21 +637,29 @@ export default {
       }
       this.scene.update();
     },
+    updateDataReferences(mobjectName, mobject) {
+      this.mobjects[mobjectName].mobject = mobject;
+      for (let i = 0; i < this.mobjects[mobjectName].submobjects.length; i++) {
+        let submobjectName = this.mobjects[mobjectName].submobjects[i];
+        console.log(submobjectName, mobject.submobjects()[i]);
+        this.updateDataReferences(submobjectName, mobject.submobjects()[i]);
+      }
+    },
     jumpPostSetupFromAnimating: function() {
       // eslint-disable-next-line
       console.assert(this.animating);
       this.scene.clearAnimation();
       if (this.savedPreAnimationMobject !== undefined) {
         this.scene.remove(this.currentAnimation.animation.mobject);
-        if (this.savedPreAnimationMobjectInScene) {
-          this.scene.add(this.savedPreAnimationMobject);
+        if (this.savedPreAnimationMobjectParent !== undefined) {
+          this.savedPreAnimationMobjectParent.add(this.savedPreAnimationMobject);
         }
         // TODO: Is there no better way to do this? Possibly binding the Mobject
         // name to each Mobject?
         let savedPreAnimationMobjectName = this.currentAnimation.animation.mobjectNameFromArgs(
           this.currentAnimation.args
         );
-        this.mobjects[savedPreAnimationMobjectName].mobject = this.savedPreAnimationMobject;
+        this.updateDataReferences(savedPreAnimationMobjectName, this.savedPreAnimationMobject);
       }
       this.savedPreAnimationMobject = null;
       this.savedPreAnimationMobjectInScene = null;

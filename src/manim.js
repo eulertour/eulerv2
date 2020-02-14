@@ -370,8 +370,12 @@ class Group extends Two.Group {
     return this.children[0];
   }
 
-  submobjects() {
-    return this.children.slice(1);
+  submobjects(index) {
+    if (index === undefined) {
+      return this.children.slice(1);
+    } else {
+      return this.children.slice(1)[index];
+    }
   }
 
   points() {

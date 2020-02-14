@@ -177,17 +177,6 @@ class WriteStuff(WebScene):
         self.play(Write(example_text))
         self.play(Write(example_tex))
         self.wait()
-`;
-
-/*
-class WarpSquare(WebScene):
-    def construct(self):
-        square = Square()
-        self.play(ApplyPointwiseFunction(
-            lambda point: complex_to_R3(np.exp(R3_to_complex(point))),
-            square
-        ))
-        self.wait()
 
 
 class GroupExample(WebScene):
@@ -205,6 +194,17 @@ class GroupExample(WebScene):
         self.play(FadeIn(g1))
         self.play(ReplacementTransform(g1, g2))
         self.play(FadeOut(c2))
+        self.wait()
+`;
+
+/*
+class WarpSquare(WebScene):
+    def construct(self):
+        square = Square()
+        self.play(ApplyPointwiseFunction(
+            lambda point: complex_to_R3(np.exp(R3_to_complex(point))),
+            square
+        ))
         self.wait()
 
 
@@ -227,3 +227,5 @@ rotation and scale) from Manim.`;
 
 // Height of a latex a in Manim space.
 export const aHeightManim = 0.22565395;
+
+export const UNKNOWN_MOBJECT = "<unknown_mobject>"

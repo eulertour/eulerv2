@@ -338,6 +338,10 @@ class FadeIn extends Animation {
       'add': [mobject],
     };
   }
+
+  static getDescription() {
+    return "Fade a Mobject in";
+  }
 }
 
 class FadeOut extends Animation {
