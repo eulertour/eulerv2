@@ -43,7 +43,7 @@
   </div>
 
   <div class="d-flex justify-center pa-0 mb-7">
-    <v-btn fab v-on:click="$emit('jump-to-start')" class="mx-2">
+    <v-btn fab v-on:click="$emit('jump-post-setup')" class="mx-2">
       <v-icon color="black" x-large>mdi-skip-previous</v-icon>
     </v-btn>
     <v-btn fab v-if="this.scene.playing" v-on:click="$emit('pause')" class="mx-4">
@@ -65,7 +65,7 @@
     >
       <v-icon color="black" x-large>mdi-play</v-icon>
     </v-btn>
-    <v-btn fab v-on:click="$emit('jump-to-end')" class="mx-2">
+    <v-btn fab v-on:click="$emit('jump-post-animation')" class="mx-2">
       <v-icon color="black" x-large>mdi-skip-next</v-icon>
     </v-btn>
   </div>

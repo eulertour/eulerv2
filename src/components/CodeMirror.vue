@@ -38,7 +38,8 @@ export default {
     this.codeMirror = CodeMirror(
       document.getElementById('editor'), {
         value: this.code,
-        theme: "rubyblue", mode: "python",
+        theme: "rubyblue",
+        mode: "python",
       });
     this.codeMirror.on('change', this.updateCode);
     let cm = document.getElementsByClassName("CodeMirror")[0];

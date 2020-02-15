@@ -12,9 +12,10 @@
     v-bind:current-animation-diff="currentAnimationDiff"
     v-bind:current-animation="currentAnimation"
     v-bind:current-scene-diff="currentSetupDiff"
+    v-bind:debug-info="debugInfo"
     v-bind:debug="debug"
-    v-bind:display-code="displayCode"
-    v-bind:expanded-panel-prop="expandedPanel"
+    v-bind:ui-screen="uiScreen"
+    v-bind:expanded-panel="expandedPanel"
     v-bind:mobject-choices="mobjectChoices"
     v-bind:mobjects="mobjects"
     v-bind:pre-setup="preSetup"
@@ -31,7 +32,7 @@
     v-bind:scene-loaded="sceneLoaded"
     v-bind:scene="scene"
     v-on:chosen-scene-update="(val)=>{chosenScene=val}"
-    v-on:code-change="toggleCode"
+    v-on:switch-ui-screen="switchUiScreen"
     v-on:debug-toggle="debug = !debug"
     v-on:expanded-panel-update="(val)=>{expandedPanel=val}"
     v-on:handle-arg-change="handleArgChange"
@@ -51,6 +52,7 @@
     v-on:step-forward="stepForward"
     v-on:update-code="(val)=>{code=val}"
     v-on:update-setup="updateSetup"
+    v-on:refresh-scene-choices="refreshSceneChoices"
   />
 </template>
 
@@ -71,15 +73,21 @@ export default {
   },
   data() {
     return {
+      debugInfo: {
+        initialMobjectSerializations: {},
+        sceneDiffs: [],
+        animationDiffs: [],
+        animationInfoList: [],
+      },
       savedPreAnimationMobject: null,
       savedPreAnimationMobjectInScene: null,
       preSetupMobjects: [],
       expandedPanel: [0, 1],
       releaseNotes: consts.RELEASE_NOTES,
       releaseNotesDialog: false,
-      debug: true, // setting to false triggers a bug
+      debug: true,
       code: consts.EXAMPLE_CODE,
-      displayCode: true,
+      uiScreen: consts.uiScreens.CODE,
       playingSingleAnimation: null,
       sceneChoices: [],
       chosenScene: "SquareToCircle",
@@ -285,6 +293,13 @@ export default {
       let scene = manimlib.get_scene(this.code, [this.chosenScene]);
       scene.render();
 
+      let debugInfo = {};
+      debugInfo.initialMobjectSerializations = scene.initial_mobject_serializations;
+      debugInfo.sceneDiffs = scene.scene_diffs;
+      debugInfo.animationDiffs = scene.animation_diffs;
+      debugInfo.animationInfoList = scene.animation_info_list;
+      this.debugInfo = debugInfo;
+
       // Initialize Mobjects.
       let newMobjects = {};
       for (let mobjectName of Object.keys(scene.initial_mobject_serializations)) {
@@ -335,11 +350,11 @@ export default {
         /*reverse=*/ false,
         /*moveCursor=*/ false,
       );
-      this.toggleCode();
+      this.switchUiScreen(consts.uiScreens.CODE);
       // this.play(null, /*singleAnimationOnly=*/ false);
     },
-    toggleCode: function() {
-      this.displayCode = !this.displayCode;
+    switchUiScreen: function(uiScreen) {
+      this.uiScreen = uiScreen;
     },
     setMobjectField: function(mobjectData, allMobjectData = null) {
       if (mobjectData.className === "TexSymbol") {
@@ -639,6 +654,9 @@ export default {
     },
     updateDataReferences(mobjectName, mobject) {
       this.mobjects[mobjectName].mobject = mobject;
+      if (!('submobjects' in this.mobjects[mobjectName])) {
+        return;
+      }
       for (let i = 0; i < this.mobjects[mobjectName].submobjects.length; i++) {
         let submobjectName = this.mobjects[mobjectName].submobjects[i];
         console.log(submobjectName, mobject.submobjects()[i]);

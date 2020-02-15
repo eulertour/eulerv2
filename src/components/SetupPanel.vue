@@ -23,10 +23,10 @@
     </div>
 
     <div class="d-flex justify-center pa-0 mb-7">
-      <v-btn fab v-on:click="$emit('jump-to-start')" class="mr-9">
+      <v-btn fab v-on:click="$emit('jump-pre-setup')" class="mr-9">
         <v-icon color="black" x-large>mdi-skip-previous</v-icon>
       </v-btn>
-      <v-btn fab v-on:click="$emit('jump-to-end')">
+      <v-btn fab v-on:click="$emit('jump-post-setup')">
         <v-icon color="black" x-large>mdi-skip-next</v-icon>
       </v-btn>
     </div>

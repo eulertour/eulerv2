@@ -60,7 +60,7 @@ export default {
   watch: {
     priorScene(newPriorScene) {
       this.updateJson("prior-scene-container", newPriorScene);
-    }, 
+    },
     sceneDiff(newSceneDiff) {
       this.updateJson("scene-diff-container", newSceneDiff);
     },
