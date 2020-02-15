@@ -64,6 +64,7 @@ export default {
 .timeline {
   position: relative;
   border: 1px solid black;
+  width: 640px;
 }
 #position-indicator {
   background-color: black;

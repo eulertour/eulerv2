@@ -85,7 +85,7 @@ export default {
       expandedPanel: [0, 1],
       releaseNotes: consts.RELEASE_NOTES,
       releaseNotesDialog: false,
-      debug: true,
+      debug: false,
       code: consts.EXAMPLE_CODE,
       uiScreen: consts.uiScreens.CODE,
       playingSingleAnimation: null,

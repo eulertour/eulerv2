@@ -1,79 +1,77 @@
 <template>
-  <div class="d-flex justify-center align-top mt-7 mb-5">
-    <div id="debug" class="headline mx-2" />
-    <div
-      class="left-side d-flex flex-column justify-start align-center mr-4"
-      v-bind:class="{ 'code-width': [CODE, DEBUG].includes(uiScreen), 'panel-width': uiScreen === PANELS }"
+  <v-container class="mt-7 mb-5" id="container">
+    <v-row
+      justify="center"
     >
-      <v-toolbar width="100%" max-height="64px" class="mb-2">
-        <v-toolbar-title>example_scenes.py</v-toolbar-title>
-        <v-spacer></v-spacer>
-        <div v-for="screen in uiScreens" v-bind:key="screen">
-          <v-btn v-if="uiScreen !== screen" fab text v-on:click="(code)=>$emit('switch-ui-screen', screen)">
-            <v-icon
-              class="headline black--text"
-            >{{ uiIcon(screen) }}</v-icon>
-          </v-btn>
+      <div id="debug" class="headline mx-2" />
+      <v-col class="">
+        <v-toolbar width="100%" max-height="64px" class="mb-2">
+          <v-toolbar-title>example_scenes.py</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <div v-for="screen in uiScreens" v-bind:key="screen">
+            <v-btn v-if="uiScreen !== screen" fab text v-on:click="(code)=>$emit('switch-ui-screen', screen)">
+              <v-icon
+                class="headline black--text"
+              >{{ uiIcon(screen) }}</v-icon>
+            </v-btn>
+          </div>
+        </v-toolbar>
+        <div v-if="sceneLoaded && uiScreen === PANELS" class="expansion-panel-container">
+          <Panels
+            v-bind:animating="animating"
+            v-bind:animation-header-style="animationHeaderStyle"
+            v-bind:animation-offset="animationOffset"
+            v-bind:current-animation-diff="currentAnimationDiff"
+            v-bind:current-animation="currentAnimation"
+            v-bind:current-scene-diff="currentSceneDiff"
+            v-bind:expanded-panel-prop="expandedPanel"
+            v-bind:mobject-choices="mobjectChoices"
+            v-bind:mobjects="mobjects"
+            v-bind:post-animation-mobjects="postAnimationMobjects"
+            v-bind:post-animation="postAnimation"
+            v-bind:post-setup-mobjects="postSetupMobjects"
+            v-bind:post-setup="postSetup"
+            v-bind:pre-setup-mobjects="preSetupMobjects"
+            v-bind:pre-setup="preSetup"
+            v-bind:scene-header-style="sceneHeaderStyle"
+            v-bind:scene="scene"
+            v-on:arg-change="(argNum, arg)=>$emit('arg-change', argNum, arg)"
+            v-on:config-change="(key, val)=>$emit('config-change', key, val)"
+            v-on:expanded-panel-update="(val)=>this.$emit('expanded-panel-update', val)"
+            v-on:jump-post-animation="$emit('jump-post-animation')"
+            v-on:jump-post-setup="(val)=>this.$emit('jump-post-setup', val)"
+            v-on:jump-pre-setup="(val)=>this.$emit('jump-pre-setup', val)"
+            v-on:mobject-update="(mobjectName, attr, val)=>$emit('mobject-update', mobjectName, attr, val)"
+            v-on:pause="(e)=>$emit('pause')"
+            v-on:play="(e)=>$emit('play')"
+            v-on:replay="(e)=>$emit('replay')"
+            v-on:update-setup="(action, newSelection)=>$emit('update-setup', action, newSelection)"
+          />
         </div>
-      </v-toolbar>
-      <div v-if="sceneLoaded && uiScreen === PANELS" class="expansion-panel-container">
-        <Panels
-          v-bind:animating="animating"
-          v-bind:animation-header-style="animationHeaderStyle"
-          v-bind:animation-offset="animationOffset"
-          v-bind:current-animation-diff="currentAnimationDiff"
-          v-bind:current-animation="currentAnimation"
-          v-bind:current-scene-diff="currentSceneDiff"
-          v-bind:expanded-panel-prop="expandedPanel"
-          v-bind:mobject-choices="mobjectChoices"
-          v-bind:mobjects="mobjects"
-          v-bind:post-animation-mobjects="postAnimationMobjects"
-          v-bind:post-animation="postAnimation"
-          v-bind:post-setup-mobjects="postSetupMobjects"
-          v-bind:post-setup="postSetup"
-          v-bind:pre-setup-mobjects="preSetupMobjects"
-          v-bind:pre-setup="preSetup"
-          v-bind:scene-header-style="sceneHeaderStyle"
-          v-bind:scene="scene"
-          v-on:arg-change="(argNum, arg)=>$emit('arg-change', argNum, arg)"
-          v-on:config-change="(key, val)=>$emit('config-change', key, val)"
-          v-on:expanded-panel-update="(val)=>this.$emit('expanded-panel-update', val)"
-          v-on:jump-post-animation="$emit('jump-post-animation')"
-          v-on:jump-post-setup="(val)=>this.$emit('jump-post-setup', val)"
-          v-on:jump-pre-setup="(val)=>this.$emit('jump-pre-setup', val)"
-          v-on:mobject-update="(mobjectName, attr, val)=>$emit('mobject-update', mobjectName, attr, val)"
-          v-on:pause="(e)=>$emit('pause')"
-          v-on:play="(e)=>$emit('play')"
-          v-on:replay="(e)=>$emit('replay')"
-          v-on:update-setup="(action, newSelection)=>$emit('update-setup', action, newSelection)"
+        <CodeMirror
+          v-else-if="sceneLoaded && uiScreen === CODE"
+          v-bind:code="code"
+          v-on:update-code="(code)=>$emit('update-code', code)"
         />
-      </div>
-      <CodeMirror
-        v-else-if="sceneLoaded && uiScreen === CODE"
-        v-bind:code="code"
-        v-on:update-code="(code)=>$emit('update-code', code)"
-      />
-      <div id="debug-panel" v-else-if="sceneLoaded && uiScreen === DEBUG"/>
-      <v-card v-else class="d-flex justify-center align-center" height="500px" width="100%">
-        <v-progress-circular indeterminate />
-      </v-card>
-      <div v-if="uiScreen === CODE" class="d-flex justify-space-between mt-4" style="width:100%">
-        <div style="width:60%">
-          <v-select v-bind:items="sceneChoices" v-model="chosenScene" label="Scene" solo></v-select>
+        <v-card v-else class="d-flex justify-center align-center" height="500px" width="100%">
+          <v-progress-circular indeterminate />
+        </v-card>
+        <div v-if="uiScreen === CODE" class="d-flex justify-space-between mt-4" style="width:100%">
+          <div style="width:60%">
+            <v-select v-bind:items="sceneChoices" v-model="chosenScene" label="Scene" solo></v-select>
+          </div>
+          <div>
+            <v-btn class="mr-2" large v-on:click="$emit('refresh-scene-choices')">
+              <v-icon class="headline black--text">mdi-replay</v-icon>
+            </v-btn>
+            <v-btn large v-on:click="$emit('run-manim')">
+              <v-icon class="headline black--text mr-2">mdi-cube-outline</v-icon>
+              <span class="title">Render</span>
+            </v-btn>
+          </div>
         </div>
-        <div>
-          <v-btn class="mr-2" large v-on:click="$emit('refresh-scene-choices')">
-            <v-icon class="headline black--text">mdi-replay</v-icon>
-          </v-btn>
-          <v-btn large v-on:click="$emit('run-manim')">
-            <v-icon class="headline black--text mr-2">mdi-cube-outline</v-icon>
-            <span class="title">Render</span>
-          </v-btn>
-        </div>
-      </div>
-    </div>
-    <div id="visualization-placeholder">
-      <div id="visualization">
+      </v-col>
+      <v-col>
         <div id="manim-background" />
         <Timeline
           class="mt-2"
@@ -92,8 +90,8 @@
           v-bind:scene="scene"
           v-bind:finished="animationIndex === animations.length - 1 && animationOffset === 1"
         />
-      </div>
-    </div>
+      </v-col>
+    </v-row>
     <div class="corner-button-container">
       <v-btn class="mr-4" v-on:click="$emit('debug-toggle')" fab large>
         <v-icon large>mdi-bug</v-icon>
@@ -117,7 +115,7 @@
         </v-card>
       </v-dialog>
     </div>
-  </div>
+  </v-container>
 </template>
 
 <script>
@@ -249,33 +247,27 @@ export default {
 </script>
 
 <style scoped>
+.container {
+  max-height: 100%;
+}
+.red-box {
+  border: 1px solid red;
+}
 #manim-background {
   width: 640px;
   height: 360px;
   background-color: black;
 }
-.left-side {
-  height: auto;
-}
 .panel-width {
   width: 410px;
 }
 .code-width {
-  width: 720px;
-}
-.code-container {
+  width: 50%;
   height: 100%;
-  width: auto;
-}
-.code-box {
-  overflow: scroll;
 }
 #visualization-placeholder {
   width: 640px;
   height: 575px;
-}
-#visualization {
-  position: fixed;
 }
 .picker-offset {
   position: absolute;
