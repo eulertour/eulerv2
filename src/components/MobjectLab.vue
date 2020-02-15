@@ -8,7 +8,7 @@
       <v-toolbar width="100%" max-height="64px" class="mb-2">
         <v-toolbar-title>example_scenes.py</v-toolbar-title>
         <v-spacer></v-spacer>
-        <div v-for="screen in uiScreens">
+        <div v-for="screen in uiScreens" v-bind:key="screen">
           <v-btn v-if="uiScreen !== screen" fab text v-on:click="(code)=>$emit('switch-ui-screen', screen)">
             <v-icon
               class="headline black--text"
@@ -124,7 +124,6 @@
 import Timeline from "./Timeline.vue";
 import VideoControls from "./VideoControls.vue";
 import CodeMirror from "./CodeMirror.vue";
-import DebugPanel from "./DebugPanel.vue";
 import Panels from "./Panels.vue";
 import * as consts from "../constants.js";
 import JSONFormatter from 'json-formatter-js'
@@ -168,7 +167,6 @@ export default {
     Timeline,
     VideoControls,
     CodeMirror,
-    DebugPanel,
     Panels,
   },
   computed: {

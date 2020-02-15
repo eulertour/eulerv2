@@ -602,7 +602,6 @@ export default {
       if ('mobjects' in diff) {
         for (let mobjectName of Object.keys(diff.mobjects)) {
           let mobjectDiff = diff['mobjects'][mobjectName];
-          let mobject = this.mobjects[mobjectName];
           for (let attr of Object.keys(mobjectDiff)) {
             switch(attr) {
               case "added":
@@ -616,7 +615,6 @@ export default {
                 break;
               default:
                 // eslint-disable-next-line
-                console.log(mobjectDiff[attr]);
                 console.error(`Ignoring unknown Mobject diff attribute ${attr}`);
             }
           }
@@ -659,7 +657,6 @@ export default {
       }
       for (let i = 0; i < this.mobjects[mobjectName].submobjects.length; i++) {
         let submobjectName = this.mobjects[mobjectName].submobjects[i];
-        console.log(submobjectName, mobject.submobjects()[i]);
         this.updateDataReferences(submobjectName, mobject.submobjects()[i]);
       }
     },

@@ -19,7 +19,7 @@
         class="headline ml-3"
       >
         <div v-if="attr === 'style'">
-          <div class="d-flex align-center mt-1" v-for="[styleAttr, styleDiff] in Object.entries(mobjectDiff[mobjectName].style)">
+          <div class="d-flex align-center mt-1" v-for="[styleAttr, styleDiff] in Object.entries(mobjectDiff[mobjectName].style)" v-bind:key="mobjectName + styleAttr">
             <v-chip>
               <span class="subtitle-1">{{ styleAttr }}</span>
             </v-chip>
