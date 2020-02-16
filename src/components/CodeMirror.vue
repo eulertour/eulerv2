@@ -1,11 +1,10 @@
 <template>
   <v-sheet
-    id="editor-container"
-    v-bind:style="containerStyle"
+    id="codemirror-padding-container"
+    v-bind:style="codeMirrorColor"
     elevation="4"
-    max-height="700px"
   >
-    <div id="editor" />
+    <div id="codemirror-container" />
   </v-sheet>
 </template>
 
@@ -24,7 +23,7 @@ export default {
     return {
       codeMirror: null,
       backgroundColor: "",
-      containerStyle: {
+      codeMirrorColor: {
         backgroundColor: "",
       }
     }
@@ -36,33 +35,40 @@ export default {
   },
   mounted() {
     this.codeMirror = CodeMirror(
-      document.getElementById('editor'), {
+      document.getElementById('codemirror-container'), {
         value: this.code,
         theme: "rubyblue",
         mode: "python",
       });
     this.codeMirror.on('change', this.updateCode);
     let cm = document.getElementsByClassName("CodeMirror")[0];
-    this.containerStyle.backgroundColor = getComputedStyle(cm)['background-color'];
+    this.codeMirrorColor.backgroundColor = getComputedStyle(cm)['background-color'];
   },
 }
 </script>
 
 <style>
-#editor-container {
-  border-radius: 8px;
-  height: calc(100% - 46px);
-  width: 100%;
-}
-#editor {
+/* Adapted from https://discuss.codemirror.net/t/size-inside-flexbox/1359/5 to
+ * size CodeMirror correctly within a flexbox element and
+ * https://stackoverflow.com/a/30826028 to make an absolutely positioned element
+ * respect its parent's padding.
+ */
+#codemirror-padding-container {
+  border-radius: 10px;
   padding: 15px;
-  border-radius: 0;
-  box-sizing: border-box;
+  flex: 1;
+}
+#codemirror-container {
+  position: relative;
   height: 100%;
-  width: 100%;
 }
 .CodeMirror {
-  height: 100%;
   font-size: 1.25em;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
 }
 </style>

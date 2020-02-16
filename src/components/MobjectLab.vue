@@ -1,10 +1,10 @@
 <template>
-  <v-container class="mt-7 mb-5" id="container">
+  <v-container class="mt-7 mb-5">
     <v-row
       justify="center"
     >
-      <div id="debug" class="headline mx-2" />
-      <v-col class="">
+      <v-col id="debug" class="headline mx-2" />
+      <v-col cols="6" class="d-flex flex-column">
         <v-toolbar width="100%" max-height="64px" class="mb-2">
           <v-toolbar-title>example_scenes.py</v-toolbar-title>
           <v-spacer></v-spacer>
@@ -16,7 +16,7 @@
             </v-btn>
           </div>
         </v-toolbar>
-        <div v-if="sceneLoaded && uiScreen === PANELS" class="expansion-panel-container">
+        <div v-if="sceneLoaded && uiScreen === PANELS">
           <Panels
             v-bind:animating="animating"
             v-bind:animation-header-style="animationHeaderStyle"
@@ -247,37 +247,10 @@ export default {
 </script>
 
 <style scoped>
-.container {
-  max-height: 100%;
-}
-.red-box {
-  border: 1px solid red;
-}
 #manim-background {
   width: 640px;
   height: 360px;
   background-color: black;
-}
-.panel-width {
-  width: 410px;
-}
-.code-width {
-  width: 50%;
-  height: 100%;
-}
-#visualization-placeholder {
-  width: 640px;
-  height: 575px;
-}
-.picker-offset {
-  position: absolute;
-  left: 98px;
-}
-.info-panel {
-  height: fit-content;
-}
-.expansion-panel-container {
-  width: 100%;
 }
 .corner-button-container {
   position: fixed;
