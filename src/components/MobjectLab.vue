@@ -3,7 +3,7 @@
     <v-row style="height: 100%">
       <v-col
         class="d-flex"
-        cols="7"
+        cols="6"
         v-bind:class="{
           'justify-space-between': displayingPanels && debug,
           'justify-end': displayingPanels && !debug,
