@@ -1,13 +1,13 @@
 <template>
   <div>
-    <div class="mb-2" v-for="transformation in transformations" v-bind:key="transformationKey(transformation)">
+    <div class="mb-2" v-for="(transformation, transformationIndex) in transformations" v-bind:key="transformationKey(transformation)">
       <v-chip>
         <v-avatar left color="orange">
           <v-icon color="white">mdi-function</v-icon>
         </v-avatar>
         <span class="subtitle-1">{{ transformation[1] + "." + transformation[2] }}</span>
       </v-chip>
-      <div v-for="(pair, index) in Object.entries(serializedTransformations[index])" v-bind:key="transformationKey(transformation) + index">
+      <div v-for="(pair, index) in Object.entries(serializedTransformations[transformationIndex])" v-bind:key="transformationKey(transformation) + transformationIndex">
         <div class="ml-5">{{ pair[0] }}: {{ pair[1] }}</div>
       </div>
     </div>

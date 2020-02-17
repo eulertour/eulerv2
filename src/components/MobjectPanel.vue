@@ -23,7 +23,7 @@
       </v-btn>
     </div>
     <div class="title">Style</div>
-    <div class="d-flex align-center position-relative mb-2">
+    <div class="d-flex align-center mb-2">
       <div class="subtitle-1">stroke color</div>
       <div class="ml-2 picker-offset">
         <Picker
@@ -35,7 +35,7 @@
         />
       </div>
     </div>
-    <div class="d-flex align-center position-relative mb-2">
+    <div class="d-flex align-center mb-2">
       <div class="subtitle-1">fill color</div>
       <div class="ml-2 picker-offset">
         <Picker

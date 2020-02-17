@@ -350,7 +350,7 @@ export default {
         /*reverse=*/ false,
         /*moveCursor=*/ false,
       );
-      this.switchUiScreen(consts.uiScreens.CODE);
+      this.switchUiScreen(consts.uiScreens.PANELS);
       // this.play(null, /*singleAnimationOnly=*/ false);
     },
     switchUiScreen: function(uiScreen) {

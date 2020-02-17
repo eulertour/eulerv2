@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <v-app class="d-flex flex-column">
     <v-app-bar app>
       <v-toolbar-title class="headline">
         <span class="mr-1 display-1">EulerTour</span>
@@ -16,7 +16,7 @@
       </v-btn>
     </v-app-bar>
 
-    <v-content>
+    <v-content class=" d-flex flex-column">
       <MobjectLabContainer />
     </v-content>
   </v-app>
@@ -27,24 +27,15 @@ import MobjectLabContainer from './components/MobjectLabContainer.vue'
 
 export default {
   name: 'App',
-  components: {
-    MobjectLabContainer,
-  },
-  data: () => ({
-    //
-  }),
+  components: { MobjectLabContainer },
 };
 </script>
 
 <style>
-.position-relative {
-  position: relative;
-}
-</style>
-
-<style scoped>
-.v-app-bar.v-app-bar--fixed {
-  /* .CodeMirror-vscrollbar has z-index: 6 */
-  z-index: 10;
+.v-application { height: 100vh; }
+.v-content { height: 100%; }
+.v-content__wrap {
+  display: flex;
+  height: 100%;
 }
 </style>

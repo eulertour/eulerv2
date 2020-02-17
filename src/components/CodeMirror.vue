@@ -1,7 +1,7 @@
 <template>
   <v-sheet
     id="codemirror-padding-container"
-    v-bind:style="codeMirrorColor"
+    v-bind:style="codeMirrorBackgroundColor"
     elevation="4"
   >
     <div id="codemirror-container" />
@@ -23,7 +23,7 @@ export default {
     return {
       codeMirror: null,
       backgroundColor: "",
-      codeMirrorColor: {
+      codeMirrorBackgroundColor: {
         backgroundColor: "",
       }
     }
@@ -42,7 +42,7 @@ export default {
       });
     this.codeMirror.on('change', this.updateCode);
     let cm = document.getElementsByClassName("CodeMirror")[0];
-    this.codeMirrorColor.backgroundColor = getComputedStyle(cm)['background-color'];
+    this.codeMirrorBackgroundColor.backgroundColor = getComputedStyle(cm)['background-color'];
   },
 }
 </script>
@@ -56,14 +56,14 @@ export default {
 #codemirror-padding-container {
   border-radius: 10px;
   padding: 15px;
-  flex: 1;
+  flex-grow: 1;
 }
 #codemirror-container {
   position: relative;
   height: 100%;
 }
 .CodeMirror {
-  font-size: 1.25em;
+  font-size: 1.35em;
   position: absolute;
   top: 0;
   bottom: 0;
