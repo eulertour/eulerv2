@@ -63,7 +63,7 @@ export default {
   height: 100%;
 }
 .CodeMirror {
-  font-size: 1.35em;
+  font-size: 1.2em;
   position: absolute;
   top: 0;
   bottom: 0;

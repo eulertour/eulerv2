@@ -31,6 +31,9 @@
     v-bind:scene-is-valid="sceneIsValid"
     v-bind:scene-loaded="sceneLoaded"
     v-bind:scene="scene"
+    v-bind:display-canvas-menu="displayCanvasMenu"
+    v-on:snapshot-canvas="snapshotCanvas"
+    v-on:display-canvas-menu="(display)=>{displayCanvasMenu=display}"
     v-on:chosen-scene-update="(val)=>{chosenScene=val}"
     v-on:switch-ui-screen="switchUiScreen"
     v-on:debug-toggle="debug = !debug"
@@ -65,6 +68,7 @@ import * as consts from "../constants.js";
 import * as Manim from "../manim.js";
 import * as utils from "../utils.js";
 import MobjectLab from "./MobjectLab.vue";
+import html2canvas from "html2canvas";
 
 export default {
   name: "MobjectLabContainer",
@@ -73,6 +77,7 @@ export default {
   },
   data() {
     return {
+      displayCanvasMenu: false,
       debugInfo: {
         initialMobjectSerializations: {},
         sceneDiffs: [],
@@ -252,6 +257,7 @@ export default {
     }
   },
   mounted() {
+    console.log(this.$route.params);
     this.scene = new Manim.Scene({ width: 640, height: 360 });
     this.scene.appendTo(document.getElementById("manim-background"));
     this.scene.update();
@@ -1041,6 +1047,17 @@ export default {
       }
       let removed = _.difference(addedOrRemoved, added);
       return _.concat(_.difference(mobjectList, removed), added);
+    },
+    snapshotCanvas() {
+      this.displayCanvasMenu = false;
+      this.$nextTick(function() {
+        html2canvas(document.getElementById('manim-background'))
+          .then(function(canvas) {
+            let dataUrl = canvas.toDataURL("image/png");
+            let win = window.open();
+            win.document.write('<img src="' + dataUrl + '"/>');
+          });
+      });
     },
   },
 };

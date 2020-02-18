@@ -163,7 +163,7 @@ class SquareToCircle(WebScene):
 class WriteStuff(WebScene):
     def construct(self):
         example_text = TextMobject(
-            "This is a some text",
+            "This is some text",
             tex_to_color_map={"text": YELLOW}
         )
         example_tex = TexMobject(
@@ -233,3 +233,6 @@ export const uiScreens = {
   PANELS: 'panels',
   CODE: 'code',
 };
+export const SCENE_DATA_DIR = "scene_data";
+export const THUMBNAIL_NAME = "thumbnail.png";
+export const BASE_LAB_URL = "/lab";

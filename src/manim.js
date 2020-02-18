@@ -489,9 +489,7 @@ class Group extends Two.Group {
   clone(parent) {
     let clone = new Group();
 
-    let children = Two.Utils.map(this.children, function (child) {
-      return child.clone();
-    });
+    let children = this.children.map(child => child.clone());
 
     clone.remove(clone.children);
     clone.add(children);
@@ -595,9 +593,7 @@ class Mobject extends Group {
   clone(parent) {
     let clone = new Mobject(this.path().clone(), [], this.getStyleDict());
 
-    let children = Two.Utils.map(this.children, function (child) {
-      return child.clone();
-    });
+    let children = this.children.map(child => child.clone());
 
     clone.remove(clone.children);
     clone.add(children);
@@ -726,9 +722,7 @@ class Circle extends Arc {
     let clone = new Circle(this.config);
     clone.applyStyle(this.getStyleDict());
 
-    let children = Two.Utils.map(this.children, function (child) {
-      return child.clone();
-    });
+    let children = this.children.map(child => child.clone());
 
     clone.remove(clone.children);
     clone.add(children);
@@ -932,9 +926,7 @@ class Square extends RegularPolygon {
       style: this.getStyleDict(),
     });
 
-    let children = Two.Utils.map(this.children, function (child) {
-      return child.clone();
-    });
+    let children = this.children.map(child => child.clone());
 
     clone.remove(clone.children);
     clone.add(children);
@@ -969,9 +961,7 @@ class TexSymbol extends Mobject {
   clone(parent) {
     let clone = new TexSymbol(this.path().clone(), this.getStyleDict());
 
-    let children = Two.Utils.map(this.children, function (child) {
-      return child.clone();
-    });
+    let children = this.children.map(child => child.clone());
 
     clone.remove(clone.children);
     clone.add(children);
@@ -1050,9 +1040,7 @@ class SingleStringTexMobject extends Mobject {
   clone(parent) {
     let clone = new SingleStringTexMobject(this.texString, [], this.getStyleDict());
 
-    let children = Two.Utils.map(this.children, function (child) {
-      return child.clone();
-    });
+    let children = this.children.map(child => child.clone());
 
     clone.remove(clone.children);
     clone.add(children);
@@ -1187,9 +1175,7 @@ class TexMobject extends Mobject {
       this.scene,
     );
 
-    let children = Two.Utils.map(this.children, function (child) {
-      return child.clone();
-    });
+    let children = this.children.map(child => child.clone());
 
     clone.remove(clone.children);
     clone.add(children);

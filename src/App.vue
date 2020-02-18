@@ -1,9 +1,19 @@
 <template>
   <v-app class="d-flex flex-column">
     <v-app-bar app>
-      <v-toolbar-title class="headline">
-        <span class="mr-1 display-1">EulerTour</span>
-        <span class="font-weight-light">v2</span>
+      <v-app-bar-nav-icon></v-app-bar-nav-icon>
+      <v-toolbar-title class="d-flex align-center pl-0">
+        <router-link to="/" exact>
+          <v-img
+            height="45px"
+            width="45px"
+            src="eulertour_logo_transparent.png">
+          </v-img>
+        </router-link>
+        <div>
+          <span class="mr-1 display-1">EulerTour</span>
+          <span class="font-weight-light">v2</span>
+        </div>
       </v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn
@@ -17,17 +27,15 @@
     </v-app-bar>
 
     <v-content class=" d-flex flex-column">
-      <MobjectLabContainer />
+      <router-view></router-view>
     </v-content>
   </v-app>
 </template>
 
 <script>
-import MobjectLabContainer from './components/MobjectLabContainer.vue'
-
 export default {
   name: 'App',
-  components: { MobjectLabContainer },
+  components: {},
 };
 </script>
 

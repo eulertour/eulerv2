@@ -95,7 +95,27 @@
         </div>
       </v-col>
       <v-col class="flex-grow-0">
-        <div id="manim-background" />
+        <div
+          id="manim-background"
+          v-on:mouseover="$emit('display-canvas-menu', true)"
+          v-on:mouseleave="$emit('display-canvas-menu', false)"
+        >
+          <div
+            id="canvas-menu"
+            class="grey lighten-2 flex-row-reverse"
+            v-bind:style="{
+              display: displayCanvasMenu ? 'flex' : 'none'
+            }"
+          >
+            <v-btn
+              height="100%"
+              class="canvas-menu-button"
+              v-on:click="$emit('snapshot-canvas')"
+            >
+              <v-icon>mdi-camera</v-icon>
+            </v-btn>
+          </div>
+        </div>
         <Timeline
           class="mt-2"
           v-bind:animations="animations"
@@ -152,6 +172,7 @@ import JSONFormatter from 'json-formatter-js'
 export default {
   name: "MobjectLab",
   props: {
+    displayCanvasMenu: Boolean,
     animating: Boolean,
     animationHeaderStyle: Object,
     animationIndex: Number,
@@ -222,15 +243,6 @@ export default {
           console.error(`No icon for unknown UI screen ${uiScreen}`);
       }
     },
-    updateLatex(tex) {
-      let texOutput = document.getElementById("tex-output");
-      let children = texOutput.childNodes;
-      if (children.length > 0) {
-        texOutput.removeChild(texOutput.childNodes[0]);
-      }
-      let html = window.MathJax.tex2svg(tex);
-      texOutput.appendChild(html);
-    }
   },
   watch: {
     debug(debugging) {
@@ -258,9 +270,19 @@ export default {
 </script>
 
 <style scoped>
+#canvas-menu {
+  position: absolute;
+  height: 25px;
+  right: 0;
+}
+.v-btn.canvas-menu-button {
+  padding: 0 8px;
+  min-width: 0;
+}
 #manim-background {
   width: 640px;
   height: 360px;
+  position: relative;
   background-color: black;
 }
 #corner-button-container {
