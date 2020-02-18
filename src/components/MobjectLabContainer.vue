@@ -9,6 +9,7 @@
     v-bind:chosen-scene-prop="chosenScene"
     v-bind:chosen-scene="chosenScene"
     v-bind:code="code"
+    v-bind:project="$route.params.project"
     v-bind:current-animation-diff="currentAnimationDiff"
     v-bind:current-animation="currentAnimation"
     v-bind:current-scene-diff="currentSetupDiff"
@@ -69,6 +70,8 @@ import * as Manim from "../manim.js";
 import * as utils from "../utils.js";
 import MobjectLab from "./MobjectLab.vue";
 import html2canvas from "html2canvas";
+import path from "path";
+import axios from "axios";
 
 export default {
   name: "MobjectLabContainer",
@@ -95,7 +98,7 @@ export default {
       uiScreen: consts.uiScreens.CODE,
       playingSingleAnimation: null,
       sceneChoices: [],
-      chosenScene: "SquareToCircle",
+      chosenScene: "",
       scene: null,
       sceneLoaded: false,
       mobjectChoices: [
@@ -115,12 +118,12 @@ export default {
       animationIndex: 0,
       animationOffset: 0,
       animations: [
-        {
-          className: "ReplacementTransform",
-          args: ["Square1"],
-          config: { targetMobject: "Circle1" },
-          animation: null,
-        },
+        // {
+        //   className: "ReplacementTransform",
+        //   args: ["Square1"],
+        //   config: { targetMobject: "Circle1" },
+        //   animation: null,
+        // },
       ],
       sceneDiffs: [
         // diffs are of the form:
@@ -214,19 +217,19 @@ export default {
     },
     animationHeaderStyle() {
       let ret = {};
-      if (this.sceneIsValid && !this.animationIsValid) {
-        ret["color"] = "red";
-      }
+      // if (this.sceneIsValid && !this.animationIsValid) {
+      //   ret["color"] = "red";
+      // }
       return ret;
     },
     sceneIsValid() {
-      if (!this.sceneLoaded) {
+      if (!this.sceneLoaded || this.currentSetupDiff === undefined) {
         return false;
       }
       return this.diffIsValidForScene(this.currentSetupDiff, this.preSetupMobjects);
     },
     animationIsValid() {
-      if (!this.sceneLoaded) {
+      if (!this.sceneLoaded || this.currentAnimationDiff === undefined) {
         return false;
       }
       return this.diffIsValidForScene(
@@ -241,13 +244,13 @@ export default {
       return !this.preSetup && this.animationOffset === 1 && this.savedPreAnimationMobject === null;
     },
     postSetupMobjects() {
-      if (!this.sceneLoaded) {
+      if (!this.sceneLoaded || this.currentSetupDiff === undefined) {
         return [];
       }
       return this.updateMobjectListWithDiff(this.preSetupMobjects, this.currentSetupDiff.mobjects);
     },
     postAnimationMobjects() {
-      if (!this.sceneLoaded) {
+      if (!this.sceneLoaded || this.currentAnimationDiff === undefined) {
         return [];
       }
       return this.updateMobjectListWithDiff(this.postSetupMobjects, this.currentAnimationDiff.mobjects);
@@ -257,7 +260,6 @@ export default {
     }
   },
   mounted() {
-    console.log(this.$route.params);
     this.scene = new Manim.Scene({ width: 640, height: 360 });
     this.scene.appendTo(document.getElementById("manim-background"));
     this.scene.update();
@@ -267,29 +269,20 @@ export default {
         window.pyodide.runPython("import manimlib");
         window.pyodide.runPython("import numpy");
         window.texToPoints = tex => Manim.SingleStringTexMobject.texToPoints(tex, this.scene);
-        // Initialize Mobjects, Animations, and scene diffs
-        for (let mobjectName of Object.keys(this.initialMobjects)) {
-          let data = _.cloneDeep(this.initialMobjects[mobjectName]);
-          this.buildAndSetMobject(data);
-          this.$set(this.mobjects, mobjectName, data);
-        }
-        this.currentAnimation.animation = this.buildCurrentAnimation();
-        this.sceneDiffs = [{
-          mobjects: {
-            'Square1': {'added': [false, true]}
-          },
-        }];
-        this.currentAnimationDiff = Manim[
-          this.currentAnimation.className
-        ].getDiff(
-          ...this.currentAnimation.args,
-          this.currentAnimation.config,
-          ['Square1'],
-          this.mobjects,
+        let codePath = path.join(
+          consts.SCENE_DATA_DIR,
+          this.$route.params.project,
+          consts.CODE_NAME,
         );
-        this.jumpPostSetup();
-        this.refreshSceneChoices();
-        this.sceneLoaded = true;
+        axios.get(codePath).then(response => {
+          this.code = response.data;
+          this.refreshSceneChoices();
+          this.chosenScene = this.sceneChoices[0];
+          this.sceneLoaded = true;
+        }).catch(error => {
+          // eslint-disable-next-line
+          console.log(error);
+        });
       });
     });
   },
@@ -356,6 +349,7 @@ export default {
         /*reverse=*/ false,
         /*moveCursor=*/ false,
       );
+      this.preSetup = false;
       this.switchUiScreen(consts.uiScreens.PANELS);
       // this.play(null, /*singleAnimationOnly=*/ false);
     },

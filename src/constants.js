@@ -233,6 +233,8 @@ export const uiScreens = {
   PANELS: 'panels',
   CODE: 'code',
 };
-export const SCENE_DATA_DIR = "scene_data";
-export const THUMBNAIL_NAME = "thumbnail.png";
 export const BASE_LAB_URL = "/lab";
+export const SCENE_DATA_DIR = "scene_data";
+export const CODE_NAME = "code.py";
+export const THUMBNAIL_NAME = "thumbnail.png";
+export const DESCRIPTION_NAME = "description.txt"

@@ -2,7 +2,8 @@
   <v-container>
     <v-row class="headline my-4">Gallery</v-row>
     <v-row>
-      <Thumbnail project="example_scenes.py"/>
+      <Thumbnail project="example_scenes.py" />
+      <Thumbnail project="what_can_we_do.py" />
     </v-row>
   </v-container>
 </template>
@@ -17,4 +18,5 @@ export default {
 </script>
 
 <style>
+.thumbnail:not(:last-child) { margin-right: 30px }
 </style>

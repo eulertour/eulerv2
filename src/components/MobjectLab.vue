@@ -10,23 +10,25 @@
         }"
         style="height: 100%"
       >
-        <div v-if="debug" id="debug" class="headline half-width" />
+        <div v-if="debug" id="debug" class="title half-width" />
         <div
           class="d-flex flex-column align-stretch pl-2"
           v-bind:class="{
             'full-width': displayingCode && !debug,
-            'half-width': displayingPanels || displayingCode && debug,
+            'column-width': displayingPanels || displayingCode && debug,
           }"
         >
           <v-toolbar elevation="5" max-height="64px" class="mb-2">
-            <v-toolbar-title>example_scenes.py</v-toolbar-title>
+            <v-toolbar-title>{{ project }}</v-toolbar-title>
             <v-spacer></v-spacer>
-            <div v-for="screen in uiScreens" v-bind:key="screen">
-              <v-btn v-if="uiScreen !== screen" fab text v-on:click="(code)=>$emit('switch-ui-screen', screen)">
-                <v-icon class="headline black--text">
-                  {{ uiIcon(screen) }}
-                </v-icon>
-              </v-btn>
+            <div v-if="animations.length > 0">
+              <div v-for="screen in uiScreens" v-bind:key="screen">
+                <v-btn v-if="uiScreen !== screen" fab text v-on:click="(code)=>$emit('switch-ui-screen', screen)">
+                  <v-icon class="headline black--text">
+                    {{ uiIcon(screen) }}
+                  </v-icon>
+                </v-btn>
+              </div>
             </div>
           </v-toolbar>
           <v-sheet
@@ -192,6 +194,7 @@ export default {
     mobjects: Object,
     pause: Boolean,
     preSetup: Boolean,
+    project: String,
     postSetup: Boolean,
     postAnimation: Boolean,
     preSetupMobjects: Array,
@@ -290,6 +293,9 @@ export default {
   right: 25px;
   bottom: 25px;
 }
-.half-width { width: 50%; }
+.column-width {
+  width: 50%;
+  min-width: 480px;
+}
 .full-width { width: 100%; }
 </style>

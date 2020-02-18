@@ -1,15 +1,21 @@
 <template>
-  <router-link class="thumbnail-link" v-bind:to="labUrl" exact>
+  <router-link class="thumbnail" v-bind:to="labUrl" exact>
     <v-card outlined>
       <v-img
+        v-if="imageAvailable"
         v-bind:src="imagePath"
-        class="white--text align-end"
+        class="white--text align-end thumbnail-image-dimensions"
         contain
-        width="350px"
       >
         <v-card-title class="pb-1 pl-3">{{ project }}</v-card-title>
       </v-img>
-      <v-card-text>Basic scenes to test functionality.</v-card-text>
+      <div
+        v-else
+        class="d-flex justify-center align-center thumbnail-image-dimensions grey lighten-2"
+      >
+        <v-icon class="display-2 black--text">mdi-camera</v-icon>
+      </div>
+      <v-card-text>{{ description }}</v-card-text>
     </v-card>
   </router-link>
 </template>
@@ -17,11 +23,18 @@
 <script>
 import * as consts from '../constants.js';
 import * as path from 'path';
+import * as axios from 'axios';
 
 export default {
   name: 'Thumbnail',
   components: {},
   props: { project: String },
+  data: () => {
+    return {
+      description: "",
+      imageAvailable: false,
+    }
+  },
   computed: {
     imagePath() {
       return path.join(
@@ -33,13 +46,39 @@ export default {
     labUrl() {
       return path.join(consts.BASE_LAB_URL, this.project);
     },
+    descriptionUrl() {
+      return path.join(
+        consts.SCENE_DATA_DIR,
+        this.project,
+        consts.DESCRIPTION_NAME,
+      );
+    }
   },
+  mounted() {
+    axios.get(this.descriptionUrl).then(response => {
+      this.description = response.data;
+    }).catch(error => {
+      // eslint-disable-next-line
+      console.log(error);
+      this.description = "No description available";
+    });
+    axios.get(this.imagePath).then(() => {
+      this.imageAvailable = true;
+    }).catch(error => {
+      // eslint-disable-next-line
+      console.log(error);
+    });
+  }
 };
 </script>
 
 <style>
-.thumbnail-link {
+.thumbnail {
   color: inherit;
   text-decoration: inherit;
+}
+.thumbnail-image-dimensions {
+  width: 320px;
+  height: 180px;
 }
 </style>
