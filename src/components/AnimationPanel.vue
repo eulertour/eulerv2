@@ -109,6 +109,7 @@ export default {
     Diff,
   },
   props: {
+    unknownAnimation: Boolean,
     animationData: Object,
     animationOffset: Number,
     mobjectClasses: Array,
@@ -124,6 +125,9 @@ export default {
   },
   computed: {
     animationComponent: function() {
+      if (this.unknownAnimation) {
+        return "BlankPanel";
+      }
       let panelName = this.animationData.className + "Panel";
       if (panelName in this.$options.components) {
          return panelName;
@@ -132,6 +136,9 @@ export default {
       }
     },
     animationDescription: function() {
+      if (this.unknownAnimation) {
+        return "";
+      }
       return Manim[this.animationData.className].getDescription();
     }
   },

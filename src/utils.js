@@ -372,7 +372,7 @@ export function updateSceneWithDiff(scene, diff, nodeDict) {
   if ("remove" in diff && diff["remove"].length > 0) {
     scene = scene.filter(node => !diff["remove"].includes(node.name));
     for (let root of scene) {
-      // Perform a depth-first traversal of the heirarchy, taking note of which
+      // Perform a depth-first traversal of the hierarchy, taking note of which
       // nodes should be kept.
       let parentMap = {};
       let stack = [root];
@@ -609,7 +609,7 @@ export function getManimToTwoTransformationMatrix(
   ]);
 }
 
-/* Converts a Two.Path with an arbitrary matrix heirarchy to an equivalent one
+/* Converts a Two.Path with an arbitrary matrix hierarchy to an equivalent one
  * in Manim coordinates.
  */
 export function normalizePath(path) {
@@ -661,7 +661,7 @@ export function normalizePath(path) {
   return newPath;
 }
 
-/* Converts a Two.Group with an arbitrary matrix heirarchy to an equivalent one
+/* Converts a Two.Group with an arbitrary matrix hierarchy to an equivalent one
  * in Manim coordinates with two levels.
  */
 export function normalizeGroup(group) {
@@ -733,4 +733,134 @@ export function renameSnakeKeys(o) {
     ret[snakeToCamel(key)] = o[key];
   }
   return ret;
+}
+
+function applyAddDiff(mobject, addDiff, reverse, scene) {
+  let presentBefore, presentAfter;
+  if (!reverse) {
+    [presentBefore, presentAfter] = addDiff;
+  } else {
+    [presentAfter, presentBefore] = addDiff;
+  }
+  if (presentBefore && !presentAfter) {
+    // eslint-disable-next-line
+    console.assert(scene.contains(mobject));
+    scene.remove(mobject);
+  } else if (!presentBefore && presentAfter) {
+    // eslint-disable-next-line
+    console.assert(!scene.contains(mobject));
+    scene.add(mobject);
+  } else {
+    // eslint-disable-next-line
+    console.error(
+      "Attempted to apply add diff with invalid parameters",
+      mobject.name,
+      presentBefore,
+      presentAfter,
+    );
+  }
+  scene.update();
+}
+
+function applyStyleDiff(mobject, styleDiff, reverse) {
+  let style = {};
+  for (let styleAttr of Object.keys(styleDiff)) {
+    if (!reverse) {
+      style[styleAttr] = styleDiff[styleAttr][1];
+    } else {
+      style[styleAttr] = styleDiff[styleAttr][0];
+    }
+    mobject.applyStyle(style);
+  }
+}
+
+function applySubmobjectDiff(mobject, submobjectDiff, reverse, mobjectDict) {
+  let startMobjects, endMobjects;
+  if (!reverse) {
+    startMobjects = submobjectDiff[0];
+    endMobjects  = submobjectDiff[1];
+  } else {
+    startMobjects = submobjectDiff[1];
+    endMobjects  = submobjectDiff[0];
+  }
+  if (endMobjects.includes(consts.UNKNOWN_MOBJECT)) {
+    // This is likely a ReplacementTransform that had to split the
+    // submobjects. Ignore the change.
+    // eslint-disable-next-line
+    console.assert(!reverse);
+    return;
+  }
+  if (startMobjects.includes(consts.UNKNOWN_MOBJECT)) {
+    // This change was ignored while going forward, so there's nothing to do
+    // now (TODO: Do you also have to check for a copied mobject here?).
+    // eslint-disable-next-line
+    console.assert(reverse);
+    return;
+  }
+  mobject.remove(mobject.submobjects());
+  for (let mobjectName of endMobjects) {
+    if (!(mobjectName in mobjectDict)) {
+      // eslint-disable-next-line
+      console.error(`Attempted to apply a submobject diff with unknown submobject ${mobjectName}`);
+    }
+    mobject.add(mobjectDict[mobjectName].mobject);
+  }
+}
+
+export function applyDiff(diff, reverse, mobjectDict, scene) {
+  if ('mobjects' in diff) {
+    for (let mobjectName of Object.keys(diff.mobjects)) {
+      let mobjectDiff = diff['mobjects'][mobjectName];
+      let mobject = mobjectDict[mobjectName].mobject;
+      for (let attr of Object.keys(mobjectDiff)) {
+        switch(attr) {
+          case "added":
+            if (scene !== null) {
+              applyAddDiff(mobject, mobjectDiff.added, reverse, scene);
+            }
+            break;
+          case "style":
+            applyStyleDiff(mobject, mobjectDiff.style, reverse);
+            break;
+          case "submobjects":
+            applySubmobjectDiff(mobject, mobjectDiff.submobjects, reverse, mobjectDict);
+            break;
+          default:
+            // eslint-disable-next-line
+            console.error(`Ignoring unknown Mobject diff attribute ${attr}`);
+        }
+      }
+    }
+  }
+  if ('transformations' in diff) {
+    for (let i = 0; i < diff.transformations.length; i++) {
+      let transformation;
+      if (!reverse) {
+        transformation = diff.transformations[i];
+      } else {
+        transformation = diff.transformations[diff.transformations.length - i - 1];
+      }
+      let mobjectName = transformation[1];
+      let transformationType = transformation[2];
+      let transformationArgs = transformation.slice(3);
+      switch (transformationType) {
+        case 'rotate':
+          mobjectDict[mobjectName].mobject.handleRotate(...transformationArgs, reverse);
+          break;
+        case 'shift':
+          mobjectDict[mobjectName].mobject.handleShift(...transformationArgs, reverse);
+          break;
+        case 'scale':
+          mobjectDict[mobjectName].mobject.handleScale(...transformationArgs, reverse);
+          break;
+        default: {
+          // eslint-disable-next-line
+          console.error(`Ignoring unknown transformation ${transformationType}`);
+        }
+      }
+    }
+  }
+  if (scene !== null) {
+    scene.update();
+  }
 }

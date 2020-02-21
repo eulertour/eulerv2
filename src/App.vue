@@ -2,19 +2,19 @@
   <v-app class="d-flex flex-column">
     <v-app-bar app>
       <v-app-bar-nav-icon></v-app-bar-nav-icon>
-      <v-toolbar-title class="d-flex align-center pl-0">
-        <router-link to="/" exact>
-          <v-img
-            height="45px"
-            width="45px"
-            src="eulertour_logo_transparent.png">
-          </v-img>
-        </router-link>
-        <div>
-          <span class="mr-1 display-1">EulerTour</span>
-          <span class="font-weight-light">v2</span>
-        </div>
-      </v-toolbar-title>
+      <router-link class="no-link-style" to="/" exact>
+        <v-toolbar-title class="d-flex align-center pl-0">
+            <v-img
+              height="45px"
+              width="45px"
+              src="eulertour_logo_transparent.png">
+            </v-img>
+          <div>
+            <span class="mr-1 display-1">EulerTour</span>
+            <span class="font-weight-light">v2</span>
+          </div>
+        </v-toolbar-title>
+      </router-link>
       <v-spacer></v-spacer>
       <v-btn
         text
@@ -42,5 +42,9 @@ export default { name: 'App' };
 .v-content__wrap {
   display: flex;
   height: 100%;
+}
+.v-application a.no-link-style {
+  color: inherit;
+  text-decoration: inherit;
 }
 </style>

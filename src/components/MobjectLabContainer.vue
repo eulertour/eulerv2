@@ -3,6 +3,7 @@
     v-bind:animating="animating"
     v-bind:animation-header-style="animationHeaderStyle"
     v-bind:animation-index="animationIndex"
+    v-bind:unknown-animation="unknownAnimation"
     v-bind:animation-is-valid="animationIsValid"
     v-bind:animation-offset="animationOffset"
     v-bind:animations="animations"
@@ -80,6 +81,7 @@ export default {
   },
   data() {
     return {
+      unknownAnimation: false,
       displayCanvasMenu: false,
       debugInfo: {
         initialMobjectSerializations: {},
@@ -229,7 +231,9 @@ export default {
       return this.diffIsValidForScene(this.currentSetupDiff, this.preSetupMobjects);
     },
     animationIsValid() {
-      if (!this.sceneLoaded || this.currentAnimationDiff === undefined) {
+      if (!this.sceneLoaded ||
+          this.currentAnimationDiff === undefined ||
+          this.unknownAnimation) {
         return false;
       }
       return this.diffIsValidForScene(
@@ -311,6 +315,7 @@ export default {
         if ('style' in pythonData) {
           mobjectData.style = Object.assign({}, pythonData.style);
         }
+        mobjectData.name = mobjectName;
         this.buildAndSetMobject(mobjectData);
         newMobjects[mobjectName] = mobjectData;
       }
@@ -400,6 +405,7 @@ export default {
     },
     buildAndSetMobject: function(mobjectData) {
       mobjectData.mobject = this.buildMobject(mobjectData);
+      mobjectData.mobject.name = mobjectData.name;
     },
     buildMobject: function(mobjectData) {
       if (utils.isTexData(mobjectData)) {
@@ -425,10 +431,24 @@ export default {
         Object.fromEntries(
           Object.entries(config).map(pair =>[pair[0], pair[1] in this.mobjects ? this.mobjects[pair[1]].mobject : pair[1]])
         );
-      return new Manim[className](
-        ...replaceMobjectNamesArgs(args),
-        replaceMobjectNamesConfig(config),
-      );
+      if (className in Manim) {
+        switch (className) {
+          case "ApplyFunction":
+            return new Manim[className](
+              ...replaceMobjectNamesArgs(args),
+              replaceMobjectNamesConfig(config),
+              this.currentAnimationDiff,
+            );
+          default:
+            return new Manim[className](
+              ...replaceMobjectNamesArgs(args),
+              replaceMobjectNamesConfig(config),
+            );
+        }
+      } else {
+        this.unknownAnimation = true;
+        return null;
+      }
     },
     saveMobjectPreAnimation(mobject) {
       if (mobject !== null) {
@@ -508,74 +528,6 @@ export default {
     pause: function() {
       this.scene.pause();
     },
-    applyAddDiff: function(mobjectName, addDiff, reverse) {
-      let presentBefore, presentAfter;
-      if (!reverse) {
-        [presentBefore, presentAfter] = addDiff;
-      } else {
-        [presentAfter, presentBefore] = addDiff;
-      }
-      let mobjectData = this.mobjects[mobjectName];
-      if (presentBefore && !presentAfter) {
-        let mobject = mobjectData.mobject;
-        // eslint-disable-next-line
-        console.assert(this.scene.contains(mobject));
-        this.scene.remove(mobject);
-      } else if (!presentBefore && presentAfter) {
-        // eslint-disable-next-line
-        console.assert(!this.scene.contains(mobjectData.mobject));
-        this.scene.add(mobjectData.mobject);
-      } else {
-        // eslint-disable-next-line
-        console.error(
-          "Invalid add parameters",
-          mobjectName,
-          presentBefore,
-          presentAfter,
-        );
-      }
-      this.scene.update();
-    },
-    applyStyleDiff: function(mobjectName, styleDiff, reverse) {
-      let style = {};
-      for (let styleAttr of Object.keys(styleDiff)) {
-        if (!reverse) {
-          style[styleAttr] = styleDiff[styleAttr][1];
-        } else {
-          style[styleAttr] = styleDiff[styleAttr][0];
-        }
-        this.mobjects[mobjectName].mobject.applyStyle(style);
-      }
-    },
-    applySubmobjectDiff: function(mobjectName, submobjectDiff, reverse) {
-      let startMobjects, endMobjects;
-      if (!reverse) {
-        startMobjects = submobjectDiff[0];
-        endMobjects  = submobjectDiff[1];
-      } else {
-        startMobjects = submobjectDiff[1];
-        endMobjects  = submobjectDiff[0];
-      }
-      if (endMobjects.includes(consts.UNKNOWN_MOBJECT)) {
-        // This is likely a ReplacementTransform that had to split the
-        // submobjects. Ignore the change.
-        // eslint-disable-next-line
-        console.assert(!reverse);
-        return;
-      }
-      if (startMobjects.includes(consts.UNKNOWN_MOBJECT)) {
-        // This change was ignored while going forware, so there's nothing to do
-        // now.
-        // eslint-disable-next-line
-        console.assert(reverse);
-        return;
-      }
-      let parentMob = this.mobjects[mobjectName].mobject;
-      parentMob.remove(parentMob.submobjects());
-      for (let mobjectName of endMobjects) {
-        parentMob.add(this.mobjects[mobjectName].mobject);
-      }
-    },
     /*  Updates the mobjects in this.scene according to the diff. Diffs have the
      *  form:
      *  {
@@ -599,65 +551,16 @@ export default {
       if (_.isEmpty(diff)) {
         return;
       }
-      if ('mobjects' in diff) {
-        for (let mobjectName of Object.keys(diff.mobjects)) {
-          let mobjectDiff = diff['mobjects'][mobjectName];
-          for (let attr of Object.keys(mobjectDiff)) {
-            switch(attr) {
-              case "added":
-                this.applyAddDiff(mobjectName, mobjectDiff.added, reverse);
-                break;
-              case "style":
-                this.applyStyleDiff(mobjectName, mobjectDiff.style, reverse);
-                break;
-              case "submobjects":
-                this.applySubmobjectDiff(mobjectName, mobjectDiff.submobjects, reverse);
-                break;
-              default:
-                // eslint-disable-next-line
-                console.error(`Ignoring unknown Mobject diff attribute ${attr}`);
-            }
-          }
-        }
-      }
-      if ('transformations' in diff) {
-        for (let i = 0; i < diff.transformations.length; i++) {
-          let transformation;
-          if (!reverse) {
-            transformation = diff.transformations[i];
-          } else {
-            transformation = diff.transformations[diff.transformations.length - i - 1];
-          }
-          let mobjectName = transformation[1];
-          let transformationType = transformation[2];
-          let transformationArgs = transformation.slice(3);
-          switch (transformationType) {
-            case 'rotate':
-              this.mobjects[mobjectName].mobject.handleRotate(...transformationArgs, reverse);
-              break;
-            case 'shift':
-              this.mobjects[mobjectName].mobject.handleShift(...transformationArgs, reverse);
-              break;
-            case 'scale':
-              this.mobjects[mobjectName].mobject.handleScale(...transformationArgs, reverse);
-              break;
-            default: {
-              // eslint-disable-next-line
-              console.error(`Ignoring unknown transformation ${transformationType}`);
-            }
-          }
-        }
-      }
-      this.scene.update();
+      utils.applyDiff(diff, reverse, this.mobjects, this.scene);
     },
-    updateDataReferences(mobjectName, mobject) {
+    updateMobjectDict(mobjectName, mobject) {
       this.mobjects[mobjectName].mobject = mobject;
       if (!('submobjects' in this.mobjects[mobjectName])) {
         return;
       }
       for (let i = 0; i < this.mobjects[mobjectName].submobjects.length; i++) {
         let submobjectName = this.mobjects[mobjectName].submobjects[i];
-        this.updateDataReferences(submobjectName, mobject.submobjects()[i]);
+        this.updateMobjectDict(submobjectName, mobject.submobjects()[i]);
       }
     },
     jumpPostSetupFromAnimating: function() {
@@ -667,17 +570,21 @@ export default {
       if (this.savedPreAnimationMobject !== undefined) {
         this.scene.remove(this.currentAnimation.animation.mobject);
         if (this.savedPreAnimationMobjectParent !== undefined) {
+          // TODO: Each Mobject in the hierarchy must be checked for addition
+          // individually.
           this.savedPreAnimationMobjectParent.add(this.savedPreAnimationMobject);
         }
         // TODO: Is there no better way to do this? Possibly binding the Mobject
-        // name to each Mobject?
+        // name to each Mobject? (update: this should be removed after Mobject
+        // names are bound to the Mobjects).
         let savedPreAnimationMobjectName = this.currentAnimation.animation.mobjectNameFromArgs(
           this.currentAnimation.args
         );
-        this.updateDataReferences(savedPreAnimationMobjectName, this.savedPreAnimationMobject);
+        this.updateMobjectDict(savedPreAnimationMobjectName, this.savedPreAnimationMobject);
       }
       this.savedPreAnimationMobject = null;
       this.savedPreAnimationMobjectInScene = null;
+      debugger;
     },
     /* Moves to the pre-setup stage of the current Animation. */
     jumpPreSetup: function() {
@@ -978,10 +885,10 @@ export default {
     diffIsValidForScene: function(diff, scene) {
       let namesInScene = this.getNamesInScene(scene);
       for (let mobjectName of diff["add"] || []) {
-        // A Mobject can be added if none of the Mobjects in its heirarchy are
+        // A Mobject can be added if none of the Mobjects in its hierarchy are
         // in the scene.
-        let namesInHeirarchy = this.getNamesInHeirarchy(mobjectName);
-        for (let submobName of namesInHeirarchy) {
+        let namesInHierarchy = this.getNamesInHierarchy(mobjectName);
+        for (let submobName of namesInHierarchy) {
           if (namesInScene.includes(submobName)) {
             // eslint-disable-next-line
             console.error(`can't add ${submobName}`);
@@ -1011,11 +918,11 @@ export default {
     getNamesInScene: function(scene) {
       let ret = [];
       for (let mobjectName of scene) {
-        ret = ret.concat(this.getNamesInHeirarchy(mobjectName));
+        ret = ret.concat(this.getNamesInHierarchy(mobjectName));
       }
       return ret;
     },
-    getNamesInHeirarchy: function(mobjectName) {
+    getNamesInHierarchy: function(mobjectName) {
       if (this.mobjects[mobjectName] === undefined) {
         return [];
       }
@@ -1023,7 +930,7 @@ export default {
       let data = this.mobjects[mobjectName];
       if ("submobjects" in data) {
         for (let submobName of data.submobjects) {
-          ret = _.concat(ret, this.getNamesInHeirarchy(submobName));
+          ret = _.concat(ret, this.getNamesInHierarchy(submobName));
         }
       }
       return ret;

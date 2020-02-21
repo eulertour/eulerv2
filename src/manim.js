@@ -8,6 +8,7 @@ import {
   ReplacementTransform,
   ShowCreation,
   // ApplyPointwiseFunction,
+  ApplyFunction,
   Write,
   FadeOut,
   FadeIn,
@@ -398,7 +399,7 @@ class Group extends Two.Group {
       xMax = -Infinity,
       yMin = Infinity,
       yMax = -Infinity;
-    this.getMobjectHeirarchy().forEach(submob => {
+    this.getMobjectHierarchy().forEach(submob => {
       submob.points().forEach(p => {
         xMin = Math.min(xMin, p.x);
         xMax = Math.max(xMax, p.x);
@@ -414,7 +415,7 @@ class Group extends Two.Group {
       xMax = -Infinity,
       yMin = Infinity,
       yMax = -Infinity;
-    this.getMobjectHeirarchy().forEach(submob => {
+    this.getMobjectHierarchy().forEach(submob => {
       submob.points().forEach(p => {
         xMin = Math.min(xMin, p.x);
         xMax = Math.max(xMax, p.x);
@@ -459,10 +460,10 @@ class Group extends Two.Group {
     return ret;
   }
 
-  getMobjectHeirarchy() {
+  getMobjectHierarchy() {
     let ret = [this];
     this.submobjects().forEach(submob => {
-      ret.push(...submob.getMobjectHeirarchy())
+      ret.push(...submob.getMobjectHierarchy())
     });
     return utils.removeListRedundancies(ret);
   }
@@ -488,6 +489,7 @@ class Group extends Two.Group {
 
   clone(parent) {
     let clone = new Group();
+    clone.name = this.name;
 
     let children = this.children.map(child => child.clone());
 
@@ -592,6 +594,7 @@ class Mobject extends Group {
 
   clone(parent) {
     let clone = new Mobject(this.path().clone(), [], this.getStyleDict());
+    clone.name = this.name;
 
     let children = this.children.map(child => child.clone());
 
@@ -720,6 +723,7 @@ class Circle extends Arc {
 
   clone(parent) {
     let clone = new Circle(this.config);
+    clone.name = this.name;
     clone.applyStyle(this.getStyleDict());
 
     let children = this.children.map(child => child.clone());
@@ -925,6 +929,7 @@ class Square extends RegularPolygon {
       sideLength: this.sideLength,
       style: this.getStyleDict(),
     });
+    clone.name = this.name;
 
     let children = this.children.map(child => child.clone());
 
@@ -960,6 +965,7 @@ class TexSymbol extends Mobject {
 
   clone(parent) {
     let clone = new TexSymbol(this.path().clone(), this.getStyleDict());
+    clone.name = this.name;
 
     let children = this.children.map(child => child.clone());
 
@@ -1039,6 +1045,7 @@ class SingleStringTexMobject extends Mobject {
 
   clone(parent) {
     let clone = new SingleStringTexMobject(this.texString, [], this.getStyleDict());
+    clone.name = this.name;
 
     let children = this.children.map(child => child.clone());
 
@@ -1174,6 +1181,7 @@ class TexMobject extends Mobject {
       this.config,
       this.scene,
     );
+    clone.name = this.name;
 
     let children = this.children.map(child => child.clone());
 
@@ -1267,6 +1275,7 @@ export {
   ReplacementTransform,
   ShowCreation,
   // ApplyPointwiseFunction,
+  ApplyFunction,
   Write,
   FadeOut,
   FadeIn,

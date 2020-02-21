@@ -37,6 +37,7 @@
             style="overflow-y: auto"
           >
             <Panels
+              v-bind:unknown-animation="unknownAnimation"
               v-bind:animating="animating"
               v-bind:animation-header-style="animationHeaderStyle"
               v-bind:animation-offset="animationOffset"
@@ -174,6 +175,7 @@ import JSONFormatter from 'json-formatter-js'
 export default {
   name: "MobjectLab",
   props: {
+    unknownAnimation: Boolean,
     displayCanvasMenu: Boolean,
     animating: Boolean,
     animationHeaderStyle: Object,

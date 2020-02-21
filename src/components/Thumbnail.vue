@@ -1,5 +1,5 @@
 <template>
-  <router-link class="thumbnail" v-bind:to="labUrl" exact>
+  <router-link class="thumbnail no-link-style" v-bind:to="labUrl" exact>
     <v-card outlined>
       <v-img
         v-if="imageAvailable"
@@ -57,26 +57,17 @@ export default {
   mounted() {
     axios.get(this.descriptionUrl).then(response => {
       this.description = response.data;
-    }).catch(error => {
-      // eslint-disable-next-line
-      console.log(error);
+    }).catch(() => {
       this.description = "No description available";
     });
     axios.get(this.imagePath).then(() => {
       this.imageAvailable = true;
-    }).catch(error => {
-      // eslint-disable-next-line
-      console.log(error);
-    });
+    }).catch(()=>{});
   }
 };
 </script>
 
 <style>
-.thumbnail {
-  color: inherit;
-  text-decoration: inherit;
-}
 .thumbnail-image-dimensions {
   width: 320px;
   height: 180px;

@@ -28,6 +28,7 @@
       </v-expansion-panel-header>
       <v-expansion-panel-content>
         <AnimationPanel
+          v-bind:unknown-animation="unknownAnimation"
           v-bind:animating="animating"
           v-bind:animation-data="currentAnimation"
           v-bind:animation-offset="animationOffset"
@@ -96,6 +97,7 @@ export default {
     SetupPanel,
   },
   props: {
+    unknownAnimation: Boolean,
     expandedPanelProp: Array,
     currentSceneDiff: Object,
     sceneHeaderStyle: Object,

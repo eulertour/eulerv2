@@ -39,10 +39,10 @@ class Animation {
   }
 
   /* On each frame of the Animation, each Mobject in the top-level Mobject's
-   * heirarchy will be passed to interpolateSubmobject. Depending on the
+   * hierarchy will be passed to interpolateSubmobject. Depending on the
    * Animation, the Mobjects may be passed together with some other Mobjects
    * which will serve to parameterize the interpolation. For each parameterizing
-   * Mobject, the Animation must provide a "copy" Mobject with whose heirarchy
+   * Mobject, the Animation must provide a "copy" Mobject with whose hierarchy
    * is one-to-one with that of its input Mobject. These copies will be
    * decomposed into the arguments to interpolateSubmobject.
    */
@@ -61,7 +61,7 @@ class Animation {
 
   interpolateMobject(alpha) {
     /* A list of arguments to interpolateSubmobject() for each Mobject in the
-     * heirarchy which contains a top-level path (i.e. those that don't function
+     * hierarchy which contains a top-level path (i.e. those that don't function
      * only as Groups).
      */
     let interpolateSubmobjectArgs = this.getAllArgsToInterpolateSubmobject();
@@ -71,7 +71,7 @@ class Animation {
     }
   }
 
-  /* For each Mobject which is in the heirarchy of the one being animated and
+  /* For each Mobject which is in the hierarchy of the one being animated and
    * has points, returns a list containing the Mobject along with any
    * parameterizing Mobjects necessary to interpolate it. Each of these lists
    * will have their Mobjects passed to interpolateSubmobject. For Transforms
@@ -83,17 +83,17 @@ class Animation {
    * ]
    */
   getAllArgsToInterpolateSubmobject() {
-    let mobjectHeirarchies = [];
+    let mobjectHierarchies = [];
     for (let mobjectCopy of this.getCopiesForInterpolation()) {
-      let heirarchy = mobjectCopy.getMobjectHeirarchy();
-      let heirarchyMembersWithPoints = heirarchy.filter(
+      let hierarchy = mobjectCopy.getMobjectHierarchy();
+      let hierarchyMembersWithPoints = hierarchy.filter(
         submob => submob.points().length > 0
       );
-      mobjectHeirarchies.push(heirarchyMembersWithPoints);
+      mobjectHierarchies.push(hierarchyMembersWithPoints);
     }
     let argsList = [];
-    for (let i = 0; i < mobjectHeirarchies[0].length; i++) {
-      argsList.push(mobjectHeirarchies.map(h => h[i]));
+    for (let i = 0; i < mobjectHierarchies[0].length; i++) {
+      argsList.push(mobjectHierarchies.map(h => h[i]));
     }
     return argsList;
   }
@@ -157,9 +157,9 @@ class ReplacementTransform extends Animation {
   }
 
   begin() {
-    // Use a copy of targetMobject for the alignData
-    // call so that the actual targetMobject is
-    // preserved.
+    // Use a copy of targetMobject for the alignData call so that the actual
+    // targetMobject is preserved (TODO: Is this necessary, since
+    // MobjectLabContainer saves the Mobject?).
     this.targetCopy = this.targetMobject.clone()
     // Note, this potentially changes the structure
     // of both this.mobject and this.targetMobject
@@ -232,7 +232,7 @@ class Write extends Animation {
     );
     Write.ensureLagRatioAndRuntime(
       fullConfig,
-      mobject.getMobjectHeirarchy().length,
+      mobject.getMobjectHierarchy().length,
     );
     super(mobject, fullConfig);
   }
@@ -295,7 +295,7 @@ class Write extends Animation {
 //     super(mobject);
 //     this.func = func;
 //   }
-// 
+//
 //   begin() {
 //     console.log(this.mobject.path().vertices.slice(0, 4).map(v => [v.x, v.y]));
 //     this.transformedMobject = this.mobject.clone();
@@ -305,15 +305,15 @@ class Write extends Animation {
 //     console.log(this.mobject.path().vertices.slice(0, 4).map(v => [v.x, v.y]));
 //     Animation.prototype.begin.call(this);
 //   }
-// 
+//
 //   interpolateSubmobject(alpha, submob, transformed) {
 //     submob.interpolate(submob, transformed, alpha);
 //   }
-// 
+//
 //   getCopiesForInterpolation() {
 //     return [this.mobject, this.transformedMobject];
 //   }
-// 
+//
 //   static getDiff() {
 //     // TODO: Add modify diff
 //     return {};
@@ -402,6 +402,47 @@ class Wait extends Animation {
   }
 }
 
+class ApplyFunction extends ReplacementTransform {
+  constructor(func, mobject, config={}, diff) {
+    const fullConfig = Object.assign(ApplyFunction.defaultConfig(), config);
+    super(mobject, fullConfig);
+    this.func = func;
+    this.diff = diff;
+  }
+
+  begin() {
+    this.targetMobject = this.mobject.clone();
+    ReplacementTransform.prototype.begin.call(this);
+    // Mock MobjectLabContainer.mobjects for the call to applyDiff().
+    let mobjectHierarchy = this.targetCopy.getMobjectHierarchy();
+    let mobjectDict = {};
+    for (let mob of mobjectHierarchy) {
+      if (mob.name !== undefined) {
+        mobjectDict[mob.name] = { mobject: mob };
+      }
+    }
+    utils.applyDiff(this.diff, /*reverse=*/false, mobjectDict, null);
+  }
+
+  mobjectNameFromArgs(args) {
+    return args[1];
+  }
+
+  static defaultConfig() {
+    return {};
+  }
+
+  static getDiff() {
+    // eslint-disable-next-line
+    console.error("The diff for ApplyFunction will have to be passed from python");
+    return {};
+  }
+
+  static getDescription() {
+    return "Transform a Mobject based on a function";
+  }
+}
+
 // Any Animation exported here must also be exported in manim.js before it can
 // be imported.
 export {
@@ -410,6 +451,7 @@ export {
   ReplacementTransform,
   ShowCreation,
   // ApplyPointwiseFunction,
+  ApplyFunction,
   Write,
   FadeOut,
   FadeIn,
