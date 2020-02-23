@@ -81,6 +81,7 @@ export default {
   },
   data() {
     return {
+      animating: false,
       unknownAnimation: false,
       displayCanvasMenu: false,
       debugInfo: {
@@ -89,8 +90,6 @@ export default {
         animationDiffs: [],
         animationInfoList: [],
       },
-      savedPreAnimationMobject: null,
-      savedPreAnimationMobjectInScene: null,
       preSetupMobjects: [],
       expandedPanel: [0, 1],
       releaseNotes: consts.RELEASE_NOTES,
@@ -207,9 +206,6 @@ export default {
         this.animationDiffs = newDiffs;
       },
     },
-    animating() {
-      return this.savedPreAnimationMobject !== null;
-    },
     sceneHeaderStyle() {
       let ret = {};
       if (!this.sceneIsValid) {
@@ -242,10 +238,10 @@ export default {
       );
     },
     postSetup() {
-      return !this.preSetup && this.animationOffset === 0 && this.savedPreAnimationMobject === null;
+      return !this.preSetup && this.animationOffset === 0 && !this.animating;
     },
     postAnimation() {
-      return !this.preSetup && this.animationOffset === 1 && this.savedPreAnimationMobject === null;
+      return !this.preSetup && this.animationOffset === 1 && !this.animating;
     },
     postSetupMobjects() {
       if (!this.sceneLoaded || this.currentSetupDiff === undefined) {
@@ -262,6 +258,12 @@ export default {
     mobjectsInScene() {
       return Object.keys(this.mobjects).filter(mobjectName => this.mobjects[mobjectName].added);
     }
+  },
+  created() {
+    // Attach these to the instance here so that they won't be watched and slow
+    // Animation setup.
+    this.savedPreAnimationMobject = null;
+    this.savedPreAnimationMobjectParent = null;
   },
   mounted() {
     this.scene = new Manim.Scene({ width: 640, height: 360 });
@@ -468,6 +470,7 @@ export default {
       if (this.animationIsValid && this.sceneIsValid) {
         this.saveMobjectPreAnimation(this.currentAnimation.animation.mobject);
         this.currentAnimation.animation.setStartingMobject(this.savedPreAnimationMobject);
+        this.animating = true;
         this.scene.playAnimation(
           this.currentAnimation.animation,
           /*onStep=*/ this.onAnimationStep,
@@ -499,6 +502,7 @@ export default {
         this.currentAnimation.animation = this.buildCurrentAnimation();
         this.saveMobjectPreAnimation(this.currentAnimation.animation.mobject);
         this.currentAnimation.animation.setStartingMobject(this.savedPreAnimationMobject);
+        this.animating = true;
         this.scene.playAnimation(
           this.currentAnimation.animation,
           /*onStep=*/ this.onAnimationStep,
@@ -563,6 +567,7 @@ export default {
       // eslint-disable-next-line
       console.assert(this.animating);
       this.scene.clearAnimation();
+      this.animating = false;
       if (this.savedPreAnimationMobject !== undefined) {
         this.scene.remove(this.currentAnimation.animation.mobject);
         if (this.savedPreAnimationMobjectParent !== undefined) {
