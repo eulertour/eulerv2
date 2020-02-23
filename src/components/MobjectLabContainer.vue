@@ -455,7 +455,7 @@ export default {
         this.savedPreAnimationMobject = mobject.clone();
         this.savedPreAnimationMobjectParent = mobject.parent;
       } else {
-        // Must not be null in order for this.animating to compute correctly.
+        // Must not be null in order for this.animating to behave correctly.
         this.savedPreAnimationMobject = undefined;
         this.savedPreAnimationMobjectParent = undefined;
       }
@@ -466,13 +466,8 @@ export default {
         return;
       }
       if (this.animationIsValid && this.sceneIsValid) {
-        let currentAnimationMobject = this.currentAnimation.animation.mobject;
-        if (currentAnimationMobject !== null) {
-          this.saveMobjectPreAnimation(this.currentAnimation.animation.mobject);
-        } else {
-          // Must not be null in order for this.animating to compute correctly.
-          this.savedPreAnimationMobject = undefined;
-        }
+        this.saveMobjectPreAnimation(this.currentAnimation.animation.mobject);
+        this.currentAnimation.animation.setStartingMobject(this.savedPreAnimationMobject);
         this.scene.playAnimation(
           this.currentAnimation.animation,
           /*onStep=*/ this.onAnimationStep,
@@ -503,6 +498,7 @@ export default {
       if (this.animationIsValid && this.sceneIsValid) {
         this.currentAnimation.animation = this.buildCurrentAnimation();
         this.saveMobjectPreAnimation(this.currentAnimation.animation.mobject);
+        this.currentAnimation.animation.setStartingMobject(this.savedPreAnimationMobject);
         this.scene.playAnimation(
           this.currentAnimation.animation,
           /*onStep=*/ this.onAnimationStep,
@@ -570,8 +566,8 @@ export default {
       if (this.savedPreAnimationMobject !== undefined) {
         this.scene.remove(this.currentAnimation.animation.mobject);
         if (this.savedPreAnimationMobjectParent !== undefined) {
-          // TODO: Each Mobject in the hierarchy must be checked for addition
-          // individually.
+          // TODO: Each Mobject in the hierarchy might have to be checked for
+          // addition individually.
           this.savedPreAnimationMobjectParent.add(this.savedPreAnimationMobject);
         }
         // TODO: Is there no better way to do this? Possibly binding the Mobject

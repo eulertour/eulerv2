@@ -56,6 +56,7 @@ class Scene extends Two {
           this.remove(animation.mobject);
         }
         this.clearAnimation();
+        animation.finish();
         if (this.onAnimationFinished !== null) {
           this.onAnimationFinished(animation);
         }

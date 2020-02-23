@@ -1011,6 +1011,9 @@ class SingleStringTexMobject extends Mobject {
   }
 
   static fromTexString(texString, style, scene) {
+    if (texString.length === 0) {
+      return new SingleStringTexMobject("", []);
+    }
     // Create the Mobject with an a prepended for scaling later.
     let group = scene.texToSvgGroup(`a${texString}`);
     group = utils.normalizeGroup(group);
@@ -1175,12 +1178,11 @@ class TexMobject extends Mobject {
   }
 
   clone(parent) {
-    // TODO: This is very wasteful, since the children are removed later
-    let clone = new TexMobject(
-      this.texStrings,
-      this.config,
-      this.scene,
-    );
+    let clone = new TexMobject([], {}, {});
+    clone.texStrings = _.cloneDeep(this.texStrings);
+    clone.config = _.cloneDeep(this.config);
+    clone.scene = this.scene;
+
     clone.name = this.name;
 
     let children = this.children.map(child => child.clone());

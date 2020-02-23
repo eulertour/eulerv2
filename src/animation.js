@@ -9,6 +9,7 @@ class Animation {
     const fullConfig = Object.assign(Animation.defaultConfig(), config);
     Object.assign(this, fullConfig);
     this.mobject = mobject;
+    this.startingMobject = null;
   }
 
   static defaultConfig() {
@@ -25,17 +26,20 @@ class Animation {
    * this method.
    */
   begin() {
-    this.startingMobject = this.createStartingMobject();
-    if (this.suspendMobjectUpdating) {
-      // All calls to self.mobject's internal updaters
-      // during the animation, either from this Animation
-      // or from the surrounding scene, should do nothing.
-      // It is, however, okay and desirable to call
-      // the internal updaters of self.starting_mobject,
-      // or any others among self.get_all_mobjects()
-      this.mobject.suspendUpdating();
+    if (this.mobject !== null) {
+      // eslint-disable-next-line
+      console.assert(
+        this.startingMobject !== null,
+        "Attempted to begin() an Animation with no startingMobject set",
+      );
     }
     this.interpolate(0);
+  }
+
+  finish() {}
+
+  setStartingMobject(mobject) {
+    this.startingMobject = mobject;
   }
 
   /* On each frame of the Animation, each Mobject in the top-level Mobject's
@@ -158,14 +162,18 @@ class ReplacementTransform extends Animation {
 
   begin() {
     // Use a copy of targetMobject for the alignData call so that the actual
-    // targetMobject is preserved (TODO: Is this necessary, since
-    // MobjectLabContainer saves the Mobject?).
-    this.targetCopy = this.targetMobject.clone()
+    // targetMobject is preserved.
+    this.targetCopy = this.targetMobject.clone();
     // Note, this potentially changes the structure
     // of both this.mobject and this.targetMobject
     this.mobject.alignData(this.targetCopy);
-    Animation.prototype.begin.call(this)
+    this.startingMobject = this.mobject.clone();
+    Animation.prototype.begin.call(this);
   }
+
+  // The startingMobject may have had to be mutated in begin() in order to align
+  // it with targetMobject.
+  setStartingMobject(/*mobject*/) {}
 
   getCopiesForInterpolation() {
     return [this.mobject, this.startingMobject, this.targetCopy];
@@ -262,6 +270,10 @@ class Write extends Animation {
     this.mobject.applyStyle({ strokeWidth: 1, fillOpacity: 0 });
     Animation.prototype.begin.call(this);
     this.startingMobject.applyStyle({ fillOpacity: 0 });
+  }
+
+  finish() {
+    this.startingMobject.applyStyle({ fillOpacity: 1 });
   }
 
   interpolateSubmobject(alpha, submob, startingSubmobject) {
