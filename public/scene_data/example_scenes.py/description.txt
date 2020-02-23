@@ -1,1 +1,1 @@
-Basic scenes to text functionality.
+Basic scenes to test functionality.

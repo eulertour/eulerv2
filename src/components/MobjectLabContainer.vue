@@ -584,7 +584,6 @@ export default {
       }
       this.savedPreAnimationMobject = null;
       this.savedPreAnimationMobjectInScene = null;
-      debugger;
     },
     /* Moves to the pre-setup stage of the current Animation. */
     jumpPreSetup: function() {

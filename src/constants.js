@@ -227,7 +227,7 @@ rotation and scale) from Manim.`;
 
 // Height of a latex a in Manim space.
 export const aHeightManim = 0.22565395;
-export const UNKNOWN_MOBJECT = "<unknown_mobject>";
+export const ALIGNMENT_SUBMOBJECT_TAG = "#AlignmentSubmobject";
 export const COPIED_MOBJECT_REGEX = "<copy of (.*)>";
 export const uiScreens = {
   // DEBUG: 'debug',

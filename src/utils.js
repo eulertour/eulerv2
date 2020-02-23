@@ -783,14 +783,20 @@ function applySubmobjectDiff(mobject, submobjectDiff, reverse, mobjectDict) {
     startMobjects = submobjectDiff[1];
     endMobjects  = submobjectDiff[0];
   }
-  if (endMobjects.includes(consts.UNKNOWN_MOBJECT)) {
+  let alignedEndMobjects = _.filter(endMobjects, mobjectName => {
+      return mobjectName.includes(consts.ALIGNMENT_SUBMOBJECT_TAG);
+  }).length !== 0;
+  if (alignedEndMobjects) {
     // This is likely a ReplacementTransform that had to split the
     // submobjects. Ignore the change.
     // eslint-disable-next-line
     console.assert(!reverse);
     return;
   }
-  if (startMobjects.includes(consts.UNKNOWN_MOBJECT)) {
+  let alignedStartMobjects = _.filter(startMobjects, mobjectName => {
+      return mobjectName.includes(consts.ALIGNMENT_SUBMOBJECT_TAG);
+  }).length !== 0;
+  if (alignedStartMobjects) {
     // This change was ignored while going forward, so there's nothing to do
     // now (TODO: Do you also have to check for a copied mobject here?).
     // eslint-disable-next-line
