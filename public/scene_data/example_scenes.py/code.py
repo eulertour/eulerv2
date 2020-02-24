@@ -20,8 +20,8 @@ class WriteStuff(WebScene):
             tex_to_color_map={"text": YELLOW}
         )
         example_tex = TexMobject(
-            "\sum_{k=1}^\infty {1 \over k^2} = {\pi^2 \over 6}",
-            # "\int_{-\infty}^\infty {e^{x^{-2}}}dx= {\sqrt{\pi}}",
+            "\int_{-\infty}^\infty {e^{x^{-2}}}dx= {\sqrt{\pi}}",
+            # "\sum_{k=1}^\infty {1 \over k^2} = {\pi^2 \over 6}",
         )
         group = VGroup(example_text, example_tex)
         group.arrange(DOWN)
@@ -48,23 +48,3 @@ class GroupExample(WebScene):
         self.play(ReplacementTransform(g1, g2))
         self.play(FadeOut(c2))
         self.wait()
-
-# class WarpSquare(WebScene):
-#     def construct(self):
-#         square = Square()
-#         self.play(ApplyPointwiseFunction(
-#             lambda point: complex_to_R3(np.exp(R3_to_complex(point))),
-#             square
-#         ))
-#         self.wait()
-#
-#
-# class AlignDataExample(WebScene):
-#   def construct(self):
-#       c1 = Circle().shift(LEFT)
-#       s1 = Square().shift(RIGHT)
-#       g1 = Group(c1, s1)
-#
-#       c2 = Circle().shift(RIGHT + 2 * DOWN)
-#       self.play(FadeIn(g1))
-#       self.play(ReplacementTransform(g1, c2))

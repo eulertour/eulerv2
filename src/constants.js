@@ -144,86 +144,11 @@ export const SHORT_NAME_MAP = {
   "ReplacementTransform": "RTransform",
 };
 
-export const EXAMPLE_CODE =
-`from manimlib.imports import *
-
-class SquareToCircle(WebScene):
-    def construct(self):
-        circle = Circle()
-        square = Square()
-        square.flip(RIGHT)
-        square.rotate(-3 * TAU / 8)
-        circle.set_fill(PINK, opacity=0.5)
-
-        self.play(ShowCreation(square))
-        self.play(ReplacementTransform(square, circle))
-        self.play(FadeOut(circle))
-
-
-class WriteStuff(WebScene):
-    def construct(self):
-        example_text = TextMobject(
-            "This is some text",
-            tex_to_color_map={"text": YELLOW}
-        )
-        example_tex = TexMobject(
-            "\\sum_{k=1}^\\infty {1 \\over k^2} = {\\pi^2 \\over 6}",
-            # "\\int_{-\\infty}^\\infty {e^{x^{-2}}}dx= {\\sqrt{\\pi}}",
-        )
-        group = VGroup(example_text, example_tex)
-        group.arrange(DOWN)
-        group.set_width(FRAME_WIDTH - 2 * LARGE_BUFF)
-
-        self.play(Write(example_text))
-        self.play(Write(example_tex))
-        self.wait()
-
-
-class GroupExample(WebScene):
-    def construct(self):
-        c1 = Circle().shift(LEFT)
-        s1 = Square().shift(RIGHT)
-        g1 = Group(c1, s1)
-
-        c2 = Circle().shift(RIGHT + 2 * DOWN)
-        s2 = Square().shift(LEFT + 2 * DOWN)
-        r2 = Rectangle(height=4, width=2) \\
-               .shift(2 * LEFT + 2 * DOWN)
-        g2 = Group(r2, s2, c2)
-
-        self.play(FadeIn(g1))
-        self.play(ReplacementTransform(g1, g2))
-        self.play(FadeOut(c2))
-        self.wait()
-`;
-
-/*
-class WarpSquare(WebScene):
-    def construct(self):
-        square = Square()
-        self.play(ApplyPointwiseFunction(
-            lambda point: complex_to_R3(np.exp(R3_to_complex(point))),
-            square
-        ))
-        self.wait()
-
-
-class AlignDataExample(WebScene):
-  def construct(self):
-      c1 = Circle().shift(LEFT)
-      s1 = Square().shift(RIGHT)
-      g1 = Group(c1, s1)
-
-      c2 = Circle().shift(RIGHT + 2 * DOWN)
-      self.play(FadeIn(g1))
-      self.play(ReplacementTransform(g1, c2))
-*/
-
 export const RELEASE_NOTES =
-`Implemented the entire Latex pipeline across MathJax, Manim and Two. The web
-Latex implementation circumvents Manim's svg renderer entirely in favor of the
-one in two.js. Also implemented a crude forwarding of transformations  (
-rotation and scale) from Manim.`;
+`This is the first version with two separate projects, an outline for a page for
+documentation, and an implementation of ApplyFunction. The panel for editing
+Mobjects was removed in preparation for a new one which with a better layout
+and more functionality.`;
 
 // Height of a latex a in Manim space.
 export const aHeightManim = 0.22565395;

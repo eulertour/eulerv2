@@ -91,7 +91,7 @@
               </v-btn>
               <v-btn large v-on:click="$emit('run-manim')">
                 <v-icon class="headline black--text mr-2">mdi-cube-outline</v-icon>
-                <span class="title">Render</span>
+                <span class="title">Run</span>
               </v-btn>
             </div>
           </div>
