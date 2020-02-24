@@ -55,14 +55,12 @@
 
 <script>
 import AnimationPanel from "./AnimationPanel.vue";
-import MobjectPanel from "./MobjectPanel.vue";
 import SetupPanel from "./SetupPanel.vue";
 
 export default {
   name: "Panels",
   components: {
     AnimationPanel,
-    MobjectPanel,
     SetupPanel,
   },
   props: {

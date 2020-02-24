@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex flex-nowrap align-center pb-1 timeline">
+  <div class="d-flex flex-nowrap align-center pl-1 pb-1 timeline">
     <v-card
       v-for="(animation, index) in animations"
       v-bind:key="index"
