@@ -1,5 +1,6 @@
 <template>
   <div class="pa-0">
+    <!--
     <v-select
       label="Mobject"
       v-bind:items="mobjectChoices"
@@ -18,6 +19,7 @@
         </v-chip>
       </template>
     </v-select>
+    -->
   </div>
 </template>
 

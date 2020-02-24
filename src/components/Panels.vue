@@ -50,37 +50,6 @@
         />
       </v-expansion-panel-content>
     </v-expansion-panel>
-    <v-expansion-panel>
-      <v-expansion-panel-header>Mobjects</v-expansion-panel-header>
-      <v-expansion-panel-content>
-        <v-expansion-panels class="d-flex flex-column" multiple>
-          <v-expansion-panel v-for="(data, name) in mobjects" v-bind:key="name">
-            <v-expansion-panel-header>
-              {{ name }}
-              <span class="text--secondary ml-2">
-                {{ !animating && scene.contains(data.mobject)
-                ? "(in scene)" : "" }}
-              </span>
-            </v-expansion-panel-header>
-            <v-expansion-panel-content>
-              <MobjectPanel
-                v-bind:mobject-classes="mobjectChoices"
-                v-bind:mobject-name="name"
-                v-bind:mobject-data="data"
-                v-bind:disabled="animating || !scene.contains(data.mobject)"
-                v-bind:scene="scene"
-                v-on:mobject-update="(mobjectName, attr, val)=>$emit('mobject-update', mobjectName, attr, val)"
-              />
-            </v-expansion-panel-content>
-          </v-expansion-panel>
-        </v-expansion-panels>
-        <div class="d-flex justify-space-around mt-4">
-          <v-btn fab v-on:click="$emit('new-mobject')">
-            <v-icon color="black" x-large>mdi-plus</v-icon>
-          </v-btn>
-        </div>
-      </v-expansion-panel-content>
-    </v-expansion-panel>
   </v-expansion-panels>
 </template>
 

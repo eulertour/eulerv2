@@ -1,5 +1,6 @@
 <template>
   <div class="pa-0">
+    <!--
     <v-select
       label="Start Mobject"
       v-bind:items="startMobjectChoices"
@@ -26,6 +27,7 @@
         <v-chip>{{ item }}</v-chip>
       </template>
     </v-select>
+    -->
   </div>
 </template>
 

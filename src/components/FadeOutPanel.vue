@@ -1,5 +1,6 @@
 <template>
   <div>
+    <!--
     <v-select
       label="Start Mobject"
       v-bind:items="postSetupMobjects"
@@ -17,6 +18,7 @@
         </v-chip>
       </template>
     </v-select>
+    -->
   </div>
 </template>
 

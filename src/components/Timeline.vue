@@ -1,9 +1,9 @@
 <template>
-  <div class="d-flex align-center timeline">
+  <div class="d-flex flex-nowrap align-center pb-1 timeline">
     <v-card
       v-for="(animation, index) in animations"
       v-bind:key="index"
-      class="d-flex flex-column justify-center keyframe"
+      class="flex-grow-0 flex-shrink-0 d-flex flex-column justify-center keyframe"
     >
       <v-card-title class="d-flex justify-center headline px-2">
         <div style="text-overflow:ellipsis">
@@ -11,11 +11,13 @@
         </div>
       </v-card-title>
     </v-card>
+    <!--
     <v-card class="keyframe d-flex align-center justify-center">
       <v-btn v-on:click="$emit('new-animation')" height="100%" width="100%">
         <v-icon class="display-2">mdi-plus</v-icon>
       </v-btn>
     </v-card>
+    -->
     <div id="position-indicator" v-bind:style="timelineOffset"/>
   </div>
 </template>
@@ -65,6 +67,7 @@ export default {
   position: relative;
   border: 1px solid black;
   width: 640px;
+  overflow-x: auto;
 }
 #position-indicator {
   background-color: black;
