@@ -8,7 +8,7 @@
           <v-img
             height="45px"
             width="45px"
-            src="eulertour_logo_transparent.png">
+            src="/eulertour_logo_transparent.png">
           </v-img>
           <div>
             <span class="mr-1 display-1">EulerTour</span>
