@@ -3,8 +3,8 @@
     <v-col>
       <v-row class="headline my-4">Gallery</v-row>
       <v-row>
-        <Thumbnail project="example_scenes.py" />
-        <Thumbnail project="what_can_we_do.py" />
+        <Thumbnail project="example_scenes" />
+        <Thumbnail project="what_can_we_do" />
       </v-row>
     </v-col>
   </v-container>
