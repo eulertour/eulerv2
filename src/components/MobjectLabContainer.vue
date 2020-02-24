@@ -95,7 +95,7 @@ export default {
       releaseNotes: consts.RELEASE_NOTES,
       releaseNotesDialog: false,
       debug: false,
-      code: consts.EXAMPLE_CODE,
+      code: "",
       uiScreen: consts.uiScreens.CODE,
       playingSingleAnimation: null,
       sceneChoices: [],
