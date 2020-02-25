@@ -21,7 +21,7 @@
             <v-list-item
               v-for="subItem in item.items"
               v-bind:key="subItem.title"
-              v-on:click="selectDocumentationComponent(item.component)"
+              v-on:click="selectDocumentationComponent(subItem.component)"
             >
               <v-list-item-content>
                 <v-list-item-title v-text="subItem.title"></v-list-item-title>
@@ -45,10 +45,13 @@
 
 <script>
 import About from './docs/About.vue'
+import ExampleScene from './docs/ExampleScene.vue'
+
 export default {
   name: 'Documentation',
   components: {
     About,
+    ExampleScene,
   },
   methods: {
     selectDocumentationComponent(componentName) {
