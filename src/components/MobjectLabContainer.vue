@@ -534,8 +534,8 @@ export default {
      *    mobject1: {
      *      added: [false, true],
      *      style: {
-     *        fillColor: [x, y],
-     *        fillOpacity: [x, y],
+     *        fillColor: ['#fff', '#f00'],
+     *        fillOpacity: [0, 1],
      *      }
      *    },
      *    transformations: [

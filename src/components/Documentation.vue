@@ -1,9 +1,9 @@
 <template>
-  <v-container class="d-flex pa-0">
+  <v-container fluid class="d-flex pa-0">
     <v-navigation-drawer
       permanent
       width="200px"
-      class="mr-3"
+      class="mr-3 flex-shrink-0"
     >
       <v-list dense>
         <div v-for="item in navigationDrawerData" v-bind:key="item.title">
@@ -37,9 +37,7 @@
       </v-list>
     </v-navigation-drawer>
 
-    <div>
-      <component v-bind:is="selectedComponent"/>
-    </div>
+    <component v-bind:is="selectedComponent"/>
   </v-container>
 </template>
 

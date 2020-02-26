@@ -6,10 +6,10 @@
 </template>
 
 <script>
-</script>
-
-<style>
 export default {
   name: 'About',
 }
+</script>
+
+<style>
 </style>

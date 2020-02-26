@@ -1,82 +1,72 @@
 <template>
-  <v-container fluid class="d-flex flex-column ma-5">
+  <v-container>
     <v-row style="height: 100%">
-      <v-col
-        class="d-flex"
-        cols="6"
-        v-bind:class="{
-          'justify-space-between': displayingPanels && debug,
-          'justify-end': displayingPanels && !debug,
-        }"
-        style="height: 100%"
-      >
-        <div v-if="debug" id="debug" class="title half-width" />
-        <div
-          class="d-flex flex-column align-stretch pl-2"
-          v-bind:class="{
-            'full-width': displayingCode && !debug,
-            'column-width': displayingPanels || displayingCode && debug,
-          }"
-        >
-          <v-toolbar elevation="5" max-height="64px" class="mb-2">
-            <v-toolbar-title>{{ project }}</v-toolbar-title>
-            <v-spacer></v-spacer>
-            <div v-if="animations.length > 0">
-              <div v-for="screen in uiScreens" v-bind:key="screen">
-                <v-btn v-if="uiScreen !== screen" fab text v-on:click="(code)=>$emit('switch-ui-screen', screen)">
-                  <v-icon class="headline black--text">
-                    {{ uiIcon(screen) }}
-                  </v-icon>
-                </v-btn>
-              </div>
+      <v-col v-if="debug" id="debug" class="title half-width" />
+      <v-col class="d-flex flex-column align-stretch" style="height: 100%">
+        <v-toolbar elevation="5" max-height="64px" class="mb-2">
+          <v-toolbar-title>{{ project }}</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <div v-if="animations.length > 0">
+            <div v-for="screen in uiScreens" v-bind:key="screen">
+              <v-btn fab text
+                v-if="uiScreen !== screen"
+                v-on:click="(code)=>$emit('switch-ui-screen', screen)"
+              >
+                <v-icon class="headline black--text">
+                  {{ uiIcon(screen) }}
+                </v-icon>
+              </v-btn>
             </div>
-          </v-toolbar>
-          <v-sheet
-            v-if="sceneLoaded && uiScreen === PANELS"
-            elevation="5"
-            style="overflow-y: auto"
-          >
-            <Panels
-              v-bind:unknown-animation="unknownAnimation"
-              v-bind:animating="animating"
-              v-bind:animation-header-style="animationHeaderStyle"
-              v-bind:animation-offset="animationOffset"
-              v-bind:current-animation-diff="currentAnimationDiff"
-              v-bind:current-animation="currentAnimation"
-              v-bind:current-scene-diff="currentSceneDiff"
-              v-bind:expanded-panel-prop="expandedPanel"
-              v-bind:mobject-choices="mobjectChoices"
-              v-bind:mobjects="mobjects"
-              v-bind:post-animation-mobjects="postAnimationMobjects"
-              v-bind:post-animation="postAnimation"
-              v-bind:post-setup-mobjects="postSetupMobjects"
-              v-bind:post-setup="postSetup"
-              v-bind:pre-setup-mobjects="preSetupMobjects"
-              v-bind:pre-setup="preSetup"
-              v-bind:scene-header-style="sceneHeaderStyle"
-              v-bind:scene="scene"
-              v-on:arg-change="(argNum, arg)=>$emit('arg-change', argNum, arg)"
-              v-on:config-change="(key, val)=>$emit('config-change', key, val)"
-              v-on:expanded-panel-update="(val)=>this.$emit('expanded-panel-update', val)"
-              v-on:jump-post-animation="$emit('jump-post-animation')"
-              v-on:jump-post-setup="(val)=>this.$emit('jump-post-setup', val)"
-              v-on:jump-pre-setup="(val)=>this.$emit('jump-pre-setup', val)"
-              v-on:mobject-update="(mobjectName, attr, val)=>$emit('mobject-update', mobjectName, attr, val)"
-              v-on:pause="(e)=>$emit('pause')"
-              v-on:play="(e)=>$emit('play')"
-              v-on:replay="(e)=>$emit('replay')"
-              v-on:update-setup="(action, newSelection)=>$emit('update-setup', action, newSelection)"
-            />
-          </v-sheet>
+          </div>
+        </v-toolbar>
+        <!-- Scrolling seems to only work if all flex elements between this tag
+        and the nearest ancestor with fixed height have height: 100% -->
+        <v-sheet
+          v-if="sceneLoaded && uiScreen === PANELS"
+          elevation="5"
+          style="overflow-y: auto"
+        >
+          <Panels
+            v-bind:unknown-animation="unknownAnimation"
+            v-bind:animating="animating"
+            v-bind:animation-header-style="animationHeaderStyle"
+            v-bind:animation-offset="animationOffset"
+            v-bind:current-animation-diff="currentAnimationDiff"
+            v-bind:current-animation="currentAnimation"
+            v-bind:current-scene-diff="currentSceneDiff"
+            v-bind:expanded-panel-prop="expandedPanel"
+            v-bind:mobject-choices="mobjectChoices"
+            v-bind:mobjects="mobjects"
+            v-bind:post-animation-mobjects="postAnimationMobjects"
+            v-bind:post-animation="postAnimation"
+            v-bind:post-setup-mobjects="postSetupMobjects"
+            v-bind:post-setup="postSetup"
+            v-bind:pre-setup-mobjects="preSetupMobjects"
+            v-bind:pre-setup="preSetup"
+            v-bind:scene-header-style="sceneHeaderStyle"
+            v-bind:scene="scene"
+            v-on:arg-change="(argNum, arg)=>$emit('arg-change', argNum, arg)"
+            v-on:config-change="(key, val)=>$emit('config-change', key, val)"
+            v-on:expanded-panel-update="(val)=>this.$emit('expanded-panel-update', val)"
+            v-on:jump-post-animation="$emit('jump-post-animation')"
+            v-on:jump-post-setup="(val)=>this.$emit('jump-post-setup', val)"
+            v-on:jump-pre-setup="(val)=>this.$emit('jump-pre-setup', val)"
+            v-on:mobject-update="(mobjectName, attr, val)=>$emit('mobject-update', mobjectName, attr, val)"
+            v-on:pause="(e)=>$emit('pause')"
+            v-on:play="(e)=>$emit('play')"
+            v-on:replay="(e)=>$emit('replay')"
+            v-on:update-setup="(action, newSelection)=>$emit('update-setup', action, newSelection)"
+          />
+        </v-sheet>
+        <div
+          v-else-if="sceneLoaded && uiScreen === CODE"
+          class="d-flex flex-column flex-grow-1"
+        >
           <CodeMirror
-            v-else-if="sceneLoaded && uiScreen === CODE"
             v-bind:code="code"
             v-on:update-code="(code)=>$emit('update-code', code)"
           />
-          <v-card v-else class="d-flex justify-center align-center flex-grow-1">
-            <v-progress-circular indeterminate />
-          </v-card>
-          <div v-if="uiScreen === CODE" class="d-flex justify-space-between mt-4">
+          <div class="d-flex justify-space-between mt-4">
             <div style="width:60%">
               <v-select
                 v-bind:items="sceneChoices"
@@ -96,46 +86,50 @@
             </div>
           </div>
         </div>
+        <v-card v-else class="d-flex justify-center align-center flex-grow-1">
+          <v-progress-circular indeterminate />
+        </v-card>
       </v-col>
-      <v-col class="flex-grow-0">
-        <div
-          id="manim-background"
-          v-on:mouseover="$emit('display-canvas-menu', true)"
-          v-on:mouseleave="$emit('display-canvas-menu', false)"
-        >
+      <v-col>
+        <div id="manim-visualization">
           <div
-            id="canvas-menu"
-            class="grey lighten-2 flex-row-reverse"
-            v-bind:style="{
-              display: displayCanvasMenu ? 'flex' : 'none'
-            }"
+            id="manim-background"
+            v-on:mouseover="$emit('display-canvas-menu', true)"
+            v-on:mouseleave="$emit('display-canvas-menu', false)"
           >
-            <v-btn
-              height="100%"
-              class="canvas-menu-button"
-              v-on:click="$emit('snapshot-canvas')"
+            <div
+              id="canvas-menu"
+              class="grey lighten-2 flex-row-reverse"
+              v-bind:style="{ display: displayCanvasMenu ? 'flex' : 'none' }"
             >
-              <v-icon>mdi-camera</v-icon>
-            </v-btn>
+              <v-btn
+                height="100%"
+                class="canvas-menu-button"
+                v-on:click="$emit('snapshot-canvas')"
+              >
+                <v-icon>mdi-camera</v-icon>
+              </v-btn>
+            </div>
           </div>
+          <Timeline
+            class="mt-2"
+            v-bind:animations="animations"
+            v-bind:index="animationIndex"
+            v-bind:offset="animationOffset"
+            v-on:new-animation="$emit('handle-new-animation')"
+          />
+          <VideoControls
+            class="mt-2"
+            v-if="sceneLoaded"
+            v-on:play="(e)=>$emit('play', e, /*singleAnimationOnly=*/false)"
+            v-on:replay="(e)=>$emit('replay', e, /*singleAnimationOnly=*/false)"
+            v-on:pause="$emit('pause')"
+            v-on:step-backward="$emit('step-backward')"
+            v-on:step-forward="$emit('step-forward')"
+            v-bind:scene="scene"
+            v-bind:finished="animationIndex === animations.length - 1 && animationOffset === 1"
+          />
         </div>
-        <Timeline
-          class="mt-2"
-          v-bind:animations="animations"
-          v-bind:index="animationIndex"
-          v-bind:offset="animationOffset"
-          v-on:new-animation="$emit('handle-new-animation')"
-        />
-        <VideoControls
-          v-if="sceneLoaded"
-          v-on:play="(e)=>$emit('play', e, /*singleAnimationOnly=*/false)"
-          v-on:replay="(e)=>$emit('replay', e, /*singleAnimationOnly=*/false)"
-          v-on:pause="$emit('pause')"
-          v-on:step-backward="$emit('step-backward')"
-          v-on:step-forward="$emit('step-forward')"
-          v-bind:scene="scene"
-          v-bind:finished="animationIndex === animations.length - 1 && animationOffset === 1"
-        />
       </v-col>
     </v-row>
     <div id="corner-button-container">
@@ -283,6 +277,9 @@ export default {
 .v-btn.canvas-menu-button {
   padding: 0 8px;
   min-width: 0;
+}
+#manim-visualization {
+  width: 640px;
 }
 #manim-background {
   width: 640px;

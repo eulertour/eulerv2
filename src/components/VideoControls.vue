@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex justify-center mt-3">
+  <div class="d-flex justify-center">
     <v-btn fab v-on:click="$emit('step-backward')" class="mx-2">
       <v-icon color="black" x-large>mdi-step-backward</v-icon>
     </v-btn>

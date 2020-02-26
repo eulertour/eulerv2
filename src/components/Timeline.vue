@@ -1,14 +1,17 @@
 <template>
-  <div class="d-flex flex-nowrap align-center pl-1 pb-1 timeline">
+  <v-card
+    class="d-flex flex-nowrap align-center pa-1 timeline"
+    color="grey lighten-3"
+  >
     <v-card
       v-for="(animation, index) in animations"
       v-bind:key="index"
-      class="flex-grow-0 flex-shrink-0 d-flex flex-column justify-center keyframe"
+      flat
+      class="flex-grow-0 flex-shrink-0 d-flex flex-column justify-center keyframe mr-1"
+      style="overflow-y:hidden"
     >
       <v-card-title class="d-flex justify-center headline px-2">
-        <div style="text-overflow:ellipsis">
-          {{ shortNameMap[animation.className] || animation.className }}
-        </div>
+        {{ shortNameMap[animation.className] || animation.className }}
       </v-card-title>
     </v-card>
     <!--
@@ -19,7 +22,7 @@
     </v-card>
     -->
     <div id="position-indicator" v-bind:style="timelineOffset"/>
-  </div>
+  </v-card>
 </template>
 
 <script>
@@ -36,7 +39,7 @@ export default {
   },
   computed: {
     timelineOffset() {
-      let cursorOffset = this.animationWidth * this.index;
+      let cursorOffset = (this.animationWidth + 4) * this.index + 4;
       cursorOffset += this.offset * this.animationWidth;
       return {
         'left': cursorOffset + 'px',
@@ -65,14 +68,13 @@ export default {
 }
 .timeline {
   position: relative;
-  border: 1px solid black;
-  width: 640px;
   overflow-x: auto;
+  overflow-y: hidden;
 }
 #position-indicator {
   background-color: black;
   height: 100%;
-  width: 5px;
+  width: 3px;
   position: absolute;
 }
 </style>
