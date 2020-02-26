@@ -2,6 +2,9 @@
 node_modules
 /dist
 notes.txt
+/.firebase
+.firebaserc
+firebase.json
 
 # external repositories
 dev/manim
