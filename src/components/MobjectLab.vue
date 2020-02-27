@@ -2,7 +2,15 @@
   <v-container>
     <v-row style="height: 100%">
       <v-col v-if="debug" id="debug" class="title half-width" />
-      <v-col class="d-flex flex-column align-stretch" style="height: 100%">
+      <v-col class="d-flex flex-column align-end" style="height: 100%">
+        <div
+          class="d-flex flex-column"
+          style="height: 100%"
+          v-bind:class="{
+            'code-width': uiScreen === CODE,
+            'panels-width': sceneLoaded && uiScreen === PANELS,
+          }"
+        >
         <v-toolbar elevation="5" max-height="64px" class="mb-2">
           <v-toolbar-title>{{ project }}</v-toolbar-title>
           <v-spacer></v-spacer>
@@ -19,8 +27,8 @@
             </div>
           </div>
         </v-toolbar>
-        <!-- Scrolling seems to only work if all flex elements between this tag
-        and the nearest ancestor with fixed height have height: 100% -->
+        <!-- Scrolling seems to only work if ancestors of this tag have
+        height: 100% and display: flex -->
         <v-sheet
           v-if="sceneLoaded && uiScreen === PANELS"
           elevation="5"
@@ -67,7 +75,7 @@
             v-on:update-code="(code)=>$emit('update-code', code)"
           />
           <div class="d-flex justify-space-between mt-4">
-            <div style="width:60%">
+            <div style="width: 60%">
               <v-select
                 v-bind:items="sceneChoices"
                 v-model="chosenScene"
@@ -76,10 +84,10 @@
               />
             </div>
             <div>
-              <v-btn class="mr-2" large v-on:click="$emit('refresh-scene-choices')">
+              <v-btn class="mr-2" large min-height="48" v-on:click="$emit('refresh-scene-choices')">
                 <v-icon class="headline black--text">mdi-replay</v-icon>
               </v-btn>
-              <v-btn large v-on:click="$emit('run-manim')">
+              <v-btn large min-height="48" v-on:click="$emit('run-manim')">
                 <v-icon class="headline black--text mr-2">mdi-cube-outline</v-icon>
                 <span class="title">Run</span>
               </v-btn>
@@ -89,8 +97,9 @@
         <v-card v-else class="d-flex justify-center align-center flex-grow-1">
           <v-progress-circular indeterminate />
         </v-card>
+        </div>
       </v-col>
-      <v-col>
+      <v-col class="d-flex flex-column align-center">
         <div id="manim-visualization">
           <div
             id="manim-background"
@@ -292,9 +301,6 @@ export default {
   right: 25px;
   bottom: 25px;
 }
-.column-width {
-  width: 50%;
-  min-width: 480px;
-}
-.full-width { width: 100%; }
+.code-width { width: 100%; }
+.panels-width { max-width: 550px; }
 </style>

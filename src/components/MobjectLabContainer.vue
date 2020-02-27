@@ -79,6 +79,9 @@ export default {
   components: {
     MobjectLab,
   },
+  props: {
+    project: String,
+  },
   data() {
     return {
       animating: false,
@@ -277,7 +280,7 @@ export default {
         window.texToPoints = tex => Manim.SingleStringTexMobject.texToPoints(tex, this.scene);
         let codePath = path.join(
           consts.SCENE_DATA_DIR,
-          this.$route.params.project,
+          this.$route.params.project || this.project,
           consts.CODE_NAME,
         );
         axios.get(codePath).then(response => {

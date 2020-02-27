@@ -114,4 +114,8 @@ export default {
   color: inherit;
   text-decoration: inherit;
 }
+header.v-app-bar.v-app-bar--fixed {
+  /* .CodeMirror-vscrollbar has z-index: 6 */
+  z-index: 10;
+}
 </style>

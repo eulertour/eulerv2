@@ -59,8 +59,10 @@ export default {
   flex-grow: 1;
 }
 #codemirror-container {
-  position: relative;
+  flex: 1 1 auto;
+  margin-top: 0;
   height: 100%;
+  position: relative;
 }
 .CodeMirror {
   font-size: 1.2em;
