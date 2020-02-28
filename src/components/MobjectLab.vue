@@ -278,13 +278,6 @@ export default {
 </script>
 
 <style>
-.MobjectLab {
-  @define-container;
-
-  @container (width < 1500px) {
-    border: 1px solid red;
-  }
-}
 #canvas-menu {
   position: absolute;
   height: 25px;
