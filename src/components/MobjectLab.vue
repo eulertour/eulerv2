@@ -1,5 +1,5 @@
 <template>
-  <v-container>
+  <v-container fluid class="MobjectLab">
     <v-row style="height: 100%">
       <v-col v-if="debug" id="debug" class="title half-width" />
       <v-col class="d-flex flex-column align-end" style="height: 100%">
@@ -99,7 +99,7 @@
         </v-card>
         </div>
       </v-col>
-      <v-col class="d-flex flex-column align-center">
+      <v-col class="d-flex flex-column align-start">
         <div id="manim-visualization">
           <div
             id="manim-background"
@@ -277,7 +277,14 @@ export default {
 };
 </script>
 
-<style scoped>
+<style>
+.MobjectLab {
+  @define-container;
+
+  @container (width < 1500px) {
+    border: 1px solid red;
+  }
+}
 #canvas-menu {
   position: absolute;
   height: 25px;
@@ -287,9 +294,7 @@ export default {
   padding: 0 8px;
   min-width: 0;
 }
-#manim-visualization {
-  width: 640px;
-}
+#manim-visualization { width: 640px; }
 #manim-background {
   width: 640px;
   height: 360px;
@@ -302,5 +307,5 @@ export default {
   bottom: 25px;
 }
 .code-width { width: 100%; }
-.panels-width { max-width: 550px; }
+.panels-width { max-width: 450px; }
 </style>
