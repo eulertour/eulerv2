@@ -1,11 +1,10 @@
 <template>
-  <v-container fluid class="MobjectLab">
+  <v-container fluid>
     <v-row style="height: 100%">
       <v-col v-if="debug" id="debug" class="title half-width" />
       <v-col class="d-flex flex-column align-end" style="height: 100%">
         <div
-          class="d-flex flex-column"
-          style="height: 100%"
+          class="d-flex flex-column uiPanels"
           v-bind:class="{
             'code-width': uiScreen === CODE,
             'panels-width': sceneLoaded && uiScreen === PANELS,
@@ -299,6 +298,10 @@ export default {
   right: 25px;
   bottom: 25px;
 }
+.uiPanels {
+  min-width: 550px;
+  height: 100%;
+}
 .code-width { width: 100%; }
-.panels-width { max-width: 450px; }
+.panels-width { width: 500px; }
 </style>
