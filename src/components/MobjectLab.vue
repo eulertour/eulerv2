@@ -1,10 +1,10 @@
 <template>
   <v-container fluid>
-    <v-row style="height: 100%">
+    <v-row class="column-container">
       <v-col v-if="debug" id="debug" class="title half-width" />
-      <v-col class="d-flex flex-column align-end" style="height: 100%">
+      <v-col class="d-flex flex-column ui-column" style="height: 100%">
         <div
-          class="d-flex flex-column uiPanels"
+          class="d-flex flex-column ui-panels"
           v-bind:class="{
             'code-width': uiScreen === CODE,
             'panels-width': sceneLoaded && uiScreen === PANELS,
@@ -98,7 +98,7 @@
         </v-card>
         </div>
       </v-col>
-      <v-col class="d-flex flex-column align-start">
+      <v-col class="manim-column d-flex flex-column">
         <div id="manim-visualization">
           <div
             id="manim-background"
@@ -277,6 +277,15 @@ export default {
 </script>
 
 <style>
+.column-container {
+  height: 100%;
+}
+.ui-column {
+  align-items: flex-end;
+}
+.manim-column {
+  align-items: start;
+}
 #canvas-menu {
   position: absolute;
   height: 25px;
@@ -298,10 +307,25 @@ export default {
   right: 25px;
   bottom: 25px;
 }
-.uiPanels {
-  min-width: 550px;
+.ui-panels {
+  min-width: 663px;
   height: 100%;
 }
 .code-width { width: 100%; }
 .panels-width { width: 500px; }
+
+@media screen and (max-width: 1350px) {
+  .column-container {
+    height: 650px;
+  }
+  .ui-column {
+    align-items: center;
+  }
+  .panels-width {
+    width: 640px;
+  }
+  .manim-column {
+    align-items: center;
+  }
+}
 </style>
