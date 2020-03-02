@@ -3,29 +3,28 @@
     v-bind:animating="animating"
     v-bind:animation-header-style="animationHeaderStyle"
     v-bind:animation-index="animationIndex"
-    v-bind:unknown-animation="unknownAnimation"
     v-bind:animation-is-valid="animationIsValid"
     v-bind:animation-offset="animationOffset"
     v-bind:animations="animations"
     v-bind:chosen-scene-prop="chosenScene"
     v-bind:chosen-scene="chosenScene"
     v-bind:code="code"
-    v-bind:project="$route.params.project"
     v-bind:current-animation-diff="currentAnimationDiff"
     v-bind:current-animation="currentAnimation"
     v-bind:current-scene-diff="currentSetupDiff"
     v-bind:debug-info="debugInfo"
     v-bind:debug="debug"
-    v-bind:ui-screen="uiScreen"
+    v-bind:display-canvas-menu="displayCanvasMenu"
     v-bind:expanded-panel="expandedPanel"
     v-bind:mobject-choices="mobjectChoices"
     v-bind:mobjects="mobjects"
-    v-bind:pre-setup="preSetup"
-    v-bind:post-setup="postSetup"
-    v-bind:post-animation="postAnimation"
-    v-bind:pre-setup-mobjects="preSetupMobjects"
-    v-bind:post-setup-mobjects="postSetupMobjects"
     v-bind:post-animation-mobjects="postAnimationMobjects"
+    v-bind:post-animation="postAnimation"
+    v-bind:post-setup-mobjects="postSetupMobjects"
+    v-bind:post-setup="postSetup"
+    v-bind:pre-setup-mobjects="preSetupMobjects"
+    v-bind:pre-setup="preSetup"
+    v-bind:project="$route.params.project || this.project"
     v-bind:release-notes-dialog-prop="releaseNotesDialog"
     v-bind:release-notes="releaseNotes"
     v-bind:scene-choices="sceneChoices"
@@ -33,31 +32,33 @@
     v-bind:scene-is-valid="sceneIsValid"
     v-bind:scene-loaded="sceneLoaded"
     v-bind:scene="scene"
-    v-bind:display-canvas-menu="displayCanvasMenu"
-    v-on:snapshot-canvas="snapshotCanvas"
-    v-on:display-canvas-menu="(display)=>{displayCanvasMenu=display}"
+    v-bind:ui-screen="uiScreen"
+    v-bind:unknown-animation="unknownAnimation"
+    v-bind:vertical-layout="verticalLayout"
     v-on:chosen-scene-update="(val)=>{chosenScene=val}"
-    v-on:switch-ui-screen="switchUiScreen"
+    v-on:config-change="handleConfigChange"
     v-on:debug-toggle="debug = !debug"
+    v-on:display-canvas-menu="(display)=>{displayCanvasMenu=display}"
     v-on:expanded-panel-update="(val)=>{expandedPanel=val}"
     v-on:handle-arg-change="handleArgChange"
-    v-on:config-change="handleConfigChange"
     v-on:handle-mobject-update="handleMobjectUpdate"
     v-on:handle-new-animation="handleNewAnimation"
-    v-on:jump-pre-setup="jumpPreSetup"
-    v-on:jump-post-setup="jumpPostSetup"
     v-on:jump-post-animation="jumpPostAnimation"
+    v-on:jump-post-setup="jumpPostSetup"
+    v-on:jump-pre-setup="jumpPreSetup"
     v-on:new-mobject="newMobject"
     v-on:pause="pause"
     v-on:play="play"
+    v-on:refresh-scene-choices="refreshSceneChoices"
     v-on:release-notes-dialog-update="(val)=>{releaseNotesDialog=val}"
     v-on:replay="replay"
     v-on:run-manim="runManim"
+    v-on:snapshot-canvas="snapshotCanvas"
     v-on:step-backward="stepBackward"
     v-on:step-forward="stepForward"
+    v-on:switch-ui-screen="switchUiScreen"
     v-on:update-code="(val)=>{code=val}"
     v-on:update-setup="updateSetup"
-    v-on:refresh-scene-choices="refreshSceneChoices"
   />
 </template>
 
@@ -80,6 +81,7 @@ export default {
     MobjectLab,
   },
   props: {
+    vertical: Boolean,
     project: String,
   },
   data() {
@@ -186,6 +188,13 @@ export default {
     };
   },
   computed: {
+    verticalLayout() {
+      if (this.vertical === undefined) {
+        return this.$vuetify.breakpoint.mdAndDown;
+      } else {
+        return this.vertical
+      }
+    },
     currentAnimation() {
       return this.animations[this.animationIndex];
     },

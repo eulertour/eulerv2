@@ -1,13 +1,25 @@
 <template>
   <v-container fluid>
-    <v-row class="column-container">
+    <v-row v-bind:class="{
+      'column-container': !verticalLayout,
+      'column-container-vertical': verticalLayout,
+    }">
       <v-col v-if="debug" id="debug" class="title half-width" />
-      <v-col class="d-flex flex-column ui-column">
+      <v-col
+        class="d-flex flex-column"
+        v-bind:class="{
+          'ui-column': !verticalLayout,
+          'ui-column-vertical': verticalLayout,
+        }"
+      >
         <div
-          class="d-flex flex-column ui-panels"
+          class="d-flex flex-column"
           v-bind:class="{
+            'ui-panels': !verticalLayout,
+            'ui-panels-vertical': verticalLayout,
             'code-width': uiScreen === CODE,
-            'panels-width': sceneLoaded && uiScreen === PANELS,
+            'panels-width': sceneLoaded && uiScreen === PANELS && !verticalLayout,
+            'panels-width-vertical': sceneLoaded && uiScreen === PANELS && verticalLayout,
           }"
         >
         <v-toolbar elevation="5" max-height="64px" class="mb-2">
@@ -98,7 +110,13 @@
         </v-card>
         </div>
       </v-col>
-      <v-col class="manim-column d-flex flex-column">
+      <v-col
+        v-bind:class="{
+          'manim-column': !verticalLayout,
+          'manim-column-vertical': verticalLayout,
+        }"
+        class="d-flex flex-column"
+      >
         <div id="manim-visualization">
           <div
             id="manim-background"
@@ -177,6 +195,7 @@ import JSONFormatter from 'json-formatter-js'
 export default {
   name: "MobjectLab",
   props: {
+    verticalLayout: Boolean,
     unknownAnimation: Boolean,
     displayCanvasMenu: Boolean,
     animating: Boolean,
@@ -304,27 +323,23 @@ export default {
   right: 25px;
   bottom: 25px;
 }
-.ui-panels {
-  min-width: 520px;
-  height: 100%;
-}
+.ui-panels { height: 100%; }
 .code-width { width: 100%; }
 .panels-width { width: 500px; }
 
-@media screen and (max-width: 1400px) {
-  .column-container {
-    flex-direction: column;
-    height: auto;
-  }
-  .ui-column {
-    align-items: center;
-    height: 650px;
-  }
-  .ui-panels { min-width: 0; }
-  .panels-width { width: 640px; }
-  .manim-column {
-    align-items: center;
-    height: 650px;
-  }
+/* Overrides for vertical layout. */
+.column-container-vertical { flex-direction: column; }
+.ui-column-vertical {
+  align-items: center;
+  height: 610px;
+}
+.ui-panels-vertical {
+  min-width: 0;
+  height: 100%;
+}
+.panels-width-vertical { width: 640px; }
+.manim-column-vertical {
+  align-items: center;
+  height: 650px;
 }
 </style>

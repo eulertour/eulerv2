@@ -1,6 +1,6 @@
 <template>
-  <v-row style="height: 100%">
-    <v-col style="overflow: auto; height: 100%">
+  <v-row>
+    <v-col>
       <div class="headline my-4">Learning by Example</div>
       <div>
         Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean vestibulum, nibh vitae euismod fringilla, sem dolor venenatis elit, mattis pulvinar urna ex in eros. Aenean accumsan eros ac sagittis ullamcorper. Sed finibus tellus nibh. Mauris scelerisque lacus ac nisl maximus, in egestas nibh gravida. Donec nulla erat, lacinia porta sagittis vel, sagittis consequat tellus. Vivamus dignissim ex euismod massa vulputate dignissim. Curabitur ligula dui, dictum in libero vel, vestibulum pellentesque mauris. Suspendisse sed fermentum magna.
@@ -11,14 +11,14 @@
       </div>
     </v-col>
     <v-col>
-      <MobjectLabContainer project="what_can_we_do"/>
+      <MobjectLabContainer project="example_scenes" v-bind:vertical="true"/>
     </v-col>
   </v-row>
 </template>
 
 <script>
 import MobjectLabContainer from '../MobjectLabContainer.vue'
-export default{
+export default {
   name: 'ExampleScene',
   components: {
     MobjectLabContainer,
