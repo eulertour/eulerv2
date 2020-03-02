@@ -81,7 +81,7 @@ export default {
     MobjectLab,
   },
   props: {
-    vertical: Boolean,
+    vertical: String,
     project: String,
   },
   data() {
@@ -189,10 +189,15 @@ export default {
   },
   computed: {
     verticalLayout() {
-      if (this.vertical === undefined) {
-        return this.$vuetify.breakpoint.mdAndDown;
-      } else {
-        return this.vertical
+      switch (this.vertical) {
+        case consts.MobjectLabContainerLayout.VERTICAL:
+          return true;
+        case consts.MobjectLabContainerLayout.HORIZONTAL:
+          return false;
+        case undefined:
+          return this.$vuetify.breakpoint.mdAndDown;
+        default:
+          console.error(`Unknown value for MobjectLabContainer.vertical: {this.vertical}`);
       }
     },
     currentAnimation() {

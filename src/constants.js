@@ -159,6 +159,10 @@ export const uiScreens = {
   PANELS: 'panels',
   CODE: 'code',
 };
+export const MobjectLabContainerLayout = {
+  VERTICAL: 'vertical',
+  HORIZONTAL: 'horizontal',
+};
 export const BASE_GALLERY_URL = "/gallery";
 export const BASE_LAB_URL = "/lab";
 export const BASE_INFO_URL = "/info";
