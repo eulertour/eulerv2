@@ -1,9 +1,8 @@
 <template>
-  <v-container fluid class="d-flex pa-0">
+  <div class="d-flex">
     <v-navigation-drawer
       permanent
       width="200px"
-      height="100%"
       class="mr-3 flex-shrink-0"
     >
       <v-list dense>
@@ -38,8 +37,10 @@
       </v-list>
     </v-navigation-drawer>
 
-    <component v-bind:is="selectedComponent"/>
-  </v-container>
+    <div style="height: 100%">
+      <component v-bind:is="selectedComponent"/>
+    </div>
+  </div>
 </template>
 
 <script>

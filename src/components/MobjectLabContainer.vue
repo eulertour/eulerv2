@@ -147,44 +147,6 @@ export default {
       ],
       animationDiffs: [],
       mobjects: {},
-      initialMobjects: {
-        Circle1: {
-          className: "Circle",
-          config: {},
-          position: [-1, 0],
-          transformations: [],
-          style: {
-            strokeColor: "#fc6255ff",
-            fillColor: "#00000000",
-            strokeWidth: 4,
-          },
-          mobject: null,
-        },
-        Square1: {
-          className: "Square",
-          config: {},
-          position: [1, 0],
-          transformations: [],
-          style: {
-            strokeColor: "#ffffffff",
-            fillColor: "#00000000",
-            strokeWidth: 4,
-          },
-          mobject: null,
-        },
-        Square2: {
-          className: "Square",
-          config: {},
-          position: [1, 0],
-          transformations: [],
-          style: {
-            strokeColor: "#00ff00ff",
-            fillColor: "#00000000",
-            strokeWidth: 4,
-          },
-          mobject: null,
-        },
-      },
     };
   },
   computed: {
@@ -197,7 +159,9 @@ export default {
         case undefined:
           return this.$vuetify.breakpoint.mdAndDown;
         default:
-          console.error(`Unknown value for MobjectLabContainer.vertical: {this.vertical}`);
+          // eslint-disable-next-line
+          console.error(`Unknown value for MobjectLabContainer.vertical: ${this.vertical}`);
+          return false;
       }
     },
     currentAnimation() {

@@ -65,7 +65,7 @@ export default {
   position: relative;
 }
 .CodeMirror {
-  font-size: 1.2em;
+  font-size: 1em;
   position: absolute;
   top: 0;
   bottom: 0;

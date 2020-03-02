@@ -27,7 +27,7 @@
       </v-btn>
     </v-app-bar>
 
-    <v-content class=" d-flex flex-column">
+    <v-content class="d-flex flex-column">
       <router-view></router-view>
     </v-content>
 
