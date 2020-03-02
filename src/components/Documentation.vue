@@ -3,6 +3,7 @@
     <v-navigation-drawer
       permanent
       width="200px"
+      height="100%"
       class="mr-3 flex-shrink-0"
     >
       <v-list dense>

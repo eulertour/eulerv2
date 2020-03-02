@@ -2,7 +2,7 @@
   <v-container fluid>
     <v-row class="column-container">
       <v-col v-if="debug" id="debug" class="title half-width" />
-      <v-col class="d-flex flex-column ui-column" style="height: 100%">
+      <v-col class="d-flex flex-column ui-column">
         <div
           class="d-flex flex-column ui-panels"
           v-bind:class="{
@@ -277,15 +277,12 @@ export default {
 </script>
 
 <style>
-.column-container {
-  height: 100%;
-}
+.column-container { height: 100%; }
 .ui-column {
   align-items: flex-end;
+  height: 100%;
 }
-.manim-column {
-  align-items: start;
-}
+.manim-column { align-items: start; }
 #canvas-menu {
   position: absolute;
   height: 25px;
@@ -308,24 +305,26 @@ export default {
   bottom: 25px;
 }
 .ui-panels {
-  min-width: 663px;
+  min-width: 520px;
   height: 100%;
 }
 .code-width { width: 100%; }
 .panels-width { width: 500px; }
 
-@media screen and (max-width: 1350px) {
+@media screen and (max-width: 1400px) {
   .column-container {
-    height: 650px;
+    flex-direction: column;
+    height: auto;
   }
   .ui-column {
     align-items: center;
+    height: 650px;
   }
-  .panels-width {
-    width: 640px;
-  }
+  .ui-panels { min-width: 0; }
+  .panels-width { width: 640px; }
   .manim-column {
     align-items: center;
+    height: 650px;
   }
 }
 </style>
