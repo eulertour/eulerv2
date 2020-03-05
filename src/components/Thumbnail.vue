@@ -15,7 +15,7 @@
       >
         <v-icon class="display-2 black--text">mdi-camera</v-icon>
       </div>
-      <v-card-text>{{ description }}</v-card-text>
+      <v-card-text style="font-size:0.7rem">{{ description }}</v-card-text>
     </v-card>
   </router-link>
 </template>
@@ -68,6 +68,9 @@ export default {
 </script>
 
 <style>
+.thumbnail {
+	font-size: 0.8rem;
+}
 .thumbnail-image-dimensions {
   width: 320px;
   height: 180px;
