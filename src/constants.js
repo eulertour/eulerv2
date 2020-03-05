@@ -147,8 +147,8 @@ export const SHORT_NAME_MAP = {
 export const RELEASE_NOTES =
 `This is the first version with two separate projects, an outline for a page for
 documentation, and an implementation of ApplyFunction. The panel for editing
-Mobjects was removed in preparation for a new one which with a better layout
-and more functionality.`;
+Mobjects was removed in preparation for a new one which will have a better
+layout and more functionality.`;
 
 // Height of a latex a in Manim space.
 export const aHeightManim = 0.22565395;

@@ -103,7 +103,7 @@ export default {
 };
 </script>
 
-<style>
+<style lang="scss">
 .v-application { height: 100vh; }
 .v-content { height: 100%; }
 .v-content__wrap {

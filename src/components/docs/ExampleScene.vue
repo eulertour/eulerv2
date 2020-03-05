@@ -1,31 +1,97 @@
 <template>
   <div class="documentation-container d-flex">
     <div class="text-container">
-      <div class="headline my-4">Learning by Example</div>
+      <div class="display-1 my-4">Learning by Example</div>
+      <div class="title my-4">SquareToCircle</div>
       <div>
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean vestibulum, nibh vitae euismod fringilla, sem dolor venenatis elit, mattis pulvinar urna ex in eros. Aenean accumsan eros ac sagittis ullamcorper. Sed finibus tellus nibh. Mauris scelerisque lacus ac nisl maximus, in egestas nibh gravida. Donec nulla erat, lacinia porta sagittis vel, sagittis consequat tellus. Vivamus dignissim ex euismod massa vulputate dignissim. Curabitur ligula dui, dictum in libero vel, vestibulum pellentesque mauris. Suspendisse sed fermentum magna.
-        Aliquam vitae augue vitae ex fermentum aliquam. Sed tortor purus, tincidunt at facilisis id, hendrerit quis metus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Phasellus condimentum tristique est, et varius lacus eleifend sed. Sed sed dolor eu tortor tristique dictum vitae sit amet orci. In rhoncus erat quis mollis elementum. Mauris a varius nisl, nec ornare ipsum. Proin tempor ex ac felis ornare gravida. Vivamus porttitor nunc nisi, nec convallis mauris hendrerit at. Pellentesque sed ipsum ultrices, cursus massa eget, finibus elit. Ut porttitor sem massa, at laoreet sem gravida eget. Vivamus vehicula dapibus diam. Cras vel feugiat est. Nullam a dapibus risus.
-        Vivamus congue at tellus sit amet fringilla. Vestibulum egestas pellentesque leo non mollis. Pellentesque imperdiet ac ipsum eu pellentesque. Vestibulum facilisis, sem vitae condimentum gravida, neque metus aliquam nisl, a vulputate orci arcu vitae tortor. Suspendisse dapibus pellentesque nulla non mollis. Cras euismod et erat nec consequat. Mauris malesuada, erat sed iaculis finibus, mi nunc aliquet risus, quis sollicitudin massa sem id odio. Proin euismod mauris id placerat ullamcorper. Curabitur pretium turpis velit, euismod malesuada lorem imperdiet sed. Etiam vestibulum leo ut arcu tristique, ac rhoncus risus interdum. Morbi tempus, augue in dictum interdum, odio felis imperdiet urna, ac commodo elit est in tellus. Quisque posuere justo ut est gravida malesuada. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque faucibus interdum ex, vehicula dignissim risus ultricies at. Aenean vitae blandit nulla, a sodales lectus. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-        Nullam varius imperdiet justo nec maximus. Etiam mattis elit lorem, at consectetur sapien convallis blandit. Integer vitae suscipit augue, nec euismod nulla. Ut commodo, justo sed lacinia blandit, risus nulla bibendum nulla, sit amet varius nunc libero vel neque. Quisque eget erat tincidunt, sagittis turpis non, eleifend magna. Morbi in commodo erat, sit amet cursus libero. Etiam imperdiet turpis eu fringilla porttitor. Phasellus suscipit sed velit eu tempus. Donec nec aliquet ligula, ut semper sapien. Cras viverra massa vel felis ullamcorper, vel fermentum massa convallis. Praesent vel sem non ante dictum porttitor in vitae est. Integer sagittis ante et viverra pulvinar. Morbi tincidunt et tortor porttitor hendrerit. Donec tempor a dui vel aliquam.
-        Duis aliquam condimentum cursus. Vivamus tincidunt risus id eleifend porta. Curabitur ac nulla sit amet turpis dapibus consequat. Aenean varius enim sit amet libero maximus, a dignissim turpis ultricies. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Mauris vel orci dignissim, hendrerit mi non, gravida tellus. Suspendisse mattis erat augue, et viverra felis accumsan sed. In sodales diam eu tincidunt convallis. Praesent rhoncus blandit sem non laoreet. Maecenas et nulla urna. Nunc sollicitudin elit eu consectetur rutrum.
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse pulvinar dui justo, a mattis dolor ultricies at. Vestibulum felis dolor, ullamcorper eu velit at, pulvinar feugiat tellus. Donec ac ipsum eleifend, semper erat ut, aliquet ipsum. Quisque non hendrerit turpis, vel ornare mi. Nulla aliquam ultrices condimentum. Praesent sit amet nunc sed lorem luctus aliquet sed ut ante. Fusce pulvinar tempus diam, dignissim tristique erat lobortis ac. Sed vitae ex erat. Sed luctus, augue a tempor blandit, neque risus convallis risus, nec feugiat eros augue a est. Praesent eu sapien blandit, ultricies mi quis, dictum leo.
+        <span class="mono">example_scenes.py</span> contains simple
+        examples that we can use to learn about manim. Go ahead and try out the
+        <span class="mono">SquareToCircle</span> scene by running it with
+        <span class="mono">manim example_scenes.py SquareToCircle -p</span>.
 
-        Donec vehicula tellus nec nibh ullamcorper, nec tempor tellus fringilla. Fusce massa arcu, hendrerit eu quam sed, luctus fermentum justo. Sed sed imperdiet justo. Vestibulum tristique orci sed tellus consectetur tempor. Curabitur bibendum lobortis lacus, et cursus dolor consectetur sed. Duis ornare in eros at posuere. Integer vulputate pretium mauris at congue. Quisque sagittis magna tortor. Duis fermentum vulputate ex eget congue. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae;
-        Etiam venenatis turpis orci, et tempus justo imperdiet fermentum. Cras velit augue, sagittis nec efficitur id, egestas eu justo. Etiam condimentum lorem eu justo iaculis, non sagittis ante efficitur. Donec porta imperdiet consequat. Suspendisse viverra pulvinar mi, a cursus lectus egestas a. Interdum et malesuada fames ac ante ipsum primis in faucibus. Sed dignissim elit turpis, in tincidunt ipsum tempus vitae. Sed interdum dui at orci tristique viverra.
-        Praesent id malesuada est. Etiam gravida dapibus sapien eget mattis. Nullam tempor lectus sed lorem euismod ornare. Phasellus ac ex eu lacus lobortis varius non ac magna. Praesent nec ipsum sem. Suspendisse ultrices tempor mi. Nulla sit amet gravida ligula, non lacinia nunc. Nulla sit amet ante in ligula tristique pharetra vel quis sem. Sed vulputate purus vitae elit gravida, in ornare dolor semper. Ut in augue vitae sem rutrum euismod. Integer eu semper nisi. In id tellus sed mauris cursus posuere vel id nibh.
-        Etiam fermentum ante vel lectus ultricies, nec feugiat erat commodo. Phasellus sit amet ligula sit amet turpis semper imperdiet. Sed vitae lectus felis. Duis ultricies iaculis porta. Nullam rhoncus dolor ut ante pulvinar lobortis. Curabitur ullamcorper consectetur sagittis. Suspendisse vel elit nisi. Cras scelerisque hendrerit magna, quis tempus dui fringilla quis. Maecenas at semper enim. Proin quis ligula imperdiet, hendrerit lorem varius, porta turpis. Praesent eu felis nec libero venenatis venenatis ac non nulla. Phasellus tincidunt at tortor sit amet egestas. Nulla commodo porttitor magna, faucibus gravida diam accumsan vel. In aliquet aliquam tortor, non accumsan velit facilisis a. Nam iaculis, orci id iaculis hendrerit, est elit dignissim mi, et faucibus dolor nibh vitae arcu. Maecenas non ornare arcu.
+        <div class="note">
+          <div class="title">Note</div> The flag -p plays the rendered video
+            with default video player. Other frequently used flags are:<br>
+          <span class="mono">-l</span> for rendering video in lower resolution
+            (for faster rendering)<br>
+          <span class="mono">-s</span> to show the last frame of the video<br>
+          <span class="mono">-h</span> all the available flags<br>
+        </div>
 
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean vestibulum, nibh vitae euismod fringilla, sem dolor venenatis elit, mattis pulvinar urna ex in eros. Aenean accumsan eros ac sagittis ullamcorper. Sed finibus tellus nibh. Mauris scelerisque lacus ac nisl maximus, in egestas nibh gravida. Donec nulla erat, lacinia porta sagittis vel, sagittis consequat tellus. Vivamus dignissim ex euismod massa vulputate dignissim. Curabitur ligula dui, dictum in libero vel, vestibulum pellentesque mauris. Suspendisse sed fermentum magna.
-        Aliquam vitae augue vitae ex fermentum aliquam. Sed tortor purus, tincidunt at facilisis id, hendrerit quis metus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Phasellus condimentum tristique est, et varius lacus eleifend sed. Sed sed dolor eu tortor tristique dictum vitae sit amet orci. In rhoncus erat quis mollis elementum. Mauris a varius nisl, nec ornare ipsum. Proin tempor ex ac felis ornare gravida. Vivamus porttitor nunc nisi, nec convallis mauris hendrerit at. Pellentesque sed ipsum ultrices, cursus massa eget, finibus elit. Ut porttitor sem massa, at laoreet sem gravida eget. Vivamus vehicula dapibus diam. Cras vel feugiat est. Nullam a dapibus risus.
-        Vivamus congue at tellus sit amet fringilla. Vestibulum egestas pellentesque leo non mollis. Pellentesque imperdiet ac ipsum eu pellentesque. Vestibulum facilisis, sem vitae condimentum gravida, neque metus aliquam nisl, a vulputate orci arcu vitae tortor. Suspendisse dapibus pellentesque nulla non mollis. Cras euismod et erat nec consequat. Mauris malesuada, erat sed iaculis finibus, mi nunc aliquet risus, quis sollicitudin massa sem id odio. Proin euismod mauris id placerat ullamcorper. Curabitur pretium turpis velit, euismod malesuada lorem imperdiet sed. Etiam vestibulum leo ut arcu tristique, ac rhoncus risus interdum. Morbi tempus, augue in dictum interdum, odio felis imperdiet urna, ac commodo elit est in tellus. Quisque posuere justo ut est gravida malesuada. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque faucibus interdum ex, vehicula dignissim risus ultricies at. Aenean vitae blandit nulla, a sodales lectus. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-        Nullam varius imperdiet justo nec maximus. Etiam mattis elit lorem, at consectetur sapien convallis blandit. Integer vitae suscipit augue, nec euismod nulla. Ut commodo, justo sed lacinia blandit, risus nulla bibendum nulla, sit amet varius nunc libero vel neque. Quisque eget erat tincidunt, sagittis turpis non, eleifend magna. Morbi in commodo erat, sit amet cursus libero. Etiam imperdiet turpis eu fringilla porttitor. Phasellus suscipit sed velit eu tempus. Donec nec aliquet ligula, ut semper sapien. Cras viverra massa vel felis ullamcorper, vel fermentum massa convallis. Praesent vel sem non ante dictum porttitor in vitae est. Integer sagittis ante et viverra pulvinar. Morbi tincidunt et tortor porttitor hendrerit. Donec tempor a dui vel aliquam.
-        Duis aliquam condimentum cursus. Vivamus tincidunt risus id eleifend porta. Curabitur ac nulla sit amet turpis dapibus consequat. Aenean varius enim sit amet libero maximus, a dignissim turpis ultricies. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Mauris vel orci dignissim, hendrerit mi non, gravida tellus. Suspendisse mattis erat augue, et viverra felis accumsan sed. In sodales diam eu tincidunt convallis. Praesent rhoncus blandit sem non laoreet. Maecenas et nulla urna. Nunc sollicitudin elit eu consectetur rutrum.
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse pulvinar dui justo, a mattis dolor ultricies at. Vestibulum felis dolor, ullamcorper eu velit at, pulvinar feugiat tellus. Donec ac ipsum eleifend, semper erat ut, aliquet ipsum. Quisque non hendrerit turpis, vel ornare mi. Nulla aliquam ultrices condimentum. Praesent sit amet nunc sed lorem luctus aliquet sed ut ante. Fusce pulvinar tempus diam, dignissim tristique erat lobortis ac. Sed vitae ex erat. Sed luctus, augue a tempor blandit, neque risus convallis risus, nec feugiat eros augue a est. Praesent eu sapien blandit, ultricies mi quis, dictum leo.
+        Let's step through each line of
+        <span class="mono">SquareToCircle</span>. You create videos in manim by
+        writing <span class="mono">Scene</span> classes. Each
+        <span class="mono">Scene</span> in manim is self-contained. That means
+        everything you created under this <span class="mono">Scene</span> does
+        not exist outside the class.
 
-        Donec vehicula tellus nec nibh ullamcorper, nec tempor tellus fringilla. Fusce massa arcu, hendrerit eu quam sed, luctus fermentum justo. Sed sed imperdiet justo. Vestibulum tristique orci sed tellus consectetur tempor. Curabitur bibendum lobortis lacus, et cursus dolor consectetur sed. Duis ornare in eros at posuere. Integer vulputate pretium mauris at congue. Quisque sagittis magna tortor. Duis fermentum vulputate ex eget congue. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae;
-        Etiam venenatis turpis orci, et tempus justo imperdiet fermentum. Cras velit augue, sagittis nec efficitur id, egestas eu justo. Etiam condimentum lorem eu justo iaculis, non sagittis ante efficitur. Donec porta imperdiet consequat. Suspendisse viverra pulvinar mi, a cursus lectus egestas a. Interdum et malesuada fames ac ante ipsum primis in faucibus. Sed dignissim elit turpis, in tincidunt ipsum tempus vitae. Sed interdum dui at orci tristique viverra.
-        Praesent id malesuada est. Etiam gravida dapibus sapien eget mattis. Nullam tempor lectus sed lorem euismod ornare. Phasellus ac ex eu lacus lobortis varius non ac magna. Praesent nec ipsum sem. Suspendisse ultrices tempor mi. Nulla sit amet gravida ligula, non lacinia nunc. Nulla sit amet ante in ligula tristique pharetra vel quis sem. Sed vulputate purus vitae elit gravida, in ornare dolor semper. Ut in augue vitae sem rutrum euismod. Integer eu semper nisi. In id tellus sed mauris cursus posuere vel id nibh.
-        Etiam fermentum ante vel lectus ultricies, nec feugiat erat commodo. Phasellus sit amet ligula sit amet turpis semper imperdiet. Sed vitae lectus felis. Duis ultricies iaculis porta. Nullam rhoncus dolor ut ante pulvinar lobortis. Curabitur ullamcorper consectetur sagittis. Suspendisse vel elit nisi. Cras scelerisque hendrerit magna, quis tempus dui fringilla quis. Maecenas at semper enim. Proin quis ligula imperdiet, hendrerit lorem varius, porta turpis. Praesent eu felis nec libero venenatis venenatis ac non nulla. Phasellus tincidunt at tortor sit amet egestas. Nulla commodo porttitor magna, faucibus gravida diam accumsan vel. In aliquet aliquam tortor, non accumsan velit facilisis a. Nam iaculis, orci id iaculis hendrerit, est elit dignissim mi, et faucibus dolor nibh vitae arcu. Maecenas non ornare arcu.
+        <span class="mono">Scene.construct()</span> specifies what is displayed
+        on the screen when the <span class="mono">Scene</span> is rendered to
+        video.
+
+        <span class="mono">Circle()</span> and
+        <span class="mono">Square()</span> create
+        <span class="mono">Circle</span> and <span class="mono">Square</span>.
+
+        Both of these are instances of <span class="mono">Mobject</span>
+        subclasses, the base class for objects in manim. Note that instantiating
+        a <span class="mono">Mobject</span> does not add it to the
+        <span class="mono">Scene</span>, so you wouldn't see anything if you
+        were to render the <span class="mono">Scene</span> at this point.
+
+        <span class="mono">flip()</span>, <span class="mono">rotate()</span>,
+        and <span class="mono">set_fill()</span> apply various modifications to
+        the <span class="mono">Mobject</span>s before animating them. The call
+        to <span class="mono">Mobject.flip()</span> flips the
+        <span class="mono">Square</span> across the
+        <span class="mono">RIGHT</span> vector. This is equivalent to a
+        refection across the x-axis.
+
+        The call to <span class="mono">Mobject.rotate()</span> rotates the
+        <span class="mono">Square</span> 3/8ths of a rotation counterclockwise.
+
+        The call to <span class="mono">Mobject.set_fill()</span> sets the fill
+        color for the <span class="mono">Circle</span> to pink, and its fill
+        opacity to 0.5.
+
+        Instances of <span class="mono">Animation</span> are used to generate
+        animations. Each <span class="mono">Animation</span> takes one or more
+        <span class="mono">Mobject</span>s as arguments and animates them when
+        passed to <span class="mono">Scene.play()</span>. This is how video is
+        typically created in manim.
+
+        <span class="mono">Mobject</span>s are automatically added to the
+        <span class="mono">Scene</span> when they are animated. You can add a
+        <span class="mono">Mobject</span> to the <span class="mono">Scene</span>
+        manually by passing it as an argument to
+        <span class="mono">Scene.add()</span>.
+
+        <span class="mono">ShowCreation</span> draws a
+        <span class="mono">Mobject</span> to the screen.
+
+        <span class="mono">ReplacementTransform</span> morphs one
+        <span class="mono">Mobject</span> into another and replaces the former
+        <span class="mono">Mobject</span> with the latter in the
+        <span class="mono">Scene</span>.
+
+        <span class="mono">FadeOut</span> fades a
+        <span class="mono">Mobject</span> out of the
+        <span class="mono">Scene</span>.
+
+        <div class="note">
+          <div class="title">Note</div> The flag -p plays the rendered video
+          The first argument to <span class="mono">ReplacementTransform</span>
+          is still modified, even though it is removed from the
+          <span class="mono">Scene</span>.
+          <span class="mono">ReplacementTransform</span> changes the appearance
+          of this <span class="mono">Mobject</span>, but not the underlying
+          properties.
+
+          After the <span class="mono">ReplacementTransform</span> is rendered
+          <span class="mono">square</span> is still a
+          <span class="mono">Square</span> instance but with the shape of a
+          <span class="mono">Circle</span>.
+        </div>
       </div>
     </div>
     <div class="lab-container px-3">
@@ -53,11 +119,22 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="scss">
+$color-pack: false;
+@import '~vuetify/src/styles/main.sass';
 .documentation-container { height: 100%; }
 .text-container { overflow-y: auto; }
 .lab-container {
   overflow-y: auto;
   flex-shrink: 0;
+}
+.mono {
+  font-family: monospace;
+}
+.note {
+  background-color: map-get($yellow, "lighten-2");
+  border: 3px solid map-get($yellow, "base");
+  padding: 12px;
+  margin: 12px 0;
 }
 </style>
