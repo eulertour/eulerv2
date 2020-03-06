@@ -23,33 +23,37 @@
 
         <p>
           Let's step through each line of
-          <span class="mono">SquareToCircle</span>. You create videos in manim
-          by writing <span class="mono">Scene</span> classes. Each
+          <span class="mono">SquareToCircle</span>.
+        </p>
+
+        <p>
+          <Prism language="python" code=
+"class SquareToCircle(WebScene):"
+          />
+          You create videos in manim by writing
+          <span class="mono">Scene</span>s. Each
           <span class="mono">Scene</span> in manim is self-contained, so
           anything you create under one <span class="mono">Scene</span> will not
           exist outside the class.
         </p>
 
         <p>
-          <code>def construct(self):</code>
+          <Prism language="python" code=
+"def construct(self):"
+          />
           <span class="mono">Scene.construct()</span> specifies what is
           displayed on the screen when the <span class="mono">Scene</span> is
           rendered to video.
         </p>
 
         <p>
-          <pre><code>
-          def median(pool):
-          class Lmao(Object)
-          circle = Circle()
-          square = Square()
-          </code></pre>
-          <PrismEditor
-            code="def median(pool):" language="python"/>
-
+          <Prism language="python" code=
+"circle = Circle()
+ square = Square()"
+          />
           <span class="mono">Circle()</span> and
           <span class="mono">Square()</span> create
-          <span class="mono">Circle</span> and <span class="mono">Square</span>.
+          <span class="mono">circle</span> and <span class="mono">square</span>.
           Both of these are instances of <span class="mono">Mobject</span>
           subclasses, the base class for objects in manim.
         </p>
@@ -62,6 +66,11 @@
         </div>
 
         <p>
+          <Prism language="python" code=
+"square.flip(RIGHT)
+ square.rotate(-3 * TAU / 8)
+ circle.set_fill(PINK, opacity=0.5)"
+          />
           <span class="mono">flip()</span>, <span class="mono">rotate()</span>,
           and <span class="mono">set_fill()</span> apply various modifications
           to the <span class="mono">Mobject</span>s before animating them:
@@ -88,8 +97,13 @@
         </p>
 
         <p>
-          There are then 3 calls to <span class="mono">Scene.play()</span>. Each
-          one is passed an instance of a subclass of
+          <Prism language="python" code=
+"self.play(ShowCreation(square))
+ self.play(ReplacementTransform(square, circle))
+ self.play(FadeOut(circle))"
+          />
+          Each of these 3 calls to <span class="mono">Scene.play()</span> is
+          passed an instance of a subclass of
           <span class="mono">Animation</span>, which in turn is passed a number
           of <span class="mono">Mobject</span>s.
           <span class="mono">Scene.play()</span> causes each
@@ -113,19 +127,19 @@
           following animations:
           <ul>
             <li>
-              <span class="mono">ShowCreation</span> draws a
-              <span class="mono">Mobject</span> to the screen.
+              <span class="mono"> ShowCreation</span> draws a
+              <span class="mono">Mobject</span> on the screen.
             </li>
 
             <li>
-              <span class="mono">ReplacementTransform</span> morphs one
+              <span class="mono"> ReplacementTransform</span> morphs one
               <span class="mono">Mobject</span> into another and replaces the
               former <span class="mono">Mobject</span> with the latter in the
               <span class="mono">Scene</span>.
             </li>
 
             <li>
-              <span class="mono">FadeOut</span> fades a
+              <span class="mono"> FadeOut</span> fades a
               <span class="mono">Mobject</span> out of the
               <span class="mono">Scene</span>.
             </li>
@@ -158,13 +172,13 @@
 <script>
 import MobjectLabContainer from '../MobjectLabContainer.vue';
 import * as consts from '../../constants.js';
-import PrismEditor from 'vue-prism-editor'
+import Prism from 'vue-prism-component'
 
 export default {
   name: 'ExampleScene',
   components: {
     MobjectLabContainer,
-    PrismEditor,
+    Prism,
   },
   computed: {
     VERTICAL() {
