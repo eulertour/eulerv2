@@ -20,6 +20,7 @@
     "two.js": "https://github.com/jonobr1/two.js",
     "vue": "^2.6.10",
     "vue-material": "^1.0.0-beta-11",
+    "vue-prism-editor": "^0.5.1",
     "vue-router": "^3.1.5",
     "vuetify": "^2.0.0",
     "vuex": "^3.1.1"

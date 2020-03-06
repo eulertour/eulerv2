@@ -31,12 +31,22 @@
         </p>
 
         <p>
+          <code>def construct(self):</code>
           <span class="mono">Scene.construct()</span> specifies what is
           displayed on the screen when the <span class="mono">Scene</span> is
           rendered to video.
         </p>
 
         <p>
+          <pre><code>
+          def median(pool):
+          class Lmao(Object)
+          circle = Circle()
+          square = Square()
+          </code></pre>
+          <PrismEditor
+            code="def median(pool):" language="python"/>
+
           <span class="mono">Circle()</span> and
           <span class="mono">Square()</span> create
           <span class="mono">Circle</span> and <span class="mono">Square</span>.
@@ -71,8 +81,8 @@
 
             <li>
               The call to <span class="mono">set_fill()</span> sets the
-              fill color for the <span class="mono">Circle</span> to pink, and its
-              fill opacity to 0.5.
+              fill color for the <span class="mono">Circle</span> to pink, and
+              its fill opacity to 0.5.
             </li>
           </ul>
         </p>
@@ -93,9 +103,9 @@
           <div class="title">Info</div>
           <span class="mono">Mobject</span>s are automatically added to the
           <span class="mono">Scene</span> when they are animated. You can add a
-          <span class="mono">Mobject</span> to the <span class="mono">Scene</span>
-          manually by passing it as an argument to
-          <span class="mono">Scene.add()</span>.
+          <span class="mono">Mobject</span> to the
+          <span class="mono">Scene</span> manually by passing it as an argument
+          to <span class="mono">Scene.add()</span>.
         </div>
 
         <p>
@@ -109,8 +119,8 @@
 
             <li>
               <span class="mono">ReplacementTransform</span> morphs one
-              <span class="mono">Mobject</span> into another and replaces the former
-              <span class="mono">Mobject</span> with the latter in the
+              <span class="mono">Mobject</span> into another and replaces the
+              former <span class="mono">Mobject</span> with the latter in the
               <span class="mono">Scene</span>.
             </li>
 
@@ -148,10 +158,13 @@
 <script>
 import MobjectLabContainer from '../MobjectLabContainer.vue';
 import * as consts from '../../constants.js';
+import PrismEditor from 'vue-prism-editor'
+
 export default {
   name: 'ExampleScene',
   components: {
     MobjectLabContainer,
+    PrismEditor,
   },
   computed: {
     VERTICAL() {
@@ -196,5 +209,8 @@ $color-pack: false;
   border: 3px solid map-get($blue, "base") !important;
   padding: 12px;
   margin: 12px 0;
+}
+.documentation-container .documentation-text-container code {
+  display: block;
 }
 </style>

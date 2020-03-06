@@ -6,24 +6,32 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
     <title>eulerv2</title>
+    <script>
+      window.languagePluginUrl = "<%= VUE_APP_ORIGIN %>/pyodide/";
+    </script>
+    <script src="<%= VUE_APP_ORIGIN %>/pyodide/pyodide.js"></script>
+
+		<!-- Google Fonts -->
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900	|
 																										Noto Sans:100,300,400,500,700,900"
     >
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@latest/css/materialdesignicons.min.css">
-    <script>
-      window.languagePluginUrl = "<%= VUE_APP_ORIGIN %>/pyodide/";
-    </script>
-    <script src="<%= VUE_APP_ORIGIN %>/pyodide/pyodide.js"></script>
-    <script>
-      MathJax = {
-        svg: { fontCache: 'none' }
-      };
-    </script>
+
+		<!-- Material Design Icons -->
+    <link
+			rel="stylesheet"
+			href="https://cdn.jsdelivr.net/npm/@mdi/font@latest/css/materialdesignicons.min.css"
+		>
+
+		<!-- MathJax -->
+    <script>MathJax = { svg: { fontCache: 'none' } };</script>
     <script type="text/javascript" id="MathJax-script" async
       src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg-full.js">
     </script>
+
+
+		<link href="https://cdn.jsdelivr.net/npm/prismjs@1.19.0/themes/prism.css" rel="stylesheet" />
   </head>
   <body>
     <noscript>
@@ -41,5 +49,8 @@
 
     <!-- Initialize Firebase -->
     <script src="/__/firebase/init.js"></script>
+
+		<script src="https://cdn.jsdelivr.net/npm/prismjs@1.19.0/components/prism-core.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/prismjs@1.19.0/plugins/autoloader/prism-autoloader.min.js"></script>
   </body>
 </html>
