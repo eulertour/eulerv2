@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex">
+  <div class="d-flex" style="height: 100%">
     <div class="documentation-text-container">
       <div class="display-1 my-4">Learning by Example</div>
       <div class="title my-4">SquareToCircle</div>
