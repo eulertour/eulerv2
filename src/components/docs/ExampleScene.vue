@@ -15,10 +15,12 @@
           <div class="title font-weight-bold">Note</div>
           The flag -p plays the rendered video with default video player. Other
           frequently used flags are:<br>
-          <span class="mono">-l</span> for rendering video in lower resolution
-          (for faster rendering)<br>
-          <span class="mono">-s</span> to show the last frame of the video<br>
-          <span class="mono">-h</span> all the available flags<br>
+          <ul list-style="none">
+            <li><span class="mono">-l</span> for rendering video in lower resolution</li>
+            <li>(for faster rendering)</li>
+            <li><span class="mono">-s</span> to show the last frame of the video</li>
+            <li><span class="mono">-h</span> to show all the available flags</li>
+          </ul>
         </div>
 
         <p>
@@ -137,19 +139,19 @@
           following animations:
           <ul>
             <li>
-              <span class="mono"> ShowCreation</span> draws a
+              <span class="mono">ShowCreation</span> draws a
               <span class="mono">Mobject</span> on the screen.
             </li>
 
             <li>
-              <span class="mono"> ReplacementTransform</span> morphs one
+              <span class="mono">ReplacementTransform</span> morphs one
               <span class="mono">Mobject</span> into another and replaces the
               former <span class="mono">Mobject</span> with the latter in the
               <span class="mono">Scene</span>.
             </li>
 
             <li>
-              <span class="mono"> FadeOut</span> fades a
+              <span class="mono">FadeOut</span> fades a
               <span class="mono">Mobject</span> out of the
               <span class="mono">Scene</span>.
             </li>
@@ -173,7 +175,7 @@
         </div>
       </div>
     </div>
-    <div class="lab-container px-3 mb-6">
+    <div class="lab-container px-3">
       <MobjectLabContainer
         project="learning_by_example"
         v-bind:vertical="VERTICAL"
@@ -203,6 +205,7 @@ export default {
 <style lang="scss">
 .documentation-container { height: 100%; }
 .documentation-text-container {
+  height: 100%;
   overflow-y: auto;
   color: map-get($grey, "darken-3");
 }
@@ -210,7 +213,7 @@ export default {
   display: block;
 }
 .documentation-text-container li:before {
-  content: "⏵";
+  content: "⏵ ";
 }
 .lab-container {
   overflow-y: auto;

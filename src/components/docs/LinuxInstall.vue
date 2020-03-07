@@ -1,7 +1,7 @@
 <template>
   <div class="documentation-text-container">
     <div class="display-1 my-4">Linux</div>
-		<div class="title my-4">Ubuntu</div>
+		<div class="headline my-4">Ubuntu</div>
 		<p>
 			Install system libraries:
 			<Prism language="bash" code=
@@ -70,6 +70,3 @@ export default {
 	components: { Prism },
 }
 </script>
-
-<style>
-</style>
