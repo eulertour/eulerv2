@@ -1,5 +1,5 @@
 <template>
-  <div class="documentation-container d-flex">
+  <div class="d-flex">
     <div class="documentation-text-container">
       <div class="display-1 my-4">Learning by Example</div>
       <div class="title my-4">SquareToCircle</div>
@@ -12,7 +12,7 @@
         </p>
 
         <div class="note">
-          <div class="title">Note</div>
+          <div class="title font-weight-bold">Note</div>
           The flag -p plays the rendered video with default video player. Other
           frequently used flags are:<br>
           <span class="mono">-l</span> for rendering video in lower resolution
@@ -28,7 +28,17 @@
 
         <p>
           <Prism language="python" code=
-"class SquareToCircle(WebScene):"
+"from manimlib.imports import *"
+          />
+          This line imports a smorgasbord of
+          <span class="mono">Mobject</span>s,
+          <span class="mono">Animation</span>s, utility functions, and parts
+          of the standard library that you'll likely end up using with manim.
+        </p>
+
+        <p>
+          <Prism language="python" code=
+"class SquareToCircle(Scene):"
           />
           You create videos in manim by writing
           <span class="mono">Scene</span>s. Each
@@ -59,7 +69,7 @@
         </p>
 
         <div class="note">
-          <div class="title">Note</div>
+          <div class="title font-weight-bold">Note</div>
           Instantiating a <span class="mono">Mobject</span> does not add it to
           the <span class="mono">Scene</span>, so you wouldn't see anything if
           you were to render the <span class="mono">Scene</span> at this point.
@@ -113,8 +123,8 @@
           manim.
         </p>
 
-        <div class="info">
-          <div class="title">Info</div>
+        <div class="note">
+          <div class="title font-weight-bold">Note</div>
           <span class="mono">Mobject</span>s are automatically added to the
           <span class="mono">Scene</span> when they are animated. You can add a
           <span class="mono">Mobject</span> to the
@@ -148,7 +158,7 @@
 
 
         <div class="note">
-          <div class="title">Note</div>
+          <div class="title font-weight-bold">Note</div>
           The first argument to <span class="mono">ReplacementTransform</span>
           is still modified, even though it is removed from the
           <span class="mono">Scene</span>.
@@ -163,8 +173,11 @@
         </div>
       </div>
     </div>
-    <div class="lab-container px-3">
-      <MobjectLabContainer project="example_scenes" v-bind:vertical="VERTICAL"/>
+    <div class="lab-container px-3 mb-6">
+      <MobjectLabContainer
+        project="learning_by_example"
+        v-bind:vertical="VERTICAL"
+      />
     </div>
   </div>
 </template>
@@ -181,19 +194,13 @@ export default {
     Prism,
   },
   computed: {
-    VERTICAL() {
-      return consts.MobjectLabContainerLayout.VERTICAL;
-    },
-    HORIZONTAL() {
-      return consts.MobjectLabContainerLayout.HORIZONTAL;
-    },
+    VERTICAL() { return consts.MobjectLabContainerLayout.VERTICAL; },
+    HORIZONTAL() { return consts.MobjectLabContainerLayout.HORIZONTAL; },
   }
 }
 </script>
 
 <style lang="scss">
-$color-pack: false;
-@import '~vuetify/src/styles/main.sass';
 .documentation-container { height: 100%; }
 .documentation-text-container {
   overflow-y: auto;
@@ -208,23 +215,5 @@ $color-pack: false;
 .lab-container {
   overflow-y: auto;
   flex-shrink: 0;
-}
-.mono {
-  font-family: monospace;
-}
-.note {
-  background-color: map-get($yellow, "lighten-3");
-  border: 3px solid map-get($yellow, "base");
-  padding: 12px;
-  margin: 12px 0;
-}
-.documentation-container .documentation-text-container .info {
-  background-color: map-get($blue, "lighten-4") !important;
-  border: 3px solid map-get($blue, "base") !important;
-  padding: 12px;
-  margin: 12px 0;
-}
-.documentation-container .documentation-text-container code {
-  display: block;
 }
 </style>

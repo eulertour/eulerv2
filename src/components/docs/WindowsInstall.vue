@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="display-1 my-4">About</div>
+    <div class="display-1 my-4">Windows</div>
 		<p>
 			<a href="https://github.com/3b1b/manim" target="_blank">Manim</a> is an
 			animation engine for explanatory math videos. It was written by Grant
@@ -32,4 +32,11 @@
   </div>
 </template>
 
-<script>export default { name: 'About' }</script>
+<script>
+export default {
+  name: 'WindowsInstall',
+}
+</script>
+
+<style>
+</style>

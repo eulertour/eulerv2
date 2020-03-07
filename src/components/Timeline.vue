@@ -11,7 +11,7 @@
       style="overflow-y:hidden"
     >
       <v-card-title class="d-flex justify-center headline px-2">
-        {{ shortNameMap[animation.className] || animation.className }}
+				<div class="keyframe-text">{{ animation.className }}</div>
       </v-card-title>
     </v-card>
     <!--
@@ -26,12 +26,8 @@
 </template>
 
 <script>
-import * as consts from '../constants.js'
 export default {
   name: 'Timeline',
-  components: {
-
-  },
   props: {
     animations: Array,
     index: Number,
@@ -47,16 +43,7 @@ export default {
     }
   },
   data() {
-    return {
-      animationWidth: 145,
-      shortNameMap: consts.SHORT_NAME_MAP,
-    }
-  },
-  methods: {
-
-  },
-  mounted() {
-
+    return { animationWidth: 145, }
   },
 }
 </script>
@@ -65,6 +52,12 @@ export default {
 .keyframe {
   height: 145px;
   width: 145px;
+}
+.keyframe-text {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	font-size: 1.35rem;
 }
 .timeline {
   position: relative;

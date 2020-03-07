@@ -3,6 +3,11 @@
     <v-btn fab v-on:click="$emit('step-backward')" class="mx-2">
       <v-icon color="black" x-large>mdi-step-backward</v-icon>
     </v-btn>
+		<!--
+    <v-btn fab v-on:click="$emit('jump-post-setup')" class="mx-2">
+      <v-icon color="black" x-large>mdi-skip-previous</v-icon>
+    </v-btn>
+		-->
     <v-btn fab v-if="playing" v-on:click="$emit('pause')" class="mx-4">
       <v-icon color="black" x-large>mdi-pause</v-icon>
     </v-btn>
@@ -12,6 +17,11 @@
     <v-btn fab v-else v-on:click="$emit('play', $event)" class="mx-4">
       <v-icon color="black" x-large>mdi-play</v-icon>
     </v-btn>
+		<!--
+    <v-btn fab v-on:click="$emit('jump-post-animation')" class="mx-2">
+      <v-icon color="black" x-large>mdi-skip-next</v-icon>
+    </v-btn>
+		-->
     <v-btn fab v-on:click="$emit('step-forward')" class="mx-2">
       <v-icon color="black" x-large>mdi-step-forward</v-icon>
     </v-btn>

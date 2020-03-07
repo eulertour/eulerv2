@@ -152,6 +152,8 @@
             v-on:pause="$emit('pause')"
             v-on:step-backward="$emit('step-backward')"
             v-on:step-forward="$emit('step-forward')"
+            v-on:jump-post-animation="$emit('jump-post-animation')"
+            v-on:jump-post-setup="(val)=>this.$emit('jump-post-setup', val)"
             v-bind:scene="scene"
             v-bind:finished="animationIndex === animations.length - 1 && animationOffset === 1"
           />

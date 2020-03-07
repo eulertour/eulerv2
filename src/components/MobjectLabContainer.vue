@@ -338,8 +338,8 @@ export default {
         /*moveCursor=*/ false,
       );
       this.preSetup = false;
-      this.switchUiScreen(consts.uiScreens.PANELS);
-      // this.play(null, /*singleAnimationOnly=*/ false);
+      // this.switchUiScreen(consts.uiScreens.PANELS);
+      this.play(null, /*singleAnimationOnly=*/ false);
     },
     switchUiScreen: function(uiScreen) {
       this.uiScreen = uiScreen;

@@ -1,6 +1,6 @@
 from manimlib.imports import *
 
-class SquareToCircle(WebScene):
+class SquareToCircle(Scene):
     def construct(self):
         circle = Circle()
         square = Square()
@@ -13,7 +13,7 @@ class SquareToCircle(WebScene):
         self.play(FadeOut(circle))
 
 
-class WriteStuff(WebScene):
+class WriteStuff(Scene):
     def construct(self):
         example_text = TextMobject(
             "This is some text",
@@ -32,7 +32,7 @@ class WriteStuff(WebScene):
         self.wait()
 
 
-class GroupExample(WebScene):
+class GroupExample(Scene):
     def construct(self):
         c1 = Circle().shift(LEFT)
         s1 = Square().shift(RIGHT)

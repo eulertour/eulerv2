@@ -140,10 +140,6 @@ export const GREEN_SCREEN="#00FF00"
 export const ORANGE="#FF862F"
 
 // MobjectLab
-export const SHORT_NAME_MAP = {
-  "ReplacementTransform": "RTransform",
-};
-
 export const RELEASE_NOTES =
 `This is the first version with two separate projects, an outline for a page for
 documentation, and an implementation of ApplyFunction. The panel for editing

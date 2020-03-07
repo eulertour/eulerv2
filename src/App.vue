@@ -35,7 +35,9 @@
       v-model="navigationDrawer"
       app
       temporary
-      width="300px"
+      class="navigation-drawer"
+      width="330px"
+      style="z-index: 12"
     >
       <v-list-item class="pl-1 grey lighten-4">
         <v-list-item-avatar class="mr-0" width="48px" height="48px">

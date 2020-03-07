@@ -1,6 +1,6 @@
 from manimlib.imports import *
 
-class WhatCanDo(WebScene):
+class WhatCanDo(Scene):
     def construct(self):
         text = VGroup(
                 TextMobject("What animations"),
