@@ -1,28 +1,37 @@
 <template>
   <v-container fluid>
     <v-row v-bind:class="{
-      'column-container': !verticalLayout,
+      'column-container': horizontalLayout,
       'column-container-vertical': verticalLayout,
+      'column-container-horizontal-embed': horizontalEmbedLayout,
     }">
       <v-col v-if="debug" id="debug" class="title half-width" />
       <v-col
         class="d-flex flex-column"
         v-bind:class="{
-          'ui-column': !verticalLayout,
+          'ui-column': horizontalLayout,
           'ui-column-vertical': verticalLayout,
+          'ui-column-horizontal-embed': horizontalEmbedLayout,
         }"
       >
         <div
           class="d-flex flex-column"
           v-bind:class="{
-            'ui-panels': !verticalLayout,
+            'ui-panels': horizontalLayout,
             'ui-panels-vertical': verticalLayout,
+            'ui-panels-horizontal-embed': horizontalEmbedLayout,
             'code-width': uiScreen === CODE,
-            'panels-width': sceneLoaded && uiScreen === PANELS && !verticalLayout,
+            'panels-width': sceneLoaded && uiScreen === PANELS && horizontalLayout,
             'panels-width-vertical': sceneLoaded && uiScreen === PANELS && verticalLayout,
+            'panels-width-horizontal-embed': sceneLoaded && uiScreen === PANELS && horizontalEmbedLayout,
           }"
         >
-        <v-toolbar elevation="5" max-height="64px" class="mb-2">
+        <v-toolbar
+          v-if="!horizontalEmbedLayout"
+          elevation="5"
+          max-height="64px"
+          class="mb-2"
+        >
           <v-toolbar-title>{{ project }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <div v-if="animations.length > 0">
@@ -111,8 +120,9 @@
         </div>
       </v-col>
       <v-col
+        cols="auto"
         v-bind:class="{
-          'manim-column': !verticalLayout,
+          'manim-column': horizontalLayout,
           'manim-column-vertical': verticalLayout,
         }"
         class="d-flex flex-column"
@@ -197,7 +207,8 @@ import JSONFormatter from 'json-formatter-js'
 export default {
   name: "MobjectLab",
   props: {
-    verticalLayout: Boolean,
+    parentUid: Number,
+    layoutMode: String,
     unknownAnimation: Boolean,
     displayCanvasMenu: Boolean,
     animating: Boolean,
@@ -240,6 +251,9 @@ export default {
     Panels,
   },
   computed: {
+    verticalLayout() { return this.layoutMode === consts.MobjectLabContainerLayout.VERTICAL; },
+    horizontalLayout() { return this.layoutMode === consts.MobjectLabContainerLayout.HORIZONTAL; },
+    horizontalEmbedLayout() { return this.layoutMode === consts.MobjectLabContainerLayout.HORIZONTAL_EMBED; },
     // For referencing screens from the template.
     CODE() { return consts.uiScreens.CODE; },
     DEBUG() { return consts.uiScreens.DEBUG; },
@@ -344,4 +358,12 @@ export default {
   align-items: center;
   height: 650px;
 }
+
+/* Overrides for horizontal embed layout. */
+.column-container-horizontal-embed {
+  height: auto;
+  align-items: stretch;
+}
+.ui-panels-horizontal-embed { height: 100%; }
+.panels-width-horizontal-embed { width: 500px; }
 </style>

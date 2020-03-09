@@ -16,6 +16,7 @@
     v-bind:debug="debug"
     v-bind:display-canvas-menu="displayCanvasMenu"
     v-bind:expanded-panel="expandedPanel"
+    v-bind:layout-mode="layoutMode"
     v-bind:mobject-choices="mobjectChoices"
     v-bind:mobjects="mobjects"
     v-bind:post-animation-mobjects="postAnimationMobjects"
@@ -34,7 +35,7 @@
     v-bind:scene="scene"
     v-bind:ui-screen="uiScreen"
     v-bind:unknown-animation="unknownAnimation"
-    v-bind:vertical-layout="verticalLayout"
+    v-bind:parent-uid="_uid"
     v-on:chosen-scene-update="(val)=>{chosenScene=val}"
     v-on:config-change="handleConfigChange"
     v-on:debug-toggle="debug = !debug"
@@ -81,7 +82,7 @@ export default {
     MobjectLab,
   },
   props: {
-    vertical: String,
+    layout: String,
     project: String,
   },
   data() {
@@ -150,17 +151,19 @@ export default {
     };
   },
   computed: {
-    verticalLayout() {
-      switch (this.vertical) {
+    layoutMode() {
+      switch (this.layout) {
         case consts.MobjectLabContainerLayout.VERTICAL:
-          return true;
         case consts.MobjectLabContainerLayout.HORIZONTAL:
-          return false;
+        case consts.MobjectLabContainerLayout.HORIZONTAL_EMBED:
+          return this.layout;
         case undefined:
-          return this.$vuetify.breakpoint.mdAndDown;
+          return this.$vuetify.breakpoint.mdAndDown
+            ? consts.MobjectLabContainerLayout.VERTICAL
+            : consts.MobjectLabContainerLayout.HORIZONTAL;
         default:
           // eslint-disable-next-line
-          console.error(`Unknown value for MobjectLabContainer.vertical: ${this.vertical}`);
+          console.error(`Unknown value for MobjectLabContainer.layout: ${this.layout}`);
           return false;
       }
     },

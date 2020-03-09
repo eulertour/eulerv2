@@ -158,6 +158,7 @@ export const uiScreens = {
 export const MobjectLabContainerLayout = {
   VERTICAL: 'vertical',
   HORIZONTAL: 'horizontal',
+  HORIZONTAL_EMBED: 'horizontal_embed',
 };
 export const BASE_GALLERY_URL = "/gallery";
 export const BASE_LAB_URL = "/lab";

@@ -178,7 +178,7 @@
     <div class="lab-container px-3">
       <MobjectLabContainer
         project="learning_by_example"
-        v-bind:vertical="VERTICAL"
+        v-bind:layout="VERTICAL"
       />
     </div>
   </div>

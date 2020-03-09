@@ -48,6 +48,7 @@ import About from './docs/About.vue'
 import ExampleScene from './docs/ExampleScene.vue'
 import LinuxInstall from './docs/LinuxInstall.vue'
 import WindowsInstall from './docs/WindowsInstall.vue'
+import GeometryExhibit from './docs/GeometryExhibit.vue'
 
 export default {
   name: 'Documentation',
@@ -56,6 +57,7 @@ export default {
     ExampleScene,
     LinuxInstall,
     WindowsInstall,
+    GeometryExhibit,
   },
   methods: {
     selectDocumentationComponent(componentName) {
@@ -78,6 +80,15 @@ export default {
           title: 'Getting Started',
           items: [
             { title: 'Learning by Example', component: 'ExampleScene' },
+            // { title: 'Mobjects', component: 'Mobjects' },
+            // { title: 'Animations', component: 'Animations' },
+            // { title: 'Scenes', component: 'Scenes' },
+          ],
+        },
+        {
+          title: 'Mobjects',
+          items: [
+            { title: 'Geometry', component: 'GeometryExhibit' },
             // { title: 'Mobjects', component: 'Mobjects' },
             // { title: 'Animations', component: 'Animations' },
             // { title: 'Scenes', component: 'Scenes' },
