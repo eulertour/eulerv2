@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex">
+  <div class="d-flex" style="width: 100%">
     <v-navigation-drawer
       permanent
       width="200px"
@@ -37,7 +37,7 @@
       </v-list>
     </v-navigation-drawer>
 
-    <div class="documentation-container" style="height: 100%">
+    <div class="documentation-container">
       <component v-bind:is="selectedComponent"/>
     </div>
   </div>
@@ -49,6 +49,7 @@ import ExampleScene from './docs/ExampleScene.vue'
 import LinuxInstall from './docs/LinuxInstall.vue'
 import WindowsInstall from './docs/WindowsInstall.vue'
 import GeometryExhibit from './docs/GeometryExhibit.vue'
+import TexExhibit from './docs/TexExhibit.vue'
 
 export default {
   name: 'Documentation',
@@ -58,6 +59,7 @@ export default {
     LinuxInstall,
     WindowsInstall,
     GeometryExhibit,
+    TexExhibit,
   },
   methods: {
     selectDocumentationComponent(componentName) {
@@ -80,18 +82,13 @@ export default {
           title: 'Getting Started',
           items: [
             { title: 'Learning by Example', component: 'ExampleScene' },
-            // { title: 'Mobjects', component: 'Mobjects' },
-            // { title: 'Animations', component: 'Animations' },
-            // { title: 'Scenes', component: 'Scenes' },
           ],
         },
         {
           title: 'Mobjects',
           items: [
             { title: 'Geometry', component: 'GeometryExhibit' },
-            // { title: 'Mobjects', component: 'Mobjects' },
-            // { title: 'Animations', component: 'Animations' },
-            // { title: 'Scenes', component: 'Scenes' },
+            { title: 'Tex', component: 'TexExhibit' },
           ],
         },
       ],
@@ -133,6 +130,11 @@ $color-pack: false;
   border: 3px solid map-get($yellow, "base");
   padding: 12px;
   margin: 12px 0;
+}
+.documentation-container {
+  height: 100%;
+  overflow-y: auto;
+  flex-grow: 1;
 }
 .documentation-container .documentation-text-container .note {
   background-color: map-get($blue, "lighten-4") !important;

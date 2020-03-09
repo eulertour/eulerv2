@@ -60,6 +60,7 @@
     v-on:switch-ui-screen="switchUiScreen"
     v-on:update-code="(val)=>{code=val}"
     v-on:update-setup="updateSetup"
+    v-on:attach-two-to-scene="attachTwo"
   />
 </template>
 
@@ -250,10 +251,6 @@ export default {
     this.savedPreAnimationMobjectParent = null;
   },
   mounted() {
-    this.scene = new Manim.Scene({ width: 640, height: 360 });
-    this.scene.appendTo(document.getElementById("manim-background"));
-    this.scene.update();
-    this.scene.renderer.domElement.id = "manim-scene";
     window.languagePluginLoader.then(() => {
       window.pyodide.loadPackage("manimlib").then(() => {
         window.pyodide.runPython("import manimlib");
@@ -277,6 +274,12 @@ export default {
     });
   },
   methods: {
+    attachTwo() {
+      this.scene = new Manim.Scene({ width: 640, height: 360 });
+      this.scene.appendTo(document.getElementById(this._uid + "manim-background"));
+      this.scene.update();
+      this.scene.renderer.domElement.id = "manim-scene";
+    },
     runManim: function() {
       let manimlib = window.pyodide.pyimport("manimlib");
       let scene = manimlib.get_scene(this.code, [this.chosenScene]);

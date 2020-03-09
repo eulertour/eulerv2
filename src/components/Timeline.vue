@@ -60,6 +60,7 @@ export default {
 	font-size: 1.35rem;
 }
 .timeline {
+  height: 155px;
   position: relative;
   overflow-x: auto;
   overflow-y: hidden;

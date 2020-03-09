@@ -4,7 +4,15 @@
     v-bind:style="codeMirrorBackgroundColor"
     elevation="4"
   >
-    <div id="codemirror-container" />
+    <div
+      v-bind:id="parentUid + 'codemirror-container'"
+      v-bind:style="{
+        flex: '1 1 auto',
+        marginTop: 0,
+        height: '100%',
+        position: 'relative',
+      }"
+    />
   </v-sheet>
 </template>
 
@@ -18,6 +26,7 @@ export default {
   name: 'CodeMirror',
   props: {
     code: String,
+    parentUid: Number,
   },
   data() {
     return {
@@ -35,7 +44,7 @@ export default {
   },
   mounted() {
     this.codeMirror = CodeMirror(
-      document.getElementById('codemirror-container'), {
+      document.getElementById(this.parentUid + 'codemirror-container'), {
         value: this.code,
         theme: "rubyblue",
         mode: "python",
@@ -59,10 +68,6 @@ export default {
   flex-grow: 1;
 }
 #codemirror-container {
-  flex: 1 1 auto;
-  margin-top: 0;
-  height: 100%;
-  position: relative;
 }
 .CodeMirror {
   font-size: 1em;

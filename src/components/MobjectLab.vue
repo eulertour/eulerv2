@@ -5,7 +5,11 @@
       'column-container-vertical': verticalLayout,
       'column-container-horizontal-embed': horizontalEmbedLayout,
     }">
-      <v-col v-if="debug" id="debug" class="title half-width" />
+      <v-col
+        v-if="debug"
+        v-bind:id="parentUid + 'debug'"
+        class="title half-width"
+      />
       <v-col
         class="d-flex flex-column"
         v-bind:class="{
@@ -92,6 +96,7 @@
         >
           <CodeMirror
             v-bind:code="code"
+            v-bind:parentUid="parentUid"
             v-on:update-code="(code)=>$emit('update-code', code)"
           />
           <div class="d-flex justify-space-between mt-4">
@@ -129,7 +134,13 @@
       >
         <div id="manim-visualization">
           <div
-            id="manim-background"
+            v-bind:id="parentUid + 'manim-background'"
+            v-bind:style="{
+              width: '640px',
+              height: '360px',
+              position: 'relative',
+              backgroundColor: 'black',
+            }"
             v-on:mouseover="$emit('display-canvas-menu', true)"
             v-on:mouseleave="$emit('display-canvas-menu', false)"
           >
@@ -271,6 +282,11 @@ export default {
       set(val) { this.$emit('release-notes-dialog-update', val); }
     },
   },
+  mounted() {
+    this.$nextTick(function() {
+      this.$emit('attach-two-to-scene');
+    });
+  },
   methods: {
     uiIcon(uiScreen) {
       switch(uiScreen) {
@@ -290,7 +306,7 @@ export default {
     debug(debugging) {
       if (debugging) {
         this.$nextTick(function() {
-          let container = document.getElementById("debug");
+          let container = document.getElementById(this.parentUid + "debug");
           if (container.childNodes.length !== 0) {
             container.childNodes[0].remove();
           }
@@ -300,7 +316,7 @@ export default {
     },
     debugInfo() {
       if (this.debug) {
-        let container = document.getElementById("debug");
+        let container = document.getElementById(this.parentUid + "debug");
         if (container.childNodes.length !== 0) {
             container.childNodes[0].remove();
             container.appendChild(new JSONFormatter(this.debugInfo).render());

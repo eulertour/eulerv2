@@ -1,25 +1,19 @@
 <template>
   <div>
     <div class="docs-lab-container">
-      <div class="display-1 my-4">Geometry</div>
+      <div class="display-1 my-4">Tex</div>
 
-      <p>Simple geometric shapes.</p>
+      <p>Mobjects for displaying Tex.</p>
 
-      <div class="headline my-4">Rectangle</div>
+      <div class="headline my-4">TexMobject</div>
       <MobjectLabContainer
-        project="rectangle_exhibit"
+        project="tex_exhibit"
         v-bind:layout="HORIZONTAL_EMBED"
       />
 
-      <div class="headline my-4">Square</div>
+      <div class="headline my-4">TextMobject</div>
       <MobjectLabContainer
-        project="square_exhibit"
-        v-bind:layout="HORIZONTAL_EMBED"
-      />
-
-      <div class="headline my-4">Circle</div>
-      <MobjectLabContainer
-        project="circle_exhibit"
+        project="text_exhibit"
         v-bind:layout="HORIZONTAL_EMBED"
       />
     </div>
@@ -42,9 +36,3 @@ export default {
   }
 }
 </script>
-
-<style>
-.docs-lab-container {
-  max-width: 1400px;
-}
-</style>
