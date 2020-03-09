@@ -939,7 +939,7 @@ export default {
     snapshotCanvas() {
       this.displayCanvasMenu = false;
       this.$nextTick(function() {
-        html2canvas(document.getElementById('manim-background'))
+        html2canvas(document.getElementById(this._uid + 'manim-background'))
           .then(function(canvas) {
             let dataUrl = canvas.toDataURL("image/png");
             let win = window.open();
