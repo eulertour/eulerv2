@@ -367,7 +367,7 @@ export default {
 }
 .ui-panels-vertical {
   min-width: 0;
-  height: 100%;
+  height: 600px;
 }
 .panels-width-vertical { width: 640px; }
 .manim-column-vertical {
