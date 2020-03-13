@@ -23,7 +23,7 @@
         href="https://github.com/eulertour/eulerv2"
         target="_blank"
       >
-        <v-icon class="display-2">mdi-github-circle</v-icon>
+        <v-icon class="display-2">mdi-github</v-icon>
       </v-btn>
     </v-app-bar>
 
