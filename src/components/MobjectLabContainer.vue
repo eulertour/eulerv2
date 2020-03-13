@@ -294,6 +294,10 @@ export default {
 
       // Initialize Mobjects.
       let newMobjects = {};
+
+      // // eslint-disable-next-line
+      // debugger;
+
       for (let mobjectName of Object.keys(scene.initial_mobject_serializations)) {
         const pythonData = scene.initial_mobject_serializations[mobjectName];
         let mobjectData = {};
@@ -439,7 +443,7 @@ export default {
         return null;
       }
     },
-    saveMobjectPreAnimation(mobject) {
+    saveMobjectPreAnimation: function(mobject) {
       if (mobject !== null) {
         this.savedPreAnimationMobject = mobject.clone();
         this.savedPreAnimationMobjectParent = mobject.parent;

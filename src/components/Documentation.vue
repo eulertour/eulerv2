@@ -50,6 +50,8 @@ import LinuxInstall from './docs/LinuxInstall.vue'
 import WindowsInstall from './docs/WindowsInstall.vue'
 import GeometryExhibit from './docs/GeometryExhibit.vue'
 import TexExhibit from './docs/TexExhibit.vue'
+import ReplacementTransformExhibit from './docs/ReplacementTransformExhibit.vue'
+import WriteExhibit from './docs/WriteExhibit.vue'
 
 export default {
   name: 'Documentation',
@@ -60,6 +62,8 @@ export default {
     WindowsInstall,
     GeometryExhibit,
     TexExhibit,
+    ReplacementTransformExhibit,
+    WriteExhibit,
   },
   methods: {
     selectDocumentationComponent(componentName) {
@@ -89,6 +93,13 @@ export default {
           items: [
             { title: 'Geometry', component: 'GeometryExhibit' },
             { title: 'Tex', component: 'TexExhibit' },
+          ],
+        },
+        {
+          title: 'Animations',
+          items: [
+            { title: 'ReplacementTransform', component: 'ReplacementTransformExhibit' },
+            { title: 'Write', component: 'WriteExhibit' },
           ],
         },
       ],
