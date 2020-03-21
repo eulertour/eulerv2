@@ -132,15 +132,10 @@
         }"
         class="d-flex flex-column"
       >
-        <div id="manim-visualization">
+        <div>
           <div
             v-bind:id="parentUid + 'manim-background'"
-            v-bind:style="{
-              width: '640px',
-              height: '360px',
-              position: 'relative',
-              backgroundColor: 'black',
-            }"
+            v-bind:style="{ position: 'relative' }"
             v-on:mouseover="$emit('display-canvas-menu', true)"
             v-on:mouseleave="$emit('display-canvas-menu', false)"
           >
@@ -343,13 +338,6 @@ export default {
   padding: 0 8px;
   min-width: 0;
 }
-#manim-visualization { width: 640px; }
-#manim-background {
-  width: 640px;
-  height: 360px;
-  position: relative;
-  background-color: black;
-}
 #corner-button-container {
   position: fixed;
   right: 25px;
@@ -372,7 +360,6 @@ export default {
 .panels-width-vertical { width: 640px; }
 .manim-column-vertical {
   align-items: center;
-  height: 650px;
 }
 
 /* Overrides for horizontal embed layout. */

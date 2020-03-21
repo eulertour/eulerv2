@@ -249,6 +249,7 @@ export default {
     // Animation setup.
     this.savedPreAnimationMobject = null;
     this.savedPreAnimationMobjectParent = null;
+    this.cachedBackground = null;
   },
   mounted() {
     window.languagePluginLoader.then(() => {
@@ -277,8 +278,14 @@ export default {
     attachTwo() {
       this.scene = new Manim.Scene({ width: 640, height: 360 });
       this.scene.appendTo(document.getElementById(this._uid + "manim-background"));
+      this.cachedBackground = this.scene.makeRectangle(
+        this.scene.width / 2,
+        this.scene.height / 2,
+        this.scene.width,
+        this.scene.height,
+      );
+      this.cachedBackground.fill = '#000000';
       this.scene.update();
-      this.scene.renderer.domElement.id = "manim-scene";
     },
     runManim: function() {
       let manimlib = window.pyodide.pyimport("manimlib");
@@ -294,9 +301,6 @@ export default {
 
       // Initialize Mobjects.
       let newMobjects = {};
-
-      // // eslint-disable-next-line
-      // debugger;
 
       for (let mobjectName of Object.keys(scene.initial_mobject_serializations)) {
         const pythonData = scene.initial_mobject_serializations[mobjectName];
@@ -338,6 +342,7 @@ export default {
       this.animationIndex = 0;
       this.animationOffset = 0;
       this.scene.clear();
+      this.scene.add(this.cachedBackground);
       this.scene.clearAnimation();
       this.currentAnimation.animation = this.buildCurrentAnimation();
       this.scene.update();

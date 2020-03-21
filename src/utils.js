@@ -624,7 +624,8 @@ export function normalizePath(path) {
     rightHandles = [...rightHandles, [v.controls.right.x, v.controls.right.y]];
   });
 
-  // Handle matrix transformations
+  // Multiply each point by the matrix obtained from multiplying each matrix in
+  // its hierarchy.
   const transformationMatrix = getCurrentTransformationMatrix(path);
   zippedAnchors = anchors.map((_, i) => [anchors[i], leftHandles[i], rightHandles[i]]);
   newAnchors = [], newLeftHandles = [], newRightHandles = [];
@@ -641,7 +642,9 @@ export function normalizePath(path) {
   leftHandles = newLeftHandles;
   rightHandles = newRightHandles;
 
-  // Transform to Manim coordinates
+  // Multiply each point by the Two->Manim matrix to convert each point to
+  // manim coordinates. Then set the path's .matrix attribute to the Manim->Two
+  // matrix to preserve their location in the Scene.
   let two2manim = getTwoToManimTransformationMatrix();
   zippedAnchors = anchors.map((_, i) => [anchors[i], leftHandles[i], rightHandles[i]]);
   let manimAnchors = [], manimLeftHandles = [], manimRightHandles = [];
