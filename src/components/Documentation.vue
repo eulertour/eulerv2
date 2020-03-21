@@ -2,10 +2,11 @@
   <div class="d-flex" style="width: 100%">
     <v-navigation-drawer
       permanent
-      width="200px"
+      v-bind:width="fullWidthMenu ? '200px' : '60px'"
       class="mr-3 flex-shrink-0"
+      style="position: relative"
     >
-      <v-list dense>
+      <v-list v-if="fullWidthMenu" dense>
         <div v-for="item in navigationDrawerData" v-bind:key="item.title">
           <v-list-group
             v-if="'items' in item"
@@ -35,6 +36,14 @@
           </v-list-item>
         </div>
       </v-list>
+      <v-btn
+        v-if="$vuetify.breakpoint.smAndDown"
+        icon
+        class="menu-button mx-3 mb-1"
+        v-on:click="expandMiniMenu=!expandMiniMenu"
+      >
+        <v-icon>{{ expandMiniMenu ? 'mdi-close' : 'mdi-menu' }}</v-icon>
+      </v-btn>
     </v-navigation-drawer>
 
     <div class="documentation-container">
@@ -70,8 +79,14 @@ export default {
       this.selectedComponent = componentName;
     }
   },
+  computed: {
+    fullWidthMenu() {
+      return this.$vuetify.breakpoint.mdAndUp || this.expandMiniMenu;
+    }
+  },
   data() {
     return {
+      expandMiniMenu: false,
       selectedComponent: "About",
       navigationDrawerData: [
         { title: 'About', component: 'About' },
@@ -155,4 +170,8 @@ $color-pack: false;
 }
 code { box-shadow: none !important; }
 p { margin-bottom: 28px !important; }
+.menu-button {
+  position: absolute;
+  bottom: 0;
+}
 </style>
