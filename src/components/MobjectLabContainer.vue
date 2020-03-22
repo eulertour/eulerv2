@@ -36,6 +36,8 @@
     v-bind:ui-screen="uiScreen"
     v-bind:unknown-animation="unknownAnimation"
     v-bind:parent-uid="_uid"
+    v-bind:height="height"
+    v-bind:width="width"
     v-on:chosen-scene-update="(val)=>{chosenScene=val}"
     v-on:config-change="handleConfigChange"
     v-on:debug-toggle="debug = !debug"
@@ -85,9 +87,13 @@ export default {
   props: {
     layout: String,
     project: String,
+    inputHeight: Number,
+    inputWidth: Number,
   },
   data() {
     return {
+      width: 640,
+      height: 360,
       animating: false,
       unknownAnimation: false,
       displayCanvasMenu: false,
@@ -276,7 +282,21 @@ export default {
   },
   methods: {
     attachTwo() {
-      this.scene = new Manim.Scene({ width: 640, height: 360 });
+      if (this.inputWidth !== undefined) {
+        this.width = this.inputWidth;
+      } else if (this.inputHeight !== undefined) {
+        this.width = this.inputHeight * 16 / 9;
+      }
+
+      if (this.inputHeight !== undefined) {
+        this.height = this.inputHeight;
+      } else if (this.inputWidth !== undefined) {
+        this.height = this.inputWidth * 9 / 16;
+      }
+
+      // eslint-disable-next-line
+      console.log(this.width, this.height);
+      this.scene = new Manim.Scene({ width: this.width, height: this.height });
       this.scene.appendTo(document.getElementById(this._uid + "manim-background"));
       this.cachedBackground = this.scene.makeRectangle(
         this.scene.width / 2,
@@ -414,7 +434,12 @@ export default {
         );
         return m;
       } else if (!utils.isGroupData(mobjectData)) {
-        let m = new Manim[mobjectData.className](mobjectData.config);
+        // TODO: Pass Scene dimensions here.
+        let m = new Manim[mobjectData.className]({
+          ...mobjectData.config,
+          sceneHeight: this.height,
+          sceneWidth: this.width,
+        });
         m.applyStyle(mobjectData.style);
         return m;
       } else {

@@ -596,12 +596,12 @@ export function getTwoToManimTransformationMatrix(
  *     [my]   [ty]
  *     [ 1]
  */
-export function getManimToTwoTransformationMatrix(
+export function getManimToTwoTransformationMatrix({
   manimWidth = consts.FRAME_WIDTH,
   manimHeight = consts.FRAME_HEIGHT,
   twoWidth = 640,
   twoHeight = 360,
-) {
+} = {}) {
   return math.matrix([
     [twoWidth/manimWidth, 0, twoWidth/2],
     [0, -twoHeight/manimHeight, twoHeight/2],

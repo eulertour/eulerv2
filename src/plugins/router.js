@@ -16,7 +16,10 @@ export default new VueRouter({
     { path: consts.BASE_GALLERY_URL, component: Gallery },
     { path: consts.BASE_INFO_URL, component: Info },
     { path: consts.BASE_DOCUMENTATION_URL, component: Documentation },
-    { path: path.join(consts.BASE_LAB_URL, ':project'), component: MobjectLabContainer },
+    {
+      path: path.join(consts.BASE_LAB_URL, ':project'),
+      component: MobjectLabContainer,
+    },
     { path: '*', redirect: '/' },
   ],
 });

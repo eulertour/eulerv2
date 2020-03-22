@@ -179,6 +179,7 @@
       <MobjectLabContainer
         project="learning_by_example"
         v-bind:layout="VERTICAL"
+        v-bind:input-width="400"
       />
     </div>
   </div>

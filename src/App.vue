@@ -27,10 +27,6 @@
       </v-btn>
     </v-app-bar>
 
-    <v-content class="d-flex flex-column">
-      <router-view></router-view>
-    </v-content>
-
     <v-navigation-drawer
       v-model="navigationDrawer"
       app
@@ -91,6 +87,10 @@
         </v-list-item>
       </router-link>
     </v-navigation-drawer>
+
+    <v-content class="d-flex flex-column">
+      <router-view></router-view>
+    </v-content>
   </v-app>
 </template>
 
