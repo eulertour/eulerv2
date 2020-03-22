@@ -294,8 +294,6 @@ export default {
         this.height = this.inputWidth * 9 / 16;
       }
 
-      // eslint-disable-next-line
-      console.log(this.width, this.height);
       this.scene = new Manim.Scene({ width: this.width, height: this.height });
       this.scene.appendTo(document.getElementById(this._uid + "manim-background"));
       this.cachedBackground = this.scene.makeRectangle(

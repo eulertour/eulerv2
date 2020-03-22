@@ -17,14 +17,6 @@ import {Scene} from './scene.js';
 import * as _ from 'lodash'
 import * as math from 'mathjs'
 
-const DEFAULT_STYLE = {
-  strokeColor: consts.WHITE,
-  strokeOpacity: 1,
-  fillColor: consts.BLACK,
-  fillOpacity: 0,
-  strokeWidth: 4,
-};
-
 /* TODO: error check python access */
 class Group extends Two.Group {
   constructor(submobjects = [], fillTopLevel = false) {
@@ -577,23 +569,56 @@ class Mobject extends Group {
   constructor(
     path = null,
     submobjects = [],
-    style = DEFAULT_STYLE,
+    config = {},
   ) {
+    if (!(config.sceneWidth && config.sceneHeight)) {
+      // eslint-disable-next-line
+      console.trace("Attempt to create Mobject without specifying scene dimensions");
+    }
+    let fullConfig = Object.assign(
+      Mobject.defaultConfig(),
+      config,
+      Mobject.staticConfig(),
+    );
+    fullConfig.style =
+      utils.styleFromConfigAndDefaults(Mobject.defaultStyle(), config.style);
+
     if (path === null) {
       path = new Two.Path();
     }
-    super([path].concat(submobjects), /*fillTopLevel=*/true);
     if (path !== null) {
-      this.path().matrix.manual = true;
-      this.path().matrix.set(...utils.getManimToTwoTransformationMatrix().toArray().flat());
+      path.matrix.manual = true;
+      path.matrix.set(...utils.getManimToTwoTransformationMatrix({
+        twoWidth: fullConfig.sceneWidth,
+        twoHeight: fullConfig.sceneHeight,
+      }).toArray().flat());
     }
-    if (style !== null) {
-      this.applyStyle(Object.assign({}, DEFAULT_STYLE, style));
+    super([path].concat(submobjects), /*fillTopLevel=*/true);
+    if (fullConfig.style !== null) {
+      this.applyStyle(fullConfig.style);
     }
   }
 
+  static defaultConfig() {
+    return {};
+  }
+
+  static defaultStyle() {
+    return {
+      strokeColor: consts.WHITE,
+      strokeOpacity: 1,
+      fillColor: consts.BLACK,
+      fillOpacity: 0,
+      strokeWidth: 4,
+    };
+  }
+
+  static staticConfig() {
+    return {};
+  }
+
   clone(parent) {
-    let clone = new Mobject(this.path().clone(), [], this.getStyleDict());
+    let clone = new Mobject(this.path().clone(), [], this.config);
     clone.name = this.name;
 
     let children = this.children.map(child => child.clone());
@@ -633,13 +658,12 @@ class Arc extends Mobject {
   constructor(config = {}) {
     let fullConfig = Object.assign(Arc.defaultConfig(), config);
     fullConfig.style =
-      utils.styleFromConfigAndDefaults(config.style, Arc.defaultStyle());
+      utils.styleFromConfigAndDefaults(Arc.defaultStyle(), config.style);
     let {
       startAngle,
       angle,
       radius,
       numComponents,
-      style,
     } = fullConfig;
     let np = window.pyodide.pyimport("numpy");
     let anchors = Array.from(np.linspace(
@@ -675,12 +699,9 @@ class Arc extends Mobject {
     }
     let path = utils.pathFromAnchors(anchors, handles1, handles2);
 
-    super(path, [], style);
+    super(path, [], fullConfig);
+    this.config = _.cloneDeep(config);
     this.scaleMobject(radius);
-
-    this.startAngle = startAngle;
-    this.angle = angle;
-    this.radius = radius;
   }
 
   static defaultConfig() {
@@ -706,7 +727,7 @@ class Circle extends Arc {
       { startAngle: 0, angle: consts.TAU, numComponents: 9 },
     );
     fullConfig.style =
-      utils.styleFromConfigAndDefaults(config.style, Circle.defaultStyle());
+      utils.styleFromConfigAndDefaults(Circle.defaultStyle(), config.style);
     super(fullConfig);
     this.config = _.cloneDeep(config);
   }
@@ -756,19 +777,48 @@ class Circle extends Arc {
 class Polygon extends Mobject {
   constructor(
     vertices,
-    style = {strokeColor: consts.BLUE}
+    config = {},
   ) {
+    let fullConfig = Object.assign(
+      Polygon.defaultConfig(),
+      config,
+      Polygon.staticConfig(),
+    );
+    fullConfig.style =
+      utils.styleFromConfigAndDefaults(Polygon.defaultStyle(), config.style);
+
     let path = utils.pathFromPoints(vertices);
-    super(path, [], style);
+    super(path, [], fullConfig);
+    this.config = _.cloneDeep(config);
+  }
+
+  static defaultConfig() {
+    return {};
+  }
+
+  static defaultStyle() {
+    return { strokeColor: consts.BLUE };
+  }
+
+  static staticConfig() {
+    return {};
   }
 }
 
 class RegularPolygon extends Polygon {
-  constructor({
-    numSides = 3,
-    height = 2,
-    style = {},
-  } = {}) {
+  constructor(config = {}) {
+    let fullConfig = Object.assign(
+      RegularPolygon.defaultConfig(),
+      config,
+      RegularPolygon.staticConfig(),
+    );
+    fullConfig.style =
+      utils.styleFromConfigAndDefaults(RegularPolygon.defaultStyle(), config.style);
+
+    let {
+      numSides,
+      height,
+    } = fullConfig;
     let np = window.pyodide.pyimport("numpy");
     let vertices = [];
     let angle;
@@ -789,7 +839,23 @@ class RegularPolygon extends Polygon {
     vertices.forEach(function (vertex) {
       vertex[1] += shiftDist;
     });
-    super(vertices, style);
+    super(vertices, fullConfig);
+    this.config = _.cloneDeep(config);
+  }
+
+  static defaultConfig() {
+    return {
+      numSides: 3,
+      height: 2,
+    };
+  }
+
+  static defaultStyle() {
+    return {};
+  }
+
+  static staticConfig() {
+    return {};
   }
 }
 
@@ -912,24 +978,37 @@ class Rectangle extends Polygon {
 }
 
 class Square extends RegularPolygon {
-  constructor({
-    sideLength = 2.0,
-    style = {strokeColor: consts.GREEN}
-  } = {}) {
-    super({
+  constructor(config = {}) {
+    let fullConfig = Object.assign(
+      Square.defaultConfig(),
+      config,
+      Square.staticConfig(),
+    );
+    fullConfig.style =
+      utils.styleFromConfigAndDefaults(Square.defaultStyle(), config.style);
+    super(fullConfig);
+    this.config = _.cloneDeep(config);
+  }
+
+  static defaultConfig() {
+    return { sideLength: 2.0 };
+  }
+
+  static defaultStyle() {
+    return { strokeColor: consts.GREEN };
+  }
+
+  static staticConfig() {
+    return {
       numSides: 4,
-      height: sideLength,
-      style: style,
-    });
-    this.sideLength = sideLength;
+      height: 2,
+    };
   }
 
   clone(parent) {
-    let clone = new Square({
-      sideLength: this.sideLength,
-      style: this.getStyleDict(),
-    });
+    let clone = new Square(this.config);
     clone.name = this.name;
+    clone.applyStyle(this.getStyleDict());
 
     let children = this.children.map(child => child.clone());
 
@@ -1088,7 +1167,7 @@ class TexMobject extends Mobject {
       config,
     );
     fullConfig.style =
-      utils.styleFromConfigAndDefaults(config.style, TexMobject.defaultStyle());
+      utils.styleFromConfigAndDefaults(TexMobject.defaultStyle(), config.style);
 
     const { texToColorMap, startString, endString, style } = fullConfig;
     let splitTexStrings = TexMobject.splitStringsWithMap(texStrings, texToColorMap);
@@ -1229,7 +1308,7 @@ class TextMobject extends TexMobject {
       { startString: "\\textrm{", endString: "}" },
     );
     fullConfig.style =
-      utils.styleFromConfigAndDefaults(config.style, TextMobject.defaultStyle());
+      utils.styleFromConfigAndDefaults(TextMobject.defaultStyle(), config.style);
     super(texStrings, fullConfig, scene);
     this.config = _.cloneDeep(config);
     this.texStrings = _.cloneDeep(texStrings);

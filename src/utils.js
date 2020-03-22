@@ -706,7 +706,7 @@ function getCurrentTransformationMatrix(path) {
 
 // Ensures all style attributes are set.
 // TODO: Can this be replaced with Object.assign()?
-export function styleFromConfigAndDefaults(defaults = {}, config) {
+export function styleFromConfigAndDefaults(defaults, config = {}) {
   let combinedStyle = {};
   if ("strokeColor" in config || "strokeColor" in defaults) {
     combinedStyle.strokeColor = config.strokeColor || defaults.strokeColor;
