@@ -580,8 +580,10 @@ class Mobject extends Group {
       config,
       Mobject.staticConfig(),
     );
-    fullConfig.style =
-      utils.styleFromConfigAndDefaults(Mobject.defaultStyle(), config.style);
+    fullConfig.style = utils.styleFromConfigAndDefaults(
+      Mobject.defaultStyle(),
+      config.style,
+    );
 
     if (path === null) {
       path = new Two.Path();
@@ -593,7 +595,10 @@ class Mobject extends Group {
         twoHeight: fullConfig.sceneHeight,
       }).toArray().flat());
     }
+
     super([path].concat(submobjects), /*fillTopLevel=*/true);
+    this.config = _.cloneDeep(config);
+
     if (fullConfig.style !== null) {
       this.applyStyle(fullConfig.style);
     }
@@ -620,6 +625,7 @@ class Mobject extends Group {
   clone(parent) {
     let clone = new Mobject(this.path().clone(), [], this.config);
     clone.name = this.name;
+    clone.applyStyle(this.getStyleDict());
 
     let children = this.children.map(child => child.clone());
 
@@ -648,17 +654,18 @@ class Mobject extends Group {
   }
 }
 
-class VMobject extends Mobject {
-  constructor() {
-    super(null, [], {});
-  }
-}
-
 class Arc extends Mobject {
   constructor(config = {}) {
-    let fullConfig = Object.assign(Arc.defaultConfig(), config);
-    fullConfig.style =
-      utils.styleFromConfigAndDefaults(Arc.defaultStyle(), config.style);
+    let fullConfig = Object.assign(
+      Arc.defaultConfig(),
+      config,
+      Arc.staticConfig(),
+    );
+    fullConfig.style = utils.styleFromConfigAndDefaults(
+      Arc.defaultStyle(),
+      config.style,
+    );
+
     let {
       startAngle,
       angle,
@@ -701,6 +708,7 @@ class Arc extends Mobject {
 
     super(path, [], fullConfig);
     this.config = _.cloneDeep(config);
+
     this.scaleMobject(radius);
   }
 
@@ -717,6 +725,10 @@ class Arc extends Mobject {
   static defaultStyle() {
     return {};
   }
+
+  static staticConfig() {
+    return {};
+  }
 }
 
 class Circle extends Arc {
@@ -724,10 +736,12 @@ class Circle extends Arc {
     let fullConfig = Object.assign(
       Circle.defaultConfig(),
       config,
-      { startAngle: 0, angle: consts.TAU, numComponents: 9 },
+      Circle.staticConfig(),
     );
-    fullConfig.style =
-      utils.styleFromConfigAndDefaults(Circle.defaultStyle(), config.style);
+    fullConfig.style = utils.styleFromConfigAndDefaults(
+      Circle.defaultStyle(),
+      config.style,
+    );
     super(fullConfig);
     this.config = _.cloneDeep(config);
   }
@@ -740,6 +754,14 @@ class Circle extends Arc {
 
   static defaultStyle() {
     return { strokeColor: consts.RED };
+  }
+
+  static staticConfig() {
+    return {
+      startAngle: 0,
+      angle: consts.TAU,
+      numComponents: 9,
+    };
   }
 
   clone(parent) {
@@ -775,18 +797,16 @@ class Circle extends Arc {
 }
 
 class Polygon extends Mobject {
-  constructor(
-    vertices,
-    config = {},
-  ) {
+  constructor(vertices, config = {}) {
     let fullConfig = Object.assign(
       Polygon.defaultConfig(),
       config,
       Polygon.staticConfig(),
     );
-    fullConfig.style =
-      utils.styleFromConfigAndDefaults(Polygon.defaultStyle(), config.style);
-
+    fullConfig.style = utils.styleFromConfigAndDefaults(
+      Polygon.defaultStyle(),
+      config.style,
+    );
     let path = utils.pathFromPoints(vertices);
     super(path, [], fullConfig);
     this.config = _.cloneDeep(config);
@@ -812,8 +832,10 @@ class RegularPolygon extends Polygon {
       config,
       RegularPolygon.staticConfig(),
     );
-    fullConfig.style =
-      utils.styleFromConfigAndDefaults(RegularPolygon.defaultStyle(), config.style);
+    fullConfig.style = utils.styleFromConfigAndDefaults(
+      RegularPolygon.defaultStyle(),
+      config.style,
+    );
 
     let {
       numSides,
@@ -860,12 +882,22 @@ class RegularPolygon extends Polygon {
 }
 
 class Star extends Polygon {
-  constructor({
-    numPoints = 5,
-    height = 2,
-    ratio = 0.5,
-    style = {}
-  } = {}) {
+  constructor(config = {}) {
+    let fullConfig = Object.assign(
+      Star.defaultConfig(),
+      config,
+      Star.staticConfig(),
+    );
+    fullConfig.style = utils.styleFromConfigAndDefaults(
+      Star.defaultStyle(),
+      config.style,
+    );
+
+    let {
+      numPoints,
+      ratio,
+      height,
+    } = fullConfig;
     let np = window.pyodide.pyimport("numpy");
     let vertices = [];
     let angle;
@@ -885,83 +917,183 @@ class Star extends Polygon {
     vertices.forEach(function (vertex) {
       vertex[1] += shiftDist;
     });
-    super(vertices, style);
+    super(vertices, fullConfig);
+    this.config = _.cloneDeep(config);
+  }
+
+  static defaultConfig() {
+    return {
+      numPoints: 5,
+      height: 2,
+      ratio: 0.5,
+    };
+  }
+
+  static defaultStyle() {
+    return {};
+  }
+
+  static staticConfig() {
+    return {};
   }
 }
 
 class StarOfDavid extends Star {
-  constructor({
-    height = 2,
-    ratio = 1 / Math.sqrt(3),
-    style = {strokeColor: consts.GREEN}
-  } = {}) {
-    super({
-      numPoints: 6,
-      height: height,
-      ratio: ratio,
-      style: style,
-    });
+  constructor(config = {}) {
+    let fullConfig = Object.assign(
+      StarOfDavid.defaultConfig(),
+      config,
+      StarOfDavid.staticConfig(),
+    );
+    fullConfig.style = utils.styleFromConfigAndDefaults(
+      StarOfDavid.defaultStyle(),
+      config.style,
+    );
+    super(fullConfig);
+    this.config = _.cloneDeep(config);
+  }
+
+  static defaultConfig() {
+    return {
+      height: 2,
+      ratio: 1 / Math.sqrt(3),
+    };
+  }
+
+  static defaultStyle() {
+    return { strokeColor: consts.GREEN }
+  }
+
+  static staticConfig() {
+    return { numPoints: 6 };
   }
 }
 
 class Triangle extends RegularPolygon {
-  constructor({
-    height = 2,
-    style = {strokeColor: consts.GREEN}
-  } = {}) {
-    super({
-      numSides: 3,
-      height: height,
-      style: style,
-    });
+  constructor(config = {}) {
+    let fullConfig = Object.assign(
+      Triangle.defaultConfig(),
+      config,
+      Triangle.staticConfig(),
+    );
+    fullConfig.style = utils.styleFromConfigAndDefaults(
+      Triangle.defaultStyle(),
+      config.style,
+    );
+    super(fullConfig);
+    this.config = _.cloneDeep(config);
+  }
+
+  static defaultConfig() {
+    return { height: 2 };
+  }
+
+  static defaultStyle() {
+    return { strokeColor: consts.GREEN }
+  }
+
+  static staticConfig() {
+    return { numSides: 3 };
   }
 }
 
 class Pentagon extends RegularPolygon {
-  constructor({
-    height = 2,
-    style = {strokeColor: consts.GREEN}
-  } = {}) {
-    super({
-      numSides: 5,
-      height: height,
-      style: style,
-    });
+  constructor(config = {}) {
+    let fullConfig = Object.assign(
+      Pentagon.defaultConfig(),
+      config,
+      Pentagon.staticConfig(),
+    );
+    fullConfig.style = utils.styleFromConfigAndDefaults(
+      Pentagon.defaultStyle(),
+      config.style,
+    );
+    super(fullConfig);
+    this.config = _.cloneDeep(config);
+  }
+
+  static defaultConfig() {
+    return { height: 2 };
+  }
+
+  static defaultStyle() {
+    return { strokeColor: consts.GREEN }
+  }
+
+  static staticConfig() {
+    return { numSides: 5 };
   }
 }
 
 class Hexagon extends RegularPolygon {
-  constructor({
-    height = 2,
-    style = {strokeColor: consts.GREEN}
-  } = {}) {
-    super({
-      numSides: 6,
-      height: height,
-      style: style,
-    });
+  constructor(config = {}) {
+    let fullConfig = Object.assign(
+      Hexagon.defaultConfig(),
+      config,
+      Hexagon.staticConfig(),
+    );
+    fullConfig.style = utils.styleFromConfigAndDefaults(
+      Hexagon.defaultStyle(),
+      config.style,
+    );
+    super(fullConfig);
+    this.config = _.cloneDeep(config);
+  }
+
+  static defaultConfig() {
+    return { height: 2 };
+  }
+
+  static defaultStyle() {
+    return { strokeColor: consts.GREEN }
+  }
+
+  static staticConfig() {
+    return { numSides: 6 };
   }
 }
 
 class Octagon extends RegularPolygon {
-  constructor({
-    height = 2,
-    style = {strokeColor: consts.GREEN}
-  } = {}) {
-    super({
-      numSides: 8,
-      height: height,
-      style: style,
-    });
+  constructor(config = {}) {
+    let fullConfig = Object.assign(
+      Octagon.defaultConfig(),
+      config,
+      Octagon.staticConfig(),
+    );
+    fullConfig.style = utils.styleFromConfigAndDefaults(
+      Octagon.defaultStyle(),
+      config.style,
+    );
+    super(fullConfig);
+    this.config = _.cloneDeep(config);
+  }
+
+  static defaultConfig() {
+    return { height: 2 };
+  }
+
+  static defaultStyle() {
+    return { strokeColor: consts.GREEN }
+  }
+
+  static staticConfig() {
+    return { numSides: 8 };
   }
 }
 
 class Rectangle extends Polygon {
-  constructor({
-    height = 2.0,
-    width = 4.0,
-    style = {strokeColor: consts.WHITE}
-  } = {}) {
+  constructor(config = {}) {
+    let fullConfig = Object.assign(
+      Rectangle.defaultConfig(),
+      config,
+      Rectangle.staticConfig(),
+    );
+    fullConfig.style = utils.styleFromConfigAndDefaults(
+      Rectangle.defaultStyle(),
+      config.style,
+    );
+
+    let { width, height } = fullConfig;
     let halfWidth = width / 2;
     let halfHeight = height / 2;
     super(
@@ -969,11 +1101,21 @@ class Rectangle extends Polygon {
       [halfWidth, halfHeight],
       [halfWidth, -halfHeight],
       [-halfWidth, -halfHeight]],
-      style,
+      fullConfig,
     );
+    this.config = _.cloneDeep(config);
+  }
 
-    this.width = width;
-    this.height = height;
+  static defaultConfig() {
+    return { height: 2, width: 4 };
+  }
+
+  static defaultStyle() {
+    return { strokeColor: consts.WHITE }
+  }
+
+  static staticConfig() {
+    return {};
   }
 }
 
@@ -1335,7 +1477,6 @@ class TextMobject extends TexMobject {
 export {
   Group,
   Mobject,
-  VMobject,
   Arc,
   Circle,
   Polygon,
