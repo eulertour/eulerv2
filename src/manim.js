@@ -571,10 +571,6 @@ class Mobject extends Group {
     submobjects = [],
     config = {},
   ) {
-    if (!(config.sceneWidth && config.sceneHeight)) {
-      // eslint-disable-next-line
-      console.trace("Attempt to create Mobject without specifying scene dimensions");
-    }
     let fullConfig = Object.assign(
       Mobject.defaultConfig(),
       config,
@@ -1351,6 +1347,11 @@ class TexMobject extends Mobject {
     config = {},
     scene,
   ) {
+    // eslint-disable-next-line
+    console.assert(
+      scene !== null,
+      "Called TexMobject constructor without a scene",
+    );
     let fullConfig = Object.assign(
       TexMobject.defaultConfig(),
       config,
@@ -1495,11 +1496,6 @@ class TextMobject extends TexMobject {
     config = {},
     scene = null,
   ) {
-    // eslint-disable-next-line
-    console.assert(
-      scene !== null,
-      "Called TexMobject constructor without a scene",
-    );
     let fullConfig = Object.assign(
       TextMobject.defaultConfig(),
       config,
