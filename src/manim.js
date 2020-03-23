@@ -599,7 +599,7 @@ class Mobject extends Group {
     super([path].concat(submobjects), /*fillTopLevel=*/true);
     this.config = _.cloneDeep(config);
 
-    if (fullConfig.style !== null) {
+    if (!config.skipStyling && fullConfig.style !== null) {
       this.applyStyle(fullConfig.style);
     }
   }
@@ -1126,8 +1126,10 @@ class Square extends RegularPolygon {
       config,
       Square.staticConfig(),
     );
-    fullConfig.style =
-      utils.styleFromConfigAndDefaults(Square.defaultStyle(), config.style);
+    fullConfig.style = utils.styleFromConfigAndDefaults(
+      Square.defaultStyle(),
+      config.style,
+    );
     super(fullConfig);
     this.config = _.cloneDeep(config);
   }
@@ -1180,13 +1182,36 @@ class Square extends RegularPolygon {
 }
 
 class TexSymbol extends Mobject {
-  constructor(path, style) {
-    super(path, [], style);
+  constructor(path, config = {}) {
+    let fullConfig = Object.assign(
+      TexSymbol.defaultConfig(),
+      config,
+      TexSymbol.staticConfig(),
+    );
+    fullConfig.style = utils.styleFromConfigAndDefaults(
+      TexSymbol.defaultStyle(),
+      config.style,
+    );
+    super(path, [], fullConfig);
+    this.config = _.cloneDeep(config);
+  }
+
+  static defaultConfig() {
+    return {};
+  }
+
+  static defaultStyle() {
+    return {};
+  }
+
+  static staticConfig() {
+    return {};
   }
 
   clone(parent) {
-    let clone = new TexSymbol(this.path().clone(), this.getStyleDict());
+    let clone = new TexSymbol(this.path().clone(), this.config);
     clone.name = this.name;
+    clone.applyStyle(this.getStyleDict());
 
     let children = this.children.map(child => child.clone());
 
@@ -1219,27 +1244,48 @@ class SingleStringTexMobject extends Mobject {
   constructor(
     texString,
     texSymbols,
-    style = {
+    config = {},
+  ) {
+    let fullConfig = Object.assign(
+      SingleStringTexMobject.defaultConfig(),
+      config,
+      SingleStringTexMobject.staticConfig(),
+    );
+    fullConfig.style = utils.styleFromConfigAndDefaults(
+      SingleStringTexMobject.defaultStyle(),
+      config.style,
+    );
+    super(null, texSymbols, fullConfig);
+    this.texString = texString;
+  }
+
+  static defaultConfig() {
+    return {};
+  }
+
+  static defaultStyle() {
+    return {
       fillColor: consts.WHITE,
       fillOpacity: 1,
       strokeColor: consts.WHITE,
       strokeOpacity: 1,
       strokeWidth: 1,
-    },
-  ) {
-    super(null, texSymbols, style);
-    this.texString = texString;
+    };
   }
 
-  static fromTexString(texString, style, scene) {
+  static staticConfig() {
+    return {};
+  }
+
+  static fromTexString(texString, config, scene) {
     if (texString.length === 0) {
-      return new SingleStringTexMobject("", []);
+      return new SingleStringTexMobject("", [], {});
     }
     // Create the Mobject with an a prepended for scaling later.
     let group = scene.texToSvgGroup(`a${texString}`);
     group = utils.normalizeGroup(group);
-    let texSymbols = group.children.map(path => new TexSymbol(path.clone(), style));
-    let mob = new SingleStringTexMobject(texString, texSymbols, style);
+    let texSymbols = group.children.map(path => new TexSymbol(path.clone(), config));
+    let mob = new SingleStringTexMobject(texString, texSymbols, config);
 
     // Scale and center the Mobject.
     const currentScalerHeight = mob.submobjects()[0].getDimensions().height;
@@ -1268,8 +1314,9 @@ class SingleStringTexMobject extends Mobject {
   }
 
   clone(parent) {
-    let clone = new SingleStringTexMobject(this.texString, [], this.getStyleDict());
+    let clone = new SingleStringTexMobject(this.texString, [], this.config);
     clone.name = this.name;
+    clone.applyStyle(this.getStyleDict());
 
     let children = this.children.map(child => child.clone());
 
@@ -1307,29 +1354,33 @@ class TexMobject extends Mobject {
     let fullConfig = Object.assign(
       TexMobject.defaultConfig(),
       config,
+      TexMobject.staticConfig(),
     );
-    fullConfig.style =
-      utils.styleFromConfigAndDefaults(TexMobject.defaultStyle(), config.style);
+    fullConfig.style = utils.styleFromConfigAndDefaults(
+      TexMobject.defaultStyle(),
+      config.style,
+    );
 
-    const { texToColorMap, startString, endString, style } = fullConfig;
+    const { texToColorMap, startString, endString } = fullConfig;
     let splitTexStrings = TexMobject.splitStringsWithMap(texStrings, texToColorMap);
 
     // Scale and position the combined tex string.
     let combinedTexString = SingleStringTexMobject.fromTexString(
-      `${startString}${splitTexStrings.join(' ')}${endString}`, style, scene,
+      `${startString}${splitTexStrings.join(' ')}${endString}`, fullConfig, scene,
     );
 
     // Align individual tex strings with the combined string.
     let singleStringTexMobjects = splitTexStrings.map(tex => {
       let wrappedString = `${startString}${tex}${endString}`;
-      let stringStyle = {...style};
+      let stringConfig = {...fullConfig};
+      stringConfig.style = _.cloneDeep(fullConfig.style);
       if (tex in texToColorMap) {
-        stringStyle["fillColor"] = texToColorMap[tex];
+        stringConfig.style.fillColor = texToColorMap[tex];
       }
-      return [wrappedString, stringStyle];
-    }).map(texStringWithStyle =>
-      SingleStringTexMobject.fromTexString(...texStringWithStyle, scene)
-    );
+      return [wrappedString, stringConfig];
+    }).map(texStringWithConfig => {
+      return SingleStringTexMobject.fromTexString(...texStringWithConfig, scene)
+    });
 
     let combinedIndex = 0;
     for (let texString of singleStringTexMobjects) {
@@ -1350,10 +1401,32 @@ class TexMobject extends Mobject {
       }
     }
 
-    super(null, singleStringTexMobjects, null);
+    super(null, singleStringTexMobjects, { ...fullConfig, skipStyling: true });
     this.texStrings = _.cloneDeep(texStrings);
     this.config = _.cloneDeep(config);
     this.scene = scene;
+  }
+
+  static defaultConfig() {
+    return {
+      texToColorMap: {},
+      startString: "",
+      endString: "",
+    };
+  }
+
+  static defaultStyle() {
+    return {
+      fillColor: consts.WHITE,
+      fillOpacity: 1,
+      strokeColor: consts.WHITE,
+      strokeOpacity: 1,
+      strokeWidth: 1,
+    };
+  }
+
+  static staticConfig() {
+    return {};
   }
 
   static splitStringsWithMap(texStrings, texMap) {
@@ -1380,31 +1453,14 @@ class TexMobject extends Mobject {
     return ret;
   }
 
-  static defaultConfig() {
-    return {
-      texToColorMap: {},
-      startString: "",
-      endString: "",
-    };
-  }
-
-  static defaultStyle() {
-    return {
-      fillColor: consts.WHITE,
-      fillOpacity: 1,
-      strokeColor: consts.WHITE,
-      strokeOpacity: 1,
-      strokeWidth: 1,
-    };
-  }
-
   clone(parent) {
     let clone = new TexMobject([], {}, {});
+    clone.name = this.name;
+    clone.applyStyle(this.getStyleDict());
+
     clone.texStrings = _.cloneDeep(this.texStrings);
     clone.config = _.cloneDeep(this.config);
     clone.scene = this.scene;
-
-    clone.name = this.name;
 
     let children = this.children.map(child => child.clone());
 
@@ -1447,10 +1503,12 @@ class TextMobject extends TexMobject {
     let fullConfig = Object.assign(
       TextMobject.defaultConfig(),
       config,
-      { startString: "\\textrm{", endString: "}" },
+      TextMobject.staticConfig(),
     );
-    fullConfig.style =
-      utils.styleFromConfigAndDefaults(TextMobject.defaultStyle(), config.style);
+    fullConfig.style = utils.styleFromConfigAndDefaults(
+      TextMobject.defaultStyle(),
+      config.style,
+    );
     super(texStrings, fullConfig, scene);
     this.config = _.cloneDeep(config);
     this.texStrings = _.cloneDeep(texStrings);
@@ -1458,9 +1516,7 @@ class TextMobject extends TexMobject {
   }
 
   static defaultConfig() {
-    return {
-      texToColorMap: {},
-    };
+    return { texToColorMap: {} };
   }
 
   static defaultStyle() {
@@ -1470,6 +1526,13 @@ class TextMobject extends TexMobject {
       strokeColor: consts.WHITE,
       strokeOpacity: 1,
       strokeWidth: 1,
+    };
+  }
+
+  static staticConfig() {
+    return {
+      startString: "\\textrm{",
+      endString: "}",
     };
   }
 }

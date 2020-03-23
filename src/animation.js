@@ -126,10 +126,6 @@ class Animation {
     return alpha >= 1;
   }
 
-  createStartingMobject() {
-    return this.mobject.clone();
-  }
-
   mobjectNameFromArgs(args) {
     return args[0];
   }
@@ -402,8 +398,6 @@ class Wait extends Animation {
   }
 
   interpolateMobject() {}
-
-  createStartingMobject() {}
 
   static getDiff() {
     return {};

@@ -427,7 +427,11 @@ export default {
       if (utils.isTexData(mobjectData)) {
         let m = new Manim[mobjectData.className](
           mobjectData.args,
-          mobjectData.config,
+          {
+            ...mobjectData.config,
+            sceneHeight: this.height,
+            sceneWidth: this.width,
+          },
           this.scene,
         );
         return m;
