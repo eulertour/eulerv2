@@ -8,13 +8,17 @@
       <div class="headline my-4">TexMobject</div>
       <MobjectLabContainer
         project="tex_exhibit"
-        v-bind:layout="HORIZONTAL_EMBED"
+        v-bind:input-layout="HORIZONTAL_EMBED"
+        v-bind:canvas-height="250"
+        v-bind:height="300"
       />
 
       <div class="headline my-4">TextMobject</div>
       <MobjectLabContainer
         project="text_exhibit"
-        v-bind:layout="HORIZONTAL_EMBED"
+        v-bind:input-layout="HORIZONTAL_EMBED"
+        v-bind:canvas-height="250"
+        v-bind:height="300"
       />
     </div>
   </div>

@@ -175,12 +175,30 @@
         </div>
       </div>
     </div>
-    <div class="lab-container px-3">
-      <MobjectLabContainer
-        project="learning_by_example"
-        v-bind:layout="VERTICAL"
-        v-bind:input-width="400"
-      />
+    <div class="lab-container pl-3">
+      <v-navigation-drawer
+        right
+        permanent
+        v-bind:width="fullWidthManim ? 'auto' : '60px'"
+      >
+        <MobjectLabContainer
+          v-if="fullWidthManim"
+          collapse-editor-buttons
+          v-bind:display-close="$vuetify.breakpoint.smAndDown"
+          v-bind:input-layout="VERTICAL"
+          v-on:close="expandManim=!expandManim"
+          project="learning_by_example"
+          v-bind:canvas-width="450"
+        />
+        <v-btn
+          v-else
+          icon
+          class="menu-button mx-3 mb-1"
+          v-on:click="expandManim=!expandManim"
+        >
+          <v-icon>{{ expandManim ? 'mdi-close' : 'mdi-code-braces' }}</v-icon>
+        </v-btn>
+      </v-navigation-drawer>
     </div>
   </div>
 </template>
@@ -196,9 +214,17 @@ export default {
     MobjectLabContainer,
     Prism,
   },
+  data() {
+    return {
+      expandManim: false,
+    }
+  },
   computed: {
     VERTICAL() { return consts.MobjectLabContainerLayout.VERTICAL; },
-    HORIZONTAL() { return consts.MobjectLabContainerLayout.HORIZONTAL; },
+    HORIZONTAL_EMBED() { return consts.MobjectLabContainerLayout.HORIZONTAL_EMBED; },
+    fullWidthManim() {
+      return this.$vuetify.breakpoint.mdAndUp || this.expandManim;
+    }
   }
 }
 </script>
@@ -219,5 +245,6 @@ export default {
 .lab-container {
   overflow-y: auto;
   flex-shrink: 0;
+  display: relative;
 }
 </style>

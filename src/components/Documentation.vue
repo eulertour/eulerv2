@@ -42,10 +42,9 @@
         class="menu-button mx-3 mb-1"
         v-on:click="expandMiniMenu=!expandMiniMenu"
       >
-        <v-icon>{{ expandMiniMenu ? 'mdi-close' : 'mdi-menu' }}</v-icon>
+        <v-icon>{{ expandMiniMenu ? 'mdi-close' : 'mdi-book' }}</v-icon>
       </v-btn>
     </v-navigation-drawer>
-
     <div class="documentation-container">
       <component v-bind:is="selectedComponent"/>
     </div>
@@ -172,6 +171,6 @@ code { box-shadow: none !important; }
 p { margin-bottom: 28px !important; }
 .menu-button {
   position: absolute;
-  bottom: 0;
+  bottom: 5px;
 }
 </style>

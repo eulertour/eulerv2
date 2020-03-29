@@ -1,5 +1,11 @@
 <template>
-  <v-container fluid>
+  <v-container
+    fluid
+    v-bind:style="{
+      display: horizontalEmbedLayout ? 'flex' : 'block',
+      height: height,
+    }"
+  >
     <v-row v-bind:class="{
       'column-container': horizontalLayout,
       'column-container-vertical': verticalLayout,
@@ -17,6 +23,7 @@
           'ui-column-vertical': verticalLayout,
           'ui-column-horizontal-embed': horizontalEmbedLayout,
         }"
+        v-bind:cols="horizontalEmbedLayout ? 'auto' : undefined"
       >
         <div
           class="d-flex flex-column"
@@ -31,7 +38,6 @@
           }"
         >
         <v-toolbar
-          v-if="!horizontalEmbedLayout"
           elevation="5"
           max-height="64px"
           class="mb-2"
@@ -108,19 +114,44 @@
                 solo
               />
             </div>
-            <div>
-              <v-btn class="mr-2" large min-height="48" v-on:click="$emit('refresh-scene-choices')">
+            <div v-if="$vuetify.breakpoint.smAndUp && !collapseEditorButtons">
+              <v-btn
+                class="mr-2"
+                large
+                min-height="48"
+                v-on:click="$emit('refresh-scene-choices')"
+              >
                 <v-icon class="headline black--text">mdi-replay</v-icon>
               </v-btn>
-              <v-btn large min-height="48" v-on:click="$emit('run-manim')">
+              <v-btn
+                large
+                min-height="48"
+                v-on:click="$emit('run-manim')"
+              >
                 <v-icon class="headline black--text mr-2">mdi-cube-outline</v-icon>
                 <span class="title">Run</span>
               </v-btn>
             </div>
+            <div v-else class="d-flex flex-grow-1 justify-center">
+              <v-speed-dial v-model="dialOpen" style="z-index:10">
+                <template v-slot:activator>
+                  <v-btn fab v-model="dialOpen" height="48" width="48">
+                    <v-icon v-if="dialOpen">mdi-close</v-icon>
+                    <v-icon v-else>mdi-gesture-tap</v-icon>
+                  </v-btn>
+                </template>
+                <v-btn v-on:click="$emit('refresh-scene-choices')" fab small>
+                  <v-icon>mdi-replay</v-icon>
+                </v-btn>
+                <v-btn v-on:click="$emit('run-manim')" fab small>
+                  <v-icon>mdi-cube-outline</v-icon>
+                </v-btn>
+              </v-speed-dial>
+            </div>
           </div>
         </div>
         <v-card v-else class="d-flex justify-center align-center flex-grow-1">
-          <v-progress-circular indeterminate />
+          <v-progress-circular indeterminate/>
         </v-card>
         </div>
       </v-col>
@@ -132,7 +163,7 @@
         }"
         class="d-flex flex-column"
       >
-        <div>
+        <div v-bind:style="{width: canvasWidth + 'px'}">
           <div
             v-bind:id="parentUid + 'manim-background'"
             v-bind:style="{ position: 'relative' }"
@@ -158,6 +189,8 @@
             v-bind:animations="animations"
             v-bind:index="animationIndex"
             v-bind:offset="animationOffset"
+            v-bind:canvas-width="canvasWidth"
+            v-bind:canvas-height="canvasHeight"
             v-on:new-animation="$emit('handle-new-animation')"
           />
           <VideoControls
@@ -177,6 +210,23 @@
       </v-col>
     </v-row>
     <div id="corner-button-container">
+      <v-btn
+        v-if="displayClose"
+        class="display-1"
+        v-on:click="$emit('close')"
+        fab
+      >
+        <v-icon>mdi-close</v-icon>
+      </v-btn>
+      <!-- For testing different layout modes.
+      <v-btn class="display-1 mr-4" v-on:click="$emit('vertical-toggle')" fab large>
+        V
+      </v-btn>
+      <v-btn class="display-1 mr-4" v-on:click="$emit('horizontal-toggle')" fab large>
+        H
+      </v-btn>
+      -->
+      <!-- For displaying info and serialization
       <v-btn class="mr-4" v-on:click="$emit('debug-toggle')" fab large>
         <v-icon large>mdi-bug</v-icon>
       </v-btn>
@@ -198,6 +248,7 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
+      -->
     </div>
   </v-container>
 </template>
@@ -213,6 +264,9 @@ import JSONFormatter from 'json-formatter-js'
 export default {
   name: "MobjectLab",
   props: {
+    inputHeight: Number,
+    displayClose: Boolean,
+    collapseEditorButtons: Boolean,
     parentUid: Number,
     layoutMode: String,
     unknownAnimation: Boolean,
@@ -223,6 +277,8 @@ export default {
     animationIsValid: Boolean,
     animationOffset: Number,
     animations: Array,
+    canvasWidth: Number,
+    canvasHeight: Number,
     chosenSceneProp: String,
     code: String,
     currentAnimation: Object,
@@ -250,6 +306,11 @@ export default {
     sceneIsValid: Boolean,
     sceneLoaded: Boolean,
   },
+  data() {
+    return {
+      dialOpen: false,
+    }
+  },
   components: {
     Timeline,
     VideoControls,
@@ -260,6 +321,17 @@ export default {
     verticalLayout() { return this.layoutMode === consts.MobjectLabContainerLayout.VERTICAL; },
     horizontalLayout() { return this.layoutMode === consts.MobjectLabContainerLayout.HORIZONTAL; },
     horizontalEmbedLayout() { return this.layoutMode === consts.MobjectLabContainerLayout.HORIZONTAL_EMBED; },
+    height() {
+      if (this.horizontalEmbedLayout) {
+        if (this.inputHeight !== undefined) {
+          return this.inputHeight;
+        } else {
+          return '630px';
+        }
+      } else {
+        return 'auto';
+      }
+    },
     // For referencing screens from the template.
     CODE() { return consts.uiScreens.CODE; },
     DEBUG() { return consts.uiScreens.DEBUG; },
@@ -340,8 +412,8 @@ export default {
 }
 #corner-button-container {
   position: fixed;
-  right: 25px;
-  bottom: 25px;
+  right: 5px;
+  bottom: 5px;
 }
 .ui-panels { height: 100%; }
 .code-width { width: 100%; }
@@ -358,14 +430,13 @@ export default {
   height: 600px;
 }
 .panels-width-vertical { width: 640px; }
-.manim-column-vertical {
-  align-items: center;
-}
+.manim-column-vertical { align-items: center; }
 
 /* Overrides for horizontal embed layout. */
 .column-container-horizontal-embed {
   height: auto;
   align-items: stretch;
+  justify-content: center;
 }
 .ui-panels-horizontal-embed { height: 100%; }
 .panels-width-horizontal-embed { width: 500px; }

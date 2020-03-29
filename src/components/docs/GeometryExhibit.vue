@@ -8,19 +8,25 @@
       <div class="headline my-4">Rectangle</div>
       <MobjectLabContainer
         project="rectangle_exhibit"
-        v-bind:layout="HORIZONTAL_EMBED"
+        v-bind:input-layout="HORIZONTAL_EMBED"
+        v-bind:canvas-height="250"
+        v-bind:height="300"
       />
 
       <div class="headline my-4">Square</div>
       <MobjectLabContainer
         project="square_exhibit"
-        v-bind:layout="HORIZONTAL_EMBED"
+        v-bind:input-layout="HORIZONTAL_EMBED"
+        v-bind:canvas-height="250"
+        v-bind:height="300"
       />
 
       <div class="headline my-4">Circle</div>
       <MobjectLabContainer
         project="circle_exhibit"
-        v-bind:layout="HORIZONTAL_EMBED"
+        v-bind:input-layout="HORIZONTAL_EMBED"
+        v-bind:canvas-height="250"
+        v-bind:height="300"
       />
     </div>
   </div>

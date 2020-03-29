@@ -32,6 +32,8 @@ export default {
     animations: Array,
     index: Number,
     offset: Number,
+    canvasWidth: Number,
+    canvasHeight: Number,
   },
   computed: {
     timelineOffset() {

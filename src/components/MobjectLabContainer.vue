@@ -16,7 +16,7 @@
     v-bind:debug="debug"
     v-bind:display-canvas-menu="displayCanvasMenu"
     v-bind:expanded-panel="expandedPanel"
-    v-bind:layout-mode="layoutMode"
+    v-bind:layout-mode="manualLayout ? manualLayout : defaultLayout"
     v-bind:mobject-choices="mobjectChoices"
     v-bind:mobjects="mobjects"
     v-bind:post-animation-mobjects="postAnimationMobjects"
@@ -36,11 +36,14 @@
     v-bind:ui-screen="uiScreen"
     v-bind:unknown-animation="unknownAnimation"
     v-bind:parent-uid="_uid"
-    v-bind:height="height"
-    v-bind:width="width"
+    v-bind:canvas-height="computedCanvasHeight"
+    v-bind:canvas-width="computedCanvasWidth"
+    v-bind:input-height="height"
+    v-bind:collapse-editor-buttons="collapseEditorButtons"
+    v-bind:display-close="displayClose"
     v-on:chosen-scene-update="(val)=>{chosenScene=val}"
     v-on:config-change="handleConfigChange"
-    v-on:debug-toggle="debug = !debug"
+    v-on:debug-toggle="debug=!debug"
     v-on:display-canvas-menu="(display)=>{displayCanvasMenu=display}"
     v-on:expanded-panel-update="(val)=>{expandedPanel=val}"
     v-on:handle-arg-change="handleArgChange"
@@ -63,6 +66,9 @@
     v-on:update-code="(val)=>{code=val}"
     v-on:update-setup="updateSetup"
     v-on:attach-two-to-scene="attachTwo"
+    v-on:horizontal-toggle="manualLayout=HORIZONTAL_EMBED"
+    v-on:vertical-toggle="manualLayout=VERTICAL"
+    v-on:close="$emit('close')"
   />
 </template>
 
@@ -85,15 +91,19 @@ export default {
     MobjectLab,
   },
   props: {
-    layout: String,
+    inputLayout: String,
     project: String,
-    inputHeight: Number,
-    inputWidth: Number,
+    height: Number,
+    canvasHeight: Number,
+    canvasWidth: Number,
+    collapseEditorButtons: Boolean,
+    displayClose: Boolean,
   },
   data() {
     return {
-      width: 640,
-      height: 360,
+      computedCanvasWidth: 640,
+      computedCanvasHeight: 360,
+      manualLayout: "",
       animating: false,
       unknownAnimation: false,
       displayCanvasMenu: false,
@@ -158,21 +168,12 @@ export default {
     };
   },
   computed: {
-    layoutMode() {
-      switch (this.layout) {
-        case consts.MobjectLabContainerLayout.VERTICAL:
-        case consts.MobjectLabContainerLayout.HORIZONTAL:
-        case consts.MobjectLabContainerLayout.HORIZONTAL_EMBED:
-          return this.layout;
-        case undefined:
-          return this.$vuetify.breakpoint.mdAndDown
-            ? consts.MobjectLabContainerLayout.VERTICAL
-            : consts.MobjectLabContainerLayout.HORIZONTAL;
-        default:
-          // eslint-disable-next-line
-          console.error(`Unknown value for MobjectLabContainer.layout: ${this.layout}`);
-          return false;
-      }
+    VERTICAL() { return consts.MobjectLabContainerLayout.VERTICAL; },
+    HORIZONTAL_EMBED() { return consts.MobjectLabContainerLayout.HORIZONTAL_EMBED; },
+    defaultLayout() {
+      return this.$vuetify.breakpoint.mdAndDown
+        ? consts.MobjectLabContainerLayout.VERTICAL
+        : consts.MobjectLabContainerLayout.HORIZONTAL;
     },
     currentAnimation() {
       return this.animations[this.animationIndex];
@@ -258,6 +259,7 @@ export default {
     this.cachedBackground = null;
   },
   mounted() {
+    this.manualLayout = this.inputLayout;
     window.languagePluginLoader.then(() => {
       window.pyodide.loadPackage("manimlib").then(() => {
         window.pyodide.runPython("import manimlib");
@@ -282,19 +284,19 @@ export default {
   },
   methods: {
     attachTwo() {
-      if (this.inputWidth !== undefined) {
-        this.width = this.inputWidth;
-      } else if (this.inputHeight !== undefined) {
-        this.width = this.inputHeight * 16 / 9;
+      if (this.canvasWidth !== undefined) {
+        this.computedCanvasWidth = this.canvasWidth;
+      } else if (this.canvasHeight !== undefined) {
+        this.computedCanvasWidth = this.canvasHeight * 16 / 9;
       }
 
-      if (this.inputHeight !== undefined) {
-        this.height = this.inputHeight;
-      } else if (this.inputWidth !== undefined) {
-        this.height = this.inputWidth * 9 / 16;
+      if (this.canvasHeight !== undefined) {
+        this.computedCanvasHeight = this.canvasHeight;
+      } else if (this.canvasWidth !== undefined) {
+        this.computedCanvasHeight = this.canvasWidth * 9 / 16;
       }
 
-      this.scene = new Manim.Scene({ width: this.width, height: this.height });
+      this.scene = new Manim.Scene({ width: this.computedCanvasWidth, height: this.computedCanvasHeight });
       this.scene.appendTo(document.getElementById(this._uid + "manim-background"));
       this.cachedBackground = this.scene.makeRectangle(
         this.scene.width / 2,
@@ -429,8 +431,8 @@ export default {
           mobjectData.args,
           {
             ...mobjectData.config,
-            sceneHeight: this.height,
-            sceneWidth: this.width,
+            sceneHeight: this.computedCanvasHeight,
+            sceneWidth: this.computedCanvasWidth,
           },
           this.scene,
         );
@@ -439,8 +441,8 @@ export default {
         // TODO: Pass Scene dimensions here.
         let m = new Manim[mobjectData.className]({
           ...mobjectData.config,
-          sceneHeight: this.height,
-          sceneWidth: this.width,
+          sceneHeight: this.computedCanvasHeight,
+          sceneWidth: this.computedCanvasWidth,
         });
         m.applyStyle(mobjectData.style);
         return m;

@@ -6,7 +6,9 @@
       <p>Gives the illusion of writing Tex.</p>
       <MobjectLabContainer
         project="write_exhibit"
-        v-bind:layout="HORIZONTAL_EMBED"
+        v-bind:input-layout="HORIZONTAL_EMBED"
+        v-bind:canvas-height="250"
+        v-bind:height="300"
       />
     </div>
   </div>
