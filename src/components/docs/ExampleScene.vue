@@ -233,6 +233,7 @@ export default {
 .documentation-container { height: 100%; }
 .documentation-text-container {
   height: 100%;
+  max-width: 70%;
   overflow-y: auto;
   color: map-get($grey, "darken-3");
 }
@@ -244,7 +245,7 @@ export default {
 }
 .lab-container {
   overflow-y: auto;
-  flex-shrink: 0;
+  flex: 1 0 600px;
   display: relative;
 }
 </style>
