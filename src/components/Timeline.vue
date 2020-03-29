@@ -7,8 +7,12 @@
       v-for="(animation, index) in animations"
       v-bind:key="index"
       flat
-      class="flex-grow-0 flex-shrink-0 d-flex flex-column justify-center keyframe mr-1"
-      style="overflow-y:hidden"
+      class="flex-grow-0 flex-shrink-0 d-flex flex-column justify-center mr-1"
+      v-bind:style="{
+        overflowY: 'hidden',
+        width: (animation.runtime * animationWidth) + 'px',
+        height: animationWidth + 'px',
+      }"
     >
       <v-card-title class="d-flex justify-center headline px-2">
 				<div class="keyframe-text">{{ animation.className }}</div>
@@ -37,11 +41,15 @@ export default {
   },
   computed: {
     timelineOffset() {
-      let cursorOffset = (this.animationWidth + 4) * this.index + 4;
-      cursorOffset += this.offset * this.animationWidth;
-      return {
-        'left': cursorOffset + 'px',
+      if (this.animations.length === 0) {
+        return '0px';
       }
+      let cursorOffset = 4;
+      for (let i = 0; i < this.index; i++) {
+        cursorOffset += this.animations[i].runtime * this.animationWidth + 4;
+      }
+      cursorOffset += this.offset * this.animations[this.index].runtime * this.animationWidth;
+      return { 'left': cursorOffset + 'px' }
     }
   },
   data() {
@@ -51,10 +59,6 @@ export default {
 </script>
 
 <style scoped>
-.keyframe {
-  height: 145px;
-  width: 145px;
-}
 .keyframe-text {
 	white-space: nowrap;
 	overflow: hidden;

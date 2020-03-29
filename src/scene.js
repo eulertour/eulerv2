@@ -46,7 +46,7 @@ class Scene extends Two {
       } else {
         this.elapsedTime += timeDelta;
       }
-      let percentFinished = this.elapsedTime / 1000;
+      let percentFinished = this.elapsedTime / (animation.runtime * 1000);
       animation.interpolate(percentFinished);
       if (onStep !== null) {
         onStep(percentFinished);

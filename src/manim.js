@@ -1377,6 +1377,7 @@ class TexMobject extends Mobject {
       stringConfig.style = _.cloneDeep(fullConfig.style);
       if (tex in texToColorMap) {
         stringConfig.style.fillColor = texToColorMap[tex];
+        stringConfig.style.strokeColor = texToColorMap[tex];
       }
       return [wrappedString, stringConfig];
     }).map(texStringWithConfig => {

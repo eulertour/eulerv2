@@ -16,7 +16,7 @@ class Animation {
     return {
       rateFunc: utils.smooth,
       lagRatio: 0,
-      runtime: 1000,
+      runtime: 1,
     };
   }
 
@@ -225,7 +225,6 @@ class ShowCreation extends Animation {
   }
 }
 
-// TODO: This should start with a thick stroke width then fade to a thin one
 class Write extends Animation {
   constructor(mobject, config={}) {
     let fullConfig = Object.assign(
@@ -241,17 +240,19 @@ class Write extends Animation {
     super(mobject, fullConfig);
   }
 
-  // These will be set in setConfigFromLength().
+  // These will be set in ensureLagRatioAndRuntime().
   static defaultConfig() {
     return {
       runtime: null,
       lagRatio: null,
+      initialStrokeWidth: 5,
+      slowWriteThreshold: 12,
     };
   }
 
   static ensureLagRatioAndRuntime(config, length) {
     if (config.runtime === null) {
-      if (length) {
+      if (length < Write.defaultConfig.slowWriteThreshold) {
         config.runtime = 1;
       } else {
         config.runtime = 2;
@@ -262,8 +263,12 @@ class Write extends Animation {
     }
   }
 
+  // TODO: Modify TexMobject / TextMobject to have consistent strokeWidth.
   begin() {
-    this.mobject.applyStyle({ strokeWidth: 1, fillOpacity: 0 });
+    this.mobject.applyStyle({
+      strokeWidth: this.initialStrokeWidth,
+      fillOpacity: 0,
+    });
     Animation.prototype.begin.call(this);
     this.startingMobject.applyStyle({ fillOpacity: 0 });
   }
@@ -279,7 +284,11 @@ class Write extends Animation {
       if(!_.last(submob.children[0].vertices).equals(_.last(startingSubmobject.children[0].vertices))) {
         submob.pointwiseBecomePartial(startingSubmobject, 0, 1);
       }
-      submob.applyStyle({ fillOpacity: 2 * alpha - 1 });
+      let subAlpha = 2 * alpha - 1;
+      submob.applyStyle({
+        fillOpacity: subAlpha,
+        strokeWidth: utils.interpolate(this.initialStrokeWidth, 1, subAlpha),
+      });
     }
   }
 

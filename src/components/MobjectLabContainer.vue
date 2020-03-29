@@ -352,6 +352,7 @@ export default {
         newData.className = animationData.className;
         newData.args = animationData.args;
         newData.config = utils.renameSnakeKeys(animationData.config);
+        newData.runtime = animationData.runtime;
         newAnimations.push(newData);
       }
 
