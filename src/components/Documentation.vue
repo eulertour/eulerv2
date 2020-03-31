@@ -53,6 +53,7 @@
 
 <script>
 import About from './docs/About.vue'
+import Docs from './docs/Docs.vue'
 import ExampleScene from './docs/ExampleScene.vue'
 import LinuxInstall from './docs/LinuxInstall.vue'
 import WindowsInstall from './docs/WindowsInstall.vue'
@@ -65,6 +66,7 @@ export default {
   name: 'Documentation',
   components: {
     About,
+    Docs,
     ExampleScene,
     LinuxInstall,
     WindowsInstall,
@@ -89,6 +91,7 @@ export default {
       selectedComponent: "About",
       navigationDrawerData: [
         { title: 'About', component: 'About' },
+        { title: 'Documentation', component: 'Docs' },
         {
           title: 'Installation',
           items: [
