@@ -120,4 +120,6 @@ header.v-app-bar.v-app-bar--fixed {
   /* .CodeMirror-vscrollbar has z-index: 6 */
   z-index: 10;
 }
+.full-height { height: 100%; }
+.full-width { width: 100%; }
 </style>

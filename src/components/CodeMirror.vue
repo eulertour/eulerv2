@@ -67,9 +67,7 @@ export default {
   padding: 15px;
   flex-grow: 1;
 }
-#codemirror-container {
-}
-.CodeMirror {
+#codemirror-padding-container .CodeMirror {
   font-size: 1em;
   position: absolute;
   top: 0;

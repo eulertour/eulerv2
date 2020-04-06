@@ -9,6 +9,8 @@ firebase.json
 # external repositories
 dev/manim
 dev/pyodide
+dev/THREE.MeshLine
+example/THREE.MeshLine
 
 # local env files
 .env.local

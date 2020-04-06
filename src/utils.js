@@ -873,3 +873,33 @@ export function applyDiff(diff, reverse, mobjectDict, scene) {
     scene.update();
   }
 }
+
+export function convertPoints(points, sourceWidth, sourceHeight, destWidth, destHeight) {
+  let pointMatrix = math.transpose(math.matrix(points));
+  let conversionMatrix = getSceneConversionMatrix(
+    sourceWidth,
+    sourceHeight,
+    destWidth,
+    destHeight,
+  );
+  return math.transpose(
+    math.multiply(conversionMatrix, pointMatrix)
+  ).toArray();
+}
+
+/* Returns a matrix for transforming points in a scene with dimensions
+ * sourceWidth x sourceHeight to points in a scene with dimensions
+ * destWidth x destHeight.
+ */
+export function getSceneConversionMatrix(
+  sourceWidth,
+  sourceHeight,
+  destWidth,
+  destHeight,
+) {
+  return math.matrix([
+    [destWidth / sourceWidth, 0, 0],
+    [0, destHeight / sourceHeight, 0],
+    [0, 0, 1],
+  ]);
+}

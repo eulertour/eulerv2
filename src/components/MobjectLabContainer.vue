@@ -310,72 +310,72 @@ export default {
     runManim: function() {
       let manimlib = window.pyodide.pyimport("manimlib");
       let scene = manimlib.get_scene(this.code, [this.chosenScene]);
-      scene.render();
+      scene.run();
 
-      let debugInfo = {};
-      debugInfo.initialMobjectSerializations = scene.initial_mobject_serializations;
-      debugInfo.sceneDiffs = scene.scene_diffs;
-      debugInfo.animationDiffs = scene.animation_diffs;
-      debugInfo.animationInfoList = scene.animation_info_list;
-      this.debugInfo = debugInfo;
+      // let debugInfo = {};
+      // debugInfo.initialMobjectSerializations = scene.initial_mobject_serializations;
+      // debugInfo.sceneDiffs = scene.scene_diffs;
+      // debugInfo.animationDiffs = scene.animation_diffs;
+      // debugInfo.animationInfoList = scene.animation_info_list;
+      // this.debugInfo = debugInfo;
 
-      // Initialize Mobjects.
-      let newMobjects = {};
+      // // Initialize Mobjects.
+      // let newMobjects = {};
 
-      for (let mobjectName of Object.keys(scene.initial_mobject_serializations)) {
-        const pythonData = scene.initial_mobject_serializations[mobjectName];
-        let mobjectData = {};
-        mobjectData.className = pythonData.className;
-        mobjectData.args = pythonData.args.slice();
-        mobjectData.config = utils.renameSnakeKeys(Object.assign({}, pythonData.config));
-        mobjectData.submobjects = 'submobjects' in pythonData ? pythonData.submobjects.slice() : [];
-        if ('style' in pythonData) {
-          mobjectData.style = Object.assign({}, pythonData.style);
-        }
-        mobjectData.name = mobjectName;
-        this.buildAndSetMobject(mobjectData);
-        newMobjects[mobjectName] = mobjectData;
-      }
+      // for (let mobjectName of Object.keys(scene.initial_mobject_serializations)) {
+      //   const pythonData = scene.initial_mobject_serializations[mobjectName];
+      //   let mobjectData = {};
+      //   mobjectData.className = pythonData.className;
+      //   mobjectData.args = pythonData.args.slice();
+      //   mobjectData.config = utils.renameSnakeKeys(Object.assign({}, pythonData.config));
+      //   mobjectData.submobjects = 'submobjects' in pythonData ? pythonData.submobjects.slice() : [];
+      //   if ('style' in pythonData) {
+      //     mobjectData.style = Object.assign({}, pythonData.style);
+      //   }
+      //   mobjectData.name = mobjectName;
+      //   this.buildAndSetMobject(mobjectData);
+      //   newMobjects[mobjectName] = mobjectData;
+      // }
 
-      // Initialize submobjects.
-      for (let mobjectName of Object.keys(newMobjects)) {
-        let parentMob = newMobjects[mobjectName].mobject;
-        for (let submobjectName of newMobjects[mobjectName].submobjects) {
-          parentMob.add(newMobjects[submobjectName].mobject);
-        }
-      }
+      // // Initialize submobjects.
+      // for (let mobjectName of Object.keys(newMobjects)) {
+      //   let parentMob = newMobjects[mobjectName].mobject;
+      //   for (let submobjectName of newMobjects[mobjectName].submobjects) {
+      //     parentMob.add(newMobjects[submobjectName].mobject);
+      //   }
+      // }
 
-      // Initialize Animations.
-      let newAnimations = [];
-      for (let animationData of scene.animation_info_list) {
-        let newData = {};
-        newData.className = animationData.className;
-        newData.args = animationData.args;
-        newData.config = utils.renameSnakeKeys(animationData.config);
-        newData.runtime = animationData.runtime;
-        newAnimations.push(newData);
-      }
+      // // Initialize Animations.
+      // let newAnimations = [];
+      // for (let animationData of scene.animation_info_list) {
+      //   let newData = {};
+      //   newData.className = animationData.className;
+      //   newData.args = animationData.args;
+      //   newData.config = utils.renameSnakeKeys(animationData.config);
+      //   newData.runtime = animationData.runtime;
+      //   newAnimations.push(newData);
+      // }
 
-      this.mobjects = newMobjects;
-      this.animations = newAnimations;
-      this.animationDiffs = scene.animation_diffs;
-      this.sceneDiffs = scene.scene_diffs;
-      this.animationIndex = 0;
-      this.animationOffset = 0;
-      this.scene.clear();
-      this.scene.add(this.cachedBackground);
-      this.scene.clearAnimation();
-      this.currentAnimation.animation = this.buildCurrentAnimation();
-      this.scene.update();
-      this.preSetupMobjects = [];
-      this.applyDiff(
-        scene.scene_diffs[0],
-        /*reverse=*/ false,
-        /*moveCursor=*/ false,
-      );
-      this.preSetup = false;
-      // this.switchUiScreen(consts.uiScreens.PANELS);
-      this.play(null, /*singleAnimationOnly=*/ false);
+      // this.mobjects = newMobjects;
+      // this.animations = newAnimations;
+      // this.animationDiffs = scene.animation_diffs;
+      // this.sceneDiffs = scene.scene_diffs;
+      // this.animationIndex = 0;
+      // this.animationOffset = 0;
+      // this.scene.clear();
+      // this.scene.add(this.cachedBackground);
+      // this.scene.clearAnimation();
+      // this.currentAnimation.animation = this.buildCurrentAnimation();
+      // this.scene.update();
+      // this.preSetupMobjects = [];
+      // this.applyDiff(
+      //   scene.scene_diffs[0],
+      //   /*reverse=*/ false,
+      //   /*moveCursor=*/ false,
+      // );
+      // this.preSetup = false;
+      // // this.switchUiScreen(consts.uiScreens.PANELS);
+      // this.play(null, /*singleAnimationOnly=*/ false);
     },
     switchUiScreen: function(uiScreen) {
       this.uiScreen = uiScreen;

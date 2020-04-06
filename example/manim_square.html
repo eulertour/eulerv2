@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - geometry - shapes</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="three.js/examples/main.css">
+		<style>
+			body {
+				background-color: #f0f0f0;
+				color: #444;
+			}
+		</style>
+	</head>
+	<body>
+
+    <script src="./three.js/build/three.min.js"></script>
+    <script src="./THREE.MeshLine/src/THREE.MeshLine.js"></script>
+		<script type="module">
+
+			// import * as THREE from './three.js/build/three.module.js';
+
+			import Stats from './three.js/examples/jsm/libs/stats.module.js';
+
+			import { LineMaterial } from './three.js/examples/jsm/lines/LineMaterial.js';
+			import { LineGeometry } from './three.js/examples/jsm/lines/LineGeometry.js';
+
+			var domContainer, stats;
+
+			var camera, scene, renderer;
+
+			var group;
+
+      domContainer = document.createElement( 'div' );
+      document.body.appendChild( domContainer );
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color( 0x000000 );
+
+      camera = new THREE.PerspectiveCamera( 50, 640 / 360, 1, 1000 );
+      camera.position.set( 0, 0, 500 );
+
+      renderer = new THREE.WebGLRenderer( { antialias: true } );
+      renderer.setSize( 640, 360 );
+      domContainer.appendChild( renderer.domElement );
+
+      stats = new Stats();
+      domContainer.appendChild( stats.dom );
+
+      var DEFAULT_STYLE = {
+        strokeColor: 0xffffff,
+        strokeOpacity: 1,
+        fillColor: 0x000000,
+        fillOpacity: 1,
+        strokeWidth: 4,
+      };
+
+      function createStrokeGeometry( shape ) {
+        var geometry = new THREE.Geometry();
+        var divisions = Math.round( 12 * shape.getPoints().length );
+        for ( var i = 0, l = divisions; i < l; i ++ ) {
+          var t = i / l;
+          var point = shape.getPointAt( t );
+          geometry.vertices.push( new THREE.Vector3( point.x, point.y, 0 ) );
+        }
+        return geometry;
+      }
+
+      function addFill( shape, color, opacity ) {
+        var geometry = new THREE.ShapeBufferGeometry( shape );
+
+        var materialConfig = { color: color };
+        if ( opacity !== 1 ) {
+          materialConfig["opacity"] = opacity;
+          materialConfig["transparent"] = true;
+        }
+        var material = new THREE.MeshBasicMaterial( materialConfig );
+
+        var mesh = new THREE.Mesh( geometry, material );
+        group.add( mesh );
+      }
+
+      function addStroke( shape, color, opacity, lineWidth ) {
+        shape.autoClose = true;
+
+        var meshLine = new MeshLine();
+        meshLine.setGeometry( createStrokeGeometry( shape ) );
+        var geometry = meshLine.geometry;
+
+        var materialConfig = { color: color, lineWidth: lineWidth };
+        if ( opacity !== 1 ) {
+          materialConfig["opacity"] = opacity;
+          materialConfig["transparent"] = true;
+        }
+        var material = new MeshLineMaterial( materialConfig );
+
+        var mesh = new THREE.Mesh( geometry, material );
+        group.add( mesh );
+      }
+
+      function drawShape( shape, style ) {
+        var fullStyle = Object.assign( DEFAULT_STYLE, style );
+				addFill( shape, fullStyle.fillColor, fullStyle.fillOpacity );
+        addStroke(
+          shape,
+          fullStyle.strokeColor,
+          fullStyle.strokeOpacity,
+          fullStyle.strokeWidth,
+        );
+      }
+
+			function render() {
+				group = new THREE.Group();
+				scene.add( group );
+
+				// Heart
+				var x = 0, y = 0;
+				var heartShape = new THREE.Shape()
+					.moveTo( x + 25, y + 25 )
+					.bezierCurveTo( x + 25, y + 25, x + 20, y, x, y )
+					.bezierCurveTo( x - 30, y, x - 30, y + 35, x - 30, y + 35 )
+					.bezierCurveTo( x - 30, y + 55, x - 10, y + 77, x + 25, y + 95 )
+					.bezierCurveTo( x + 60, y + 77, x + 80, y + 55, x + 80, y + 35 )
+					.bezierCurveTo( x + 80, y + 35, x + 80, y, x + 50, y )
+					.bezierCurveTo( x + 35, y, x + 25, y + 25, x + 25, y + 25 );
+
+        var heartStyle = {
+          strokeColor: 0xffffff,
+          strokeOpacity: 1,
+          fillColor: 0xf00000,
+          fillOpacity: 1,
+          strokeWidth: 4,
+        };
+
+        drawShape( heartShape, heartStyle );
+				renderer.render( scene, camera );
+        // console.log(renderer.info.memory.geometries);
+			}
+
+			function animate() {
+				requestAnimationFrame( animate );
+				render();
+				stats.update();
+			}
+			animate();
+		</script>
+	</body>
+</html>
