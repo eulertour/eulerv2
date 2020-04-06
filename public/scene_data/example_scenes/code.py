@@ -9,8 +9,8 @@ class SquareToCircle(Scene):
         circle.set_fill(PINK, opacity=0.5)
 
         self.play(ShowCreation(square))
-        self.play(ReplacementTransform(square, circle))
-        # self.play(FadeOut(circle))
+        self.play(Transform(square, circle))
+        self.play(FadeOut(square))
 
 
 # class WriteStuff(Scene):

@@ -172,3 +172,4 @@ export const SCENE_DATA_DIR = "/scene_data";
 export const CODE_NAME = "code.py";
 export const THUMBNAIL_NAME = "thumbnail.png";
 export const DESCRIPTION_NAME = "description.txt"
+export const MS_PER_SECOND = 1000;

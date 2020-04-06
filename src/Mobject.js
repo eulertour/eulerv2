@@ -31,12 +31,14 @@ class Mobject {
 
   computeShape(points) {
     let shape = new THREE.Shape().moveTo(points[0][0], points[0][1]);
-    for (let i = 0; i < points.length / 3; i++) {
-      shape.quadraticCurveTo(
-        points[3 * i + 1][0],
-        points[3 * i + 1][1],
-        points[3 * i + 2][0],
-        points[3 * i + 2][1],
+    for (let i = 0; i < points.length / 4; i++) {
+      shape.bezierCurveTo(
+        points[4 * i + 1][0],
+        points[4 * i + 1][1],
+        points[4 * i + 2][0],
+        points[4 * i + 2][1],
+        points[4 * i + 3][0],
+        points[4 * i + 3][1],
       );
     }
     return shape;

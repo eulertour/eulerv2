@@ -10,6 +10,7 @@
         v-bind:scene-choices="sceneChoices"
         v-bind:chosen-scene-prop="chosenScene"
         v-on:chosen-scene-update="(newScene)=>{this.chosenScene=newScene}"
+        v-on:refresh-scene-choices="refreshSceneChoices"
         v-on:run-manim="runManim"
       />
     </div>
@@ -48,6 +49,7 @@
       };
     },
     created() {
+      this.fps = 15;
       this.scene = null;
       this.camera = null;
       this.renderer = null;
@@ -98,58 +100,6 @@
       renderer.setSize(rendererWidth, rendererWidth / aspectRatio);
       this.$refs.rendererContainer.appendChild(renderer.domElement);
       this.renderer = renderer;
-
-      // function init() {
-      //   let heartPoints = [
-      //     [0.4053477928657103,0.4053477928657103,0],
-      //     [0.4053477928657103,0.4053477928657103,0],
-      //     [0.32427823429256825,0,0],
-      //     [0,0,0],
-      //     [0,0,0],
-      //     [-0.4864173514388524,0,0],
-      //     [-0.4864173514388524,0.5674869100119945,0],
-      //     [-0.4864173514388524,0.5674869100119945,0],
-      //     [-0.4864173514388524,0.5674869100119945,0],
-      //     [-0.4864173514388524,0.8917651443045627,0],
-      //     [-0.16213911714628412,1.2484712020263877,0],
-      //     [0.4053477928657103,1.5403216128896993,0],
-      //     [0.4053477928657103,1.5403216128896993,0],
-      //     [0.9728347028777048,1.2484712020263877,0],
-      //     [1.297112937170273,0.8917651443045627,0],
-      //     [1.297112937170273,0.5674869100119945,0],
-      //     [1.297112937170273,0.5674869100119945,0],
-      //     [1.297112937170273,0.5674869100119945,0],
-      //     [1.297112937170273,0,0],
-      //     [0.8106955857314206,0,0],
-      //     [0.8106955857314206,0,0],
-      //     [0.5674869100119945,0,0],
-      //     [0.4053477928657103,0.4053477928657103,0],
-      //     [0.4053477928657103,0.4053477928657103,0],
-      //   ];
-
-      //   let heart = new Mobject(
-      //     heartPoints, {
-      //       strokeColor: 0xffffff,
-      //       strokeOpacity: 1,
-      //       fillColor: 0xf00000,
-      //       fillOpacity: 1,
-      //       strokeWidth: 4,
-      //     }
-      //   );
-      //   scene.add(heart.mesh);
-      // }
-
-      // let stats = new Stats();
-      // rendererContainer.appendChild(stats.dom);
-			// function animate() {
-			// 	requestAnimationFrame( animate );
-			// 	render();
-			// 	stats.update();
-			// }
-
-      // init();
-			// animate();
-      // renderer.render(scene, camera);
     },
     methods: {
       loadCode() {
@@ -174,51 +124,43 @@
         manimlib.destroy();
       },
       runManim() {
-        this.frameData.length = 0;
         let manimlib = window.pyodide.pyimport("manimlib");
         let scene = manimlib.get_scene(this.code, [this.chosenScene]);
-        scene.run();
+        scene.render();
+        this.frameData = scene.dump_frames();
+        this.animateFrameData();
         manimlib.destroy();
       },
-      dumpFrames(frames) {
-        this.frameData = frames;
-        this.animateFrameData();
-      },
-      captureMobjects(mobjectData) {
-        // for (let data of this.frameData) {
-        //   console.log(data[0].points[11]);
-        // }
-        // this.frameData.push(mobjectData);
-        // let mobjects = [];
-        // for (let data of mobjectData) {
-        //   let mobject = new Mobject(data.points, data.style);
-        //   mobjects.push(mobject);
-        //   this.scene.add(mobject.mesh);
-        // }
-        // this.renderer.render(this.scene, this.camera);
-      },
+      // FPS throttling adapted from https://stackoverflow.com/a/19772220/3753494
       animateFrameData() {
+        let fpsInterval = consts.MS_PER_SECOND / this.fps;
+        let lastFrameTimestamp = window.performance.now();
         let currentFrame = 0;
-
+        let mobjectsToDispose = [];
         let animate = () => {
           if (currentFrame !== this.frameData.length - 1) {
             requestAnimationFrame(animate);
+            let now = window.performance.now();
+            let elapsed = now - lastFrameTimestamp;
+            if (elapsed > fpsInterval) {
+              lastFrameTimestamp = now - (elapsed % fpsInterval);
+              let frameData = this.frameData[currentFrame];
+              for (let mobjectData of frameData) {
+                let mobject = new Mobject(mobjectData.points, mobjectData.style);
+                mobjectsToDispose.push(mobject);
+                this.scene.add(mobject.mesh);
+              }
+              this.renderer.render(this.scene, this.camera);
+              while(this.scene.children.length > 0){
+                this.scene.remove(this.scene.children[0]);
+              }
+              currentFrame += 1;
+            }
+          } else {
+            mobjectsToDispose.forEach(mob => mob.dispose());
+            this.frameData.length = 0;
           }
-          let frameData = this.frameData[currentFrame];
-
-          let meshes = [];
-          for (let mobjectData of frameData) {
-            let mesh = new Mobject(mobjectData.points, mobjectData.style).mesh;
-            meshes.push(mesh);
-            this.scene.add(mesh);
-          }
-          this.renderer.render(this.scene, this.camera);
-          for (let mesh of meshes) {
-            this.scene.remove(mesh);
-          }
-          currentFrame += 1;
         }
-
         animate();
       }
     },
