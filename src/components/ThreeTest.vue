@@ -73,7 +73,7 @@
         width: rendererWidth,
         height: rendererWidth / aspectRatio,
       });
-      window.texToPoints = tex => SingleStringTexMobject.texToPoints(
+      window.tex_to_points = tex => SingleStringTexMobject.texToPoints(
         tex,
         this.twoScene,
         /*dumpToFile=*/false,
