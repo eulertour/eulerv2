@@ -25,7 +25,9 @@
   import axios from "axios";
   import path from "path";
   // import Stats from "../../node_modules/three/examples/jsm/libs/stats.module.js";
+  import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
   import { Mobject } from  "../Mobject.js";
+  import { Scene, SingleStringTexMobject } from  "../manim.js";
   import EditorControls from  "./EditorControls.vue";
 
   import { codemirror } from 'vue-codemirror'
@@ -54,16 +56,34 @@
       this.camera = null;
       this.renderer = null;
       this.frameData = [];
+      this.twoScene = null;
     },
     mounted() {
+      let aspectRatio = 16 / 9;
+      let rendererWidth = 480;
+      let sceneHeight = 8;
+      let verticalFOVDeg = 45;
+      let verticalFOVRad = THREE.Math.degToRad(verticalFOVDeg);
+      // Camera position equation from https://stackoverflow.com/a/13351534/3753494
+      let cameraZPosition = sceneHeight / (2 * Math.tan(verticalFOVRad / 2));
+
       window.capture_mobjects = this.captureMobjects;
       window.dump_frames = this.dumpFrames;
+      this.twoScene = new Scene({
+        width: rendererWidth,
+        height: rendererWidth / aspectRatio,
+      });
+      window.texToPoints = tex => SingleStringTexMobject.texToPoints(
+        tex,
+        this.twoScene,
+        /*dumpToFile=*/false,
+        /*includeCommands=*/true,
+      );
 
       window.languagePluginLoader.then(() => {
         window.pyodide.loadPackage("manimlib").then(() => {
           window.pyodide.runPython("import manimlib");
           window.pyodide.runPython("import numpy");
-          // window.texToPoints = tex => Manim.SingleStringTexMobject.texToPoints(tex, this.scene);
         }).then(() => {
           this.loadCode().then(() => {
             this.refreshSceneChoices();
@@ -74,28 +94,17 @@
         });
       });
 
-      let scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x000000);
-      this.scene = scene;
+      // Scene
+      this.scene = new THREE.Scene();
 
-      let aspectRatio = 16 / 9;
-      let rendererWidth = 480;
-      let verticalFOVDeg = 45;
-      let verticalFOVRad = THREE.Math.degToRad(verticalFOVDeg);
-      let zDist = 4 / Math.tan(verticalFOVRad / 2);
+      // Camera
       let camera = new THREE.PerspectiveCamera(
         verticalFOVDeg, aspectRatio, 1, 10,
       );
-      camera.position.z = zDist;
+      camera.position.z = cameraZPosition;
       this.camera = camera;
 
-      // let height = 2 * Math.tan( verticalFOVRad / 2 ) * zDist;
-      // let width = height * camera.aspect;
-      // console.log(`camera.fov = ${camera.fov}`);
-      // console.log(`camera.position.z = ${camera.position.z}`);
-      // console.log(`visible width = ${width}`);
-      // console.log(`visible height = ${height}`);
-
+      // Renderer
       let renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setSize(rendererWidth, rendererWidth / aspectRatio);
       this.$refs.rendererContainer.appendChild(renderer.domElement);
@@ -131,7 +140,7 @@
         this.animateFrameData();
         manimlib.destroy();
       },
-      // FPS throttling adapted from https://stackoverflow.com/a/19772220/3753494
+      // FPS throttling from https://stackoverflow.com/a/19772220/3753494
       animateFrameData() {
         let fpsInterval = consts.MS_PER_SECOND / this.fps;
         let lastFrameTimestamp = window.performance.now();
@@ -146,7 +155,11 @@
               lastFrameTimestamp = now - (elapsed % fpsInterval);
               let frameData = this.frameData[currentFrame];
               for (let mobjectData of frameData) {
-                let mobject = new Mobject(mobjectData.points, mobjectData.style);
+                let mobject = new Mobject(
+                  mobjectData.points,
+                  mobjectData.style,
+                  mobjectData.commands,
+                );
                 mobjectsToDispose.push(mobject);
                 this.scene.add(mobject.mesh);
               }

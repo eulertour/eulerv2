@@ -1294,19 +1294,23 @@ class SingleStringTexMobject extends Mobject {
   }
 
   static texToPoints(tex, scene, dumpToFile=false) {
-    let points = SingleStringTexMobject
+    let texSymbols = SingleStringTexMobject
       .fromTexString(tex, {}, scene)
-      .submobjects()
-      .map(texSymbol => utils.getManimPoints(texSymbol));
-
+      .submobjects();
+    let points = [];
+    let commands = [];
+    for (let texSymbol of texSymbols) {
+      let [p, c] = utils.getManimPoints(texSymbol);
+      points.push(p);
+      commands.push(c);
+    }
     if (dumpToFile) {
       let f = new File([JSON.stringify(points)], `${tex}.txt`, {type: "text/plain"});
       let url = URL.createObjectURL(f);
       // eslint-disable-next-line
       console.info(`Dumped points for ${tex} to ${url}`);
     }
-
-    return points;
+    return [points, commands];
   }
 
   clone(parent) {

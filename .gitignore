@@ -11,6 +11,7 @@ dev/manim
 dev/pyodide
 dev/THREE.MeshLine
 example/THREE.MeshLine
+example/three.js
 
 # local env files
 .env.local
