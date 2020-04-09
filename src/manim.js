@@ -1304,6 +1304,7 @@ class SingleStringTexMobject extends Mobject {
       points.push(p);
       commands.push(c);
     }
+
     if (dumpToFile) {
       let f = new File([JSON.stringify(points)], `${tex}.txt`, {type: "text/plain"});
       let url = URL.createObjectURL(f);

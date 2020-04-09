@@ -1,4 +1,3 @@
-/* eslint-disable */
 import * as THREE from "three";
 import { MeshLine, MeshLineMaterial } from "three.meshline";
 import { BufferGeometryUtils } from "three/examples/jsm/utils/BufferGeometryUtils.js";
@@ -32,26 +31,18 @@ class Mobject {
   }
 
   computeShapes(points, commands) {
-    let shape = new THREE.Shape();
     let shapePath = new THREE.ShapePath();
-    shape.moveTo(points[0][0], points[0][1]);
     shapePath.moveTo(points[0][0], points[0][1]);
     for (let i = 0; i < points.length / 4; i++) {
       if (commands[i + 1] === "M") {
         if (i + 1 < points.length / 4) {
-          shape.moveTo(points[4 * i + 3][0], points[4 * i + 3][1]);
-          shapePath.moveTo(points[4 * i + 3][0], points[4 * i + 3][1]);
+          shapePath.moveTo(
+            points[4 * i + 3][0],
+            points[4 * i + 3][1],
+          );
         }
         continue;
       }
-      shape.bezierCurveTo(
-        points[4 * i + 1][0],
-        points[4 * i + 1][1],
-        points[4 * i + 2][0],
-        points[4 * i + 2][1],
-        points[4 * i + 3][0],
-        points[4 * i + 3][1],
-      );
       shapePath.bezierCurveTo(
         points[4 * i + 1][0],
         points[4 * i + 1][1],
@@ -61,9 +52,7 @@ class Mobject {
         points[4 * i + 3][1],
       );
     }
-    let shapePathShapes = shapePath.toShapes();
-    return shapePathShapes;
-    // return shape;
+    return shapePath.toShapes();
   }
 
   createMeshLineGeometries(shape) {

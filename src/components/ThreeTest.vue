@@ -19,13 +19,10 @@
 </template>
 
 <script>
-  /* eslint-disable */
   import * as THREE from "three";
   import * as consts from "../constants.js";
   import axios from "axios";
   import path from "path";
-  // import Stats from "../../node_modules/three/examples/jsm/libs/stats.module.js";
-  import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
   import { Mobject } from  "../Mobject.js";
   import { Scene, SingleStringTexMobject } from  "../manim.js";
   import EditorControls from  "./EditorControls.vue";
