@@ -13,9 +13,9 @@ const DEFAULT_STYLE = {
 const STROKE_SHRINK_FACTOR = 100;
 
 class Mobject {
-  constructor(points, style, commands) {
+  constructor(points, style) {
     this.style = Object.assign(DEFAULT_STYLE, style);
-    this.shapes = this.computeShapes(points, commands);
+    this.shapes = this.computeShapes(points);
     this.fillMesh = this.computeFillMesh();
     this.strokeMesh = this.computeStrokeMesh();
     this.mesh = new THREE.Group();
@@ -30,18 +30,15 @@ class Mobject {
     this.strokeMesh.material.dispose();
   }
 
-  computeShapes(points, commands) {
+  computeShapes(points) {
     let shapePath = new THREE.ShapePath();
-    shapePath.moveTo(points[0][0], points[0][1]);
+    let move = true;
     for (let i = 0; i < points.length / 4; i++) {
-      if (commands[i + 1] === "M") {
-        if (i + 1 < points.length / 4) {
-          shapePath.moveTo(
-            points[4 * i + 3][0],
-            points[4 * i + 3][1],
-          );
-        }
-        continue;
+      if (move) {
+        shapePath.moveTo(
+          points[4 * i][0],
+          points[4 * i][1],
+        );
       }
       shapePath.bezierCurveTo(
         points[4 * i + 1][0],
@@ -51,6 +48,17 @@ class Mobject {
         points[4 * i + 3][0],
         points[4 * i + 3][1],
       );
+      if (4 * i + 4 < points.length) {
+        move = false;
+        let lastPoint = points[4 * i + 3];
+        let nextPoint = points[4 * i + 4];
+        for (let j = 0; j < 3; j++) {
+          if (Math.abs(lastPoint[j] - nextPoint[j]) > 1e-6) {
+            move = true;
+            break;
+          }
+        }
+      }
     }
     return shapePath.toShapes();
   }

@@ -144,7 +144,7 @@
         let currentFrame = 0;
         let mobjectsToDispose = [];
         let animate = () => {
-          if (currentFrame !== this.frameData.length - 1) {
+          if (currentFrame !== this.frameData.length) {
             requestAnimationFrame(animate);
             let now = window.performance.now();
             let elapsed = now - lastFrameTimestamp;
@@ -155,7 +155,6 @@
                 let mobject = new Mobject(
                   mobjectData.points,
                   mobjectData.style,
-                  mobjectData.commands,
                 );
                 mobjectsToDispose.push(mobject);
                 this.scene.add(mobject.mesh);

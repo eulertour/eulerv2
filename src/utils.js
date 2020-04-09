@@ -118,18 +118,17 @@ export function interpolateStyles(style1, style2, alpha) {
  */
 export function getManimPoints(mobject) {
   let points = [];
-  let commands = [];
   let length = mobject.children[0].vertices.length;
   for (let i = 0; i < length - 1; i++) {
     let curV = mobject.children[0].vertices[i];
     let nextV = mobject.children[0].vertices[i + 1];
+    if (nextV.command === "M") continue;
     points.push([curV.x, curV.y, 0]);
     points.push([curV.controls.right.x, curV.controls.right.y, 0]);
     points.push([nextV.controls.left.x, nextV.controls.left.y, 0]);
     points.push([nextV.x, nextV.y, 0]);
-    commands.push(curV.command);
   }
-  return [points, commands];
+  return points;
 }
 
 /* Returns a Path from a list of points of the form: [

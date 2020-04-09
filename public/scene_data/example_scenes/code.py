@@ -130,14 +130,3 @@ class UpdatersExample(Scene):
             run_time=5,
         )
         self.wait()
-
-class TexProblem(Scene):
-    def construct(self):
-        grid_title = TextMobject("e").scale(8)
-        grid_transform_title = TextMobject("o").scale(8)
-        grid_transform_title.move_to(grid_title, UL)
-        self.play(
-            Transform(grid_title, grid_transform_title)
-        )
-        self.wait()
-
