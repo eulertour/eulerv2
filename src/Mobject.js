@@ -10,7 +10,7 @@ const DEFAULT_STYLE = {
   strokeWidth: 4,
 };
 
-const STROKE_SHRINK_FACTOR = 100;
+const STROKE_SHRINK_FACTOR = 700;
 
 class Mobject {
   constructor(points, style) {

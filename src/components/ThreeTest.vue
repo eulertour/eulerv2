@@ -14,7 +14,7 @@
         v-on:run-manim="runManim"
       />
     </div>
-    <div class="renderer-container" ref="rendererContainer"/>
+    <canvas class="renderer-element" ref="renderer"/>
   </div>
 </template>
 
@@ -49,34 +49,22 @@
     },
     created() {
       this.fps = 15;
+      this.aspectRatio = 16 / 9;
+      this.rendererHeight = 480; // Set to 720 for 720p
+      this.sceneHeight = 8;
+      this.cameraNear = 1; // z = 2
+      this.cameraFar = 5;  // z = -2
+      this.cameraZPosition = 3;
+
       this.scene = null;
       this.camera = null;
       this.renderer = null;
+
       this.frameData = [];
       this.twoScene = null;
     },
     mounted() {
-      let aspectRatio = 16 / 9;
-      let rendererWidth = 480;
-      let sceneHeight = 8;
-      let verticalFOVDeg = 45;
-      let verticalFOVRad = THREE.Math.degToRad(verticalFOVDeg);
-      // Camera position equation from https://stackoverflow.com/a/13351534/3753494
-      let cameraZPosition = sceneHeight / (2 * Math.tan(verticalFOVRad / 2));
-
-      window.capture_mobjects = this.captureMobjects;
-      window.dump_frames = this.dumpFrames;
-      this.twoScene = new Scene({
-        width: rendererWidth,
-        height: rendererWidth / aspectRatio,
-      });
-      window.tex_to_points = tex => SingleStringTexMobject.texToPoints(
-        tex,
-        this.twoScene,
-        /*dumpToFile=*/false,
-        /*includeCommands=*/true,
-      );
-
+      // Pyodide
       window.languagePluginLoader.then(() => {
         window.pyodide.loadPackage("manimlib").then(() => {
           window.pyodide.runPython("import manimlib");
@@ -91,21 +79,46 @@
         });
       });
 
+      // A global function for generating tex from python.
+      this.twoScene = new Scene({
+        width: this.sceneWidth,
+        height: this.sceneHeight,
+      });
+      window.tex_to_points = tex => SingleStringTexMobject.texToPoints(
+        tex,
+        this.twoScene,
+        /*dumpToFile=*/false,
+        /*includeCommands=*/true,
+      );
+
       // Scene
       this.scene = new THREE.Scene();
 
       // Camera
-      let camera = new THREE.PerspectiveCamera(
-        verticalFOVDeg, aspectRatio, 1, 10,
+      this.camera = new THREE.OrthographicCamera(
+        /*left=*/-this.sceneWidth / 2,
+        /*right=*/this.sceneWidth / 2,
+        /*top=*/this.sceneHeight / 2,
+        /*bottom=*/-this.sceneHeight / 2,
+        /*near=*/this.cameraNear,
+        /*far=*/this.cameraFar,
       );
-      camera.position.z = cameraZPosition;
-      this.camera = camera;
+      this.camera.position.z = this.cameraZPosition;
 
       // Renderer
-      let renderer = new THREE.WebGLRenderer({ antialias: true });
-      renderer.setSize(rendererWidth, rendererWidth / aspectRatio);
-      this.$refs.rendererContainer.appendChild(renderer.domElement);
-      this.renderer = renderer;
+      this.renderer = new THREE.WebGLRenderer({
+        canvas: this.$refs.renderer,
+        antialias: true,
+      });
+      this.renderer.setSize(
+        this.rendererHeight * this.aspectRatio,
+        this.rendererHeight,
+        false,
+      );
+    },
+    computed: {
+      sceneWidth() { return this.sceneHeight * this.aspectRatio; },
+      rendererWidth() { return this.rendererHeight * this.aspectRatio; },
     },
     methods: {
       loadCode() {
@@ -193,5 +206,9 @@
   left: 0;
   right: 0;
   height: 100%;
+}
+.renderer-element {
+  width: 480px;
+  height: 270px;
 }
 </style>
