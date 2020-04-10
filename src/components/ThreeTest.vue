@@ -146,7 +146,7 @@
         let manimlib = window.pyodide.pyimport("manimlib");
         let scene = manimlib.get_scene(this.code, [this.chosenScene]);
         scene.render();
-        this.frameData = scene.dump_frames();
+        this.frameData = scene.camera.frame_data;
         this.animateFrameData();
         manimlib.destroy();
       },
