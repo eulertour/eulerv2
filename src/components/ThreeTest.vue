@@ -119,6 +119,7 @@
     computed: {
       sceneWidth() { return this.sceneHeight * this.aspectRatio; },
       rendererWidth() { return this.rendererHeight * this.aspectRatio; },
+      fpsInterval() { return consts.MS_PER_SECOND / this.fps; }
     },
     methods: {
       loadCode() {
@@ -152,32 +153,32 @@
       },
       // FPS throttling from https://stackoverflow.com/a/19772220/3753494
       animateFrameData() {
-        let fpsInterval = consts.MS_PER_SECOND / this.fps;
         let lastFrameTimestamp = window.performance.now();
         let currentFrame = 0;
         let mobjectsToDispose = [];
         let animate = () => {
           if (currentFrame !== this.frameData.length) {
             requestAnimationFrame(animate);
+
             let now = window.performance.now();
             let elapsed = now - lastFrameTimestamp;
-            if (elapsed > fpsInterval) {
-              lastFrameTimestamp = now - (elapsed % fpsInterval);
-              let frameData = this.frameData[currentFrame];
-              for (let mobjectData of frameData) {
-                let mobject = new Mobject(
-                  mobjectData.points,
-                  mobjectData.style,
-                );
-                mobjectsToDispose.push(mobject);
-                this.scene.add(mobject.mesh);
-              }
-              this.renderer.render(this.scene, this.camera);
-              while(this.scene.children.length > 0){
-                this.scene.remove(this.scene.children[0]);
-              }
-              currentFrame += 1;
+            if (elapsed <= this.fpsInterval) return;
+            lastFrameTimestamp = now - (elapsed % this.fpsInterval);
+
+            let frameData = this.frameData[currentFrame];
+            for (let mobjectData of frameData) {
+              let mobject = new Mobject(
+                mobjectData.points,
+                mobjectData.style,
+              );
+              mobjectsToDispose.push(mobject);
+              this.scene.add(mobject.mesh);
             }
+            this.renderer.render(this.scene, this.camera);
+            while(this.scene.children.length > 0){
+              this.scene.remove(this.scene.children[0]);
+            }
+            currentFrame += 1;
           } else {
             mobjectsToDispose.forEach(mob => mob.dispose());
             this.frameData.length = 0;

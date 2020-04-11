@@ -34,24 +34,25 @@ class Mobject {
     let shapePath = new THREE.ShapePath();
     let move = true;
     for (let i = 0; i < points.length / 4; i++) {
+      let curveStartIndex = 4 * i;
       if (move) {
         shapePath.moveTo(
-          points[4 * i][0],
-          points[4 * i][1],
+          points[curveStartIndex][0],
+          points[curveStartIndex][1],
         );
       }
       shapePath.bezierCurveTo(
-        points[4 * i + 1][0],
-        points[4 * i + 1][1],
-        points[4 * i + 2][0],
-        points[4 * i + 2][1],
-        points[4 * i + 3][0],
-        points[4 * i + 3][1],
+        points[curveStartIndex + 1][0],
+        points[curveStartIndex + 1][1],
+        points[curveStartIndex + 2][0],
+        points[curveStartIndex + 2][1],
+        points[curveStartIndex + 3][0],
+        points[curveStartIndex + 3][1],
       );
-      if (4 * i + 4 < points.length) {
+      if (curveStartIndex + 4 < points.length) {
         move = false;
-        let lastPoint = points[4 * i + 3];
-        let nextPoint = points[4 * i + 4];
+        let lastPoint = points[curveStartIndex + 3];
+        let nextPoint = points[curveStartIndex + 4];
         for (let j = 0; j < 3; j++) {
           if (Math.abs(lastPoint[j] - nextPoint[j]) > 1e-6) {
             move = true;
@@ -104,7 +105,7 @@ class Mobject {
 
   computeFillMesh() {
     let opacity = this.style.fillOpacity;
-    let geometry = new THREE.ShapeBufferGeometry(this.shapes);
+    let geometry = new THREE.ShapeBufferGeometry(this.shapes, 11);
     let materialConfig = { color: new THREE.Color(this.style.fillColor) };
     if (opacity !== 1) {
       materialConfig["opacity"] = opacity;
