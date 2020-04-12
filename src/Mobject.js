@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { MeshLine, MeshLineMaterial } from "three.meshline";
 import { BufferGeometryUtils } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+// import { MobjectFillBufferGeometry } from "./MobjectFillBufferGeometry.js";
 
 const DEFAULT_STYLE = {
   strokeColor: 0xffffff,
@@ -12,15 +13,33 @@ const DEFAULT_STYLE = {
 
 const STROKE_SHRINK_FACTOR = 700;
 
-class Mobject {
-  constructor(points, style) {
+// TODO: Make MobjectFillBufferGeometry a ShapeBufferGeometry.
+class Mobject extends THREE.Group {
+  constructor(id, points, style) {
+    super();
+    this.mobjectId = id;
     this.style = Object.assign(DEFAULT_STYLE, style);
     this.shapes = this.computeShapes(points);
     this.fillMesh = this.computeFillMesh();
     this.strokeMesh = this.computeStrokeMesh();
-    this.mesh = new THREE.Group();
-    this.mesh.add(this.fillMesh);
-    this.mesh.add(this.strokeMesh);
+    this.add(this.fillMesh);
+    this.add(this.strokeMesh);
+  }
+
+  update(points, style) {
+    this.style = Object.assign(this.style, style);
+    this.shapes = this.computeShapes(points);
+
+    this.remove(...this.children);
+    this.fillMesh.geometry.dispose();
+    this.fillMesh.material.dispose();
+    this.strokeMesh.geometry.dispose();
+    this.strokeMesh.material.dispose();
+
+    this.fillMesh = this.computeFillMesh();
+    this.strokeMesh = this.computeStrokeMesh();
+    this.add(this.fillMesh);
+    this.add(this.strokeMesh);
   }
 
   dispose() {

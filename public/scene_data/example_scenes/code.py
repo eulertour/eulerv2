@@ -70,6 +70,17 @@ class OpeningManimExample(Scene):
         self.wait()
 
 
+class Morph(Scene):
+    def construct(self):
+        circle = Circle() \
+            .set_fill(PINK, opacity=0.2)
+        circle.generate_target() \
+            .scale(2) \
+            .set_fill(opacity=1) \
+            .set_stroke(BLUE)
+        self.play(MoveToTarget(circle), rate_func=there_and_back)
+
+
 class SquareToCircle(Scene):
     def construct(self):
         circle = Circle()

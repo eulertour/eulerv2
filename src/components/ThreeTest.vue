@@ -19,6 +19,7 @@
 </template>
 
 <script>
+  /* eslint-disable */
   import * as THREE from "three";
   import * as consts from "../constants.js";
   import axios from "axios";
@@ -62,6 +63,10 @@
 
       this.frameData = [];
       this.twoScene = null;
+
+      // Maps Mobject IDs from Python to their respective Mobjects in
+      // Javascript.
+      this.mobjectDict = {};
     },
     mounted() {
       // Pyodide
@@ -151,36 +156,52 @@
         this.animateFrameData();
         manimlib.destroy();
       },
-      // FPS throttling from https://stackoverflow.com/a/19772220/3753494
       animateFrameData() {
         let lastFrameTimestamp = window.performance.now();
         let currentFrame = 0;
-        let mobjectsToDispose = [];
         let animate = () => {
           if (currentFrame !== this.frameData.length) {
             requestAnimationFrame(animate);
 
+            // Throttle FPS (https://stackoverflow.com/a/19772220/3753494).
             let now = window.performance.now();
             let elapsed = now - lastFrameTimestamp;
             if (elapsed <= this.fpsInterval) return;
             lastFrameTimestamp = now - (elapsed % this.fpsInterval);
 
             let frameData = this.frameData[currentFrame];
+            // Add each Mobject in the frame.
+            let currentFrameMobjectIds = new Set();
             for (let mobjectData of frameData) {
-              let mobject = new Mobject(
-                mobjectData.points,
-                mobjectData.style,
-              );
-              mobjectsToDispose.push(mobject);
-              this.scene.add(mobject.mesh);
+              let { id, points, style } = mobjectData;
+              currentFrameMobjectIds.add(id);
+              if (id in this.mobjectDict) {
+                this.mobjectDict[id].update(points, style);
+              } else {
+                this.mobjectDict[id] = new Mobject(id, points, style);
+              }
+              // As long as all Mobjects are direct children of the Scene
+              // double-adding them has no effect.
+              this.scene.add(this.mobjectDict[id]);
             }
+
+            // Remove Mobjects that isn't in the frame.
+            for (let i = this.scene.children.length - 1; i >= 0; i--) {
+              let child = this.scene.children[i];
+              if (!(currentFrameMobjectIds.has(child.mobjectId))) {
+                this.scene.remove(child);
+              }
+            }
+
             this.renderer.render(this.scene, this.camera);
-            while(this.scene.children.length > 0){
-              this.scene.remove(this.scene.children[0]);
-            }
             currentFrame += 1;
           } else {
-            mobjectsToDispose.forEach(mob => mob.dispose());
+            // Clear the Scene.
+            for (let i = this.scene.children.length - 1; i >= 0; i--) {
+              let child = this.scene.children[i];
+              this.scene.remove(child);
+              child.dispose();
+            }
             this.frameData.length = 0;
           }
         }
