@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { MeshLine, MeshLineMaterial } from "three.meshline";
 import { BufferGeometryUtils } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import * as utils from "./utils.js";
 // import { MobjectFillBufferGeometry } from "./MobjectFillBufferGeometry.js";
 
 const DEFAULT_STYLE = {
@@ -20,8 +21,14 @@ class Mobject extends THREE.Group {
     this.mobjectId = id;
     this.style = Object.assign(DEFAULT_STYLE, style);
     this.shapes = this.computeShapes(points);
-    this.fillMesh = this.computeFillMesh();
-    this.strokeMesh = this.computeStrokeMesh();
+    this.fillMesh = new THREE.Mesh(
+      this.computeFillGeometry(),
+      this.computeFillMaterial(),
+    );
+    this.strokeMesh = new THREE.Mesh(
+      this.computeStrokeGeometry(),
+      this.computeStrokeMaterial(),
+    );
     this.add(this.fillMesh);
     this.add(this.strokeMesh);
   }
@@ -30,16 +37,13 @@ class Mobject extends THREE.Group {
     this.style = Object.assign(this.style, style);
     this.shapes = this.computeShapes(points);
 
-    this.remove(...this.children);
     this.fillMesh.geometry.dispose();
-    this.fillMesh.material.dispose();
-    this.strokeMesh.geometry.dispose();
-    this.strokeMesh.material.dispose();
+    this.fillMesh.geometry = this.computeFillGeometry();
+    this.updateFillMaterial();
 
-    this.fillMesh = this.computeFillMesh();
-    this.strokeMesh = this.computeStrokeMesh();
-    this.add(this.fillMesh);
-    this.add(this.strokeMesh);
+    this.strokeMesh.geometry.dispose();
+    this.strokeMesh.geometry = this.computeStrokeGeometry();
+    this.updateStrokeMaterial();
   }
 
   dispose() {
@@ -100,38 +104,48 @@ class Mobject extends THREE.Group {
     return fullGeometry;
   }
 
-  computeStrokeMesh() {
-    let materialConfig = {
-      color: new THREE.Color(this.style.strokeColor),
-      lineWidth: this.style.strokeWidth / STROKE_SHRINK_FACTOR,
-    };
-    let opacity = this.style.strokeOpacity;
-    if (opacity !== 1) {
-      materialConfig["opacity"] = opacity;
-      materialConfig["transparent"] = true;
-    }
-
+  computeStrokeGeometry() {
     let geometries = [];
     for (let shape of this.shapes) {
       geometries.push(this.createMeshLineGeometries(shape));
     }
-
-    let geometry = BufferGeometryUtils.mergeBufferGeometries(geometries);
-    let material = new MeshLineMaterial(materialConfig);
-    let mesh = new THREE.Mesh(geometry, material);
-    return mesh;
+    return BufferGeometryUtils.mergeBufferGeometries(geometries);
   }
 
-  computeFillMesh() {
-    let opacity = this.style.fillOpacity;
-    let geometry = new THREE.ShapeBufferGeometry(this.shapes, 11);
-    let materialConfig = { color: new THREE.Color(this.style.fillColor) };
-    if (opacity !== 1) {
-      materialConfig["opacity"] = opacity;
-      materialConfig["transparent"] = true;
-    }
-    let material = new THREE.MeshBasicMaterial(materialConfig);
-    return new THREE.Mesh(geometry, material);
+  computeStrokeMaterial() {
+    let { strokeOpacity, strokeColor, strokeWidth } = this.style;
+    return new MeshLineMaterial({
+      color: new THREE.Color(strokeColor),
+      opacity: strokeOpacity,
+      transparent: true,
+      lineWidth: strokeWidth / STROKE_SHRINK_FACTOR,
+    });
+  }
+
+  updateStrokeMaterial() {
+    let { strokeColor, strokeOpacity, strokeWidth } = this.style;
+    this.strokeMesh.material.color.set(utils.manimColorToHex(strokeColor));
+    this.strokeMesh.material.opacity = strokeOpacity;
+    this.strokeMesh.material.lineWidth = strokeWidth / STROKE_SHRINK_FACTOR;
+  }
+
+  computeFillGeometry() {
+    return new THREE.ShapeBufferGeometry(this.shapes, 11);
+  }
+
+  computeFillMaterial() {
+    let { fillOpacity, fillColor } = this.style;
+    return new THREE.MeshBasicMaterial({
+      color: new THREE.Color(fillColor),
+      opacity: fillOpacity,
+      transparent: true,
+    });
+  }
+
+  updateFillMaterial() {
+    let { fillColor, fillOpacity } = this.style;
+    this.fillMesh.material.color.set(utils.manimColorToHex(fillColor));
+    this.fillMesh.material.opacity = fillOpacity;
   }
 }
 

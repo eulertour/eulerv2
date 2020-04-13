@@ -185,7 +185,7 @@
               this.scene.add(this.mobjectDict[id]);
             }
 
-            // Remove Mobjects that isn't in the frame.
+            // Remove each Mobject that isn't in the frame.
             for (let i = this.scene.children.length - 1; i >= 0; i--) {
               let child = this.scene.children[i];
               if (!(currentFrameMobjectIds.has(child.mobjectId))) {
