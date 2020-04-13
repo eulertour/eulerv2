@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { MeshLine, MeshLineMaterial } from "three.meshline";
 import { BufferGeometryUtils } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import * as utils from "./utils.js";
-// import { MobjectFillBufferGeometry } from "./MobjectFillBufferGeometry.js";
+import { MobjectFillBufferGeometry } from "./MobjectFillBufferGeometry.js";
 
 const DEFAULT_STYLE = {
   strokeColor: 0xffffff,
@@ -37,8 +37,7 @@ class Mobject extends THREE.Group {
     this.style = Object.assign(this.style, style);
     this.shapes = this.computeShapes(points);
 
-    this.fillMesh.geometry.dispose();
-    this.fillMesh.geometry = this.computeFillGeometry();
+    this.updateFillGeometry();
     this.updateFillMaterial();
 
     this.strokeMesh.geometry.dispose();
@@ -130,7 +129,11 @@ class Mobject extends THREE.Group {
   }
 
   computeFillGeometry() {
-    return new THREE.ShapeBufferGeometry(this.shapes, 11);
+    return new MobjectFillBufferGeometry(this.shapes, 11);
+  }
+
+  updateFillGeometry() {
+    this.fillMesh.geometry.update(this.shapes);
   }
 
   computeFillMaterial() {

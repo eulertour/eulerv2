@@ -19,7 +19,6 @@
 </template>
 
 <script>
-  /* eslint-disable */
   import * as THREE from "three";
   import * as consts from "../constants.js";
   import axios from "axios";
