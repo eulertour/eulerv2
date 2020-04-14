@@ -5,7 +5,7 @@ import VueRouter from 'vue-router'
 // import Gallery from '../components/Gallery.vue'
 // import Documentation from '../components/Documentation.vue'
 import ThreeTest from '../components/ThreeTest.vue'
-import * as consts from '../constants'
+// import * as consts from '../constants'
 // import * as path from 'path'
 
 Vue.use(VueRouter);
@@ -21,7 +21,7 @@ export default new VueRouter({
     //   path: path.join(consts.BASE_LAB_URL, ':project'),
     //   component: MobjectLabContainer,
     // },
-    { path: consts.THREE_TEST_URL, component: ThreeTest },
-    { path: '*', redirect: consts.THREE_TEST_URL },
+    { path: '', component: ThreeTest },
+    { path: '*', redirect: '' },
   ],
 });

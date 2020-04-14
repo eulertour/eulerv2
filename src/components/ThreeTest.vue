@@ -172,10 +172,21 @@
             // Add each Mobject in the frame.
             let currentFrameMobjectIds = new Set();
             for (let mobjectData of frameData) {
-              let { id, points, style } = mobjectData;
+              let {
+                id,
+                points,
+                style,
+                needsRedraw,
+                needsTriangulation,
+              } = mobjectData;
               currentFrameMobjectIds.add(id);
               if (id in this.mobjectDict) {
-                this.mobjectDict[id].update(points, style);
+                this.mobjectDict[id].update(
+                  points,
+                  style,
+                  needsRedraw,
+                  needsTriangulation,
+                );
               } else {
                 this.mobjectDict[id] = new Mobject(id, points, style);
               }
@@ -197,9 +208,11 @@
           } else {
             // Clear the Scene.
             for (let i = this.scene.children.length - 1; i >= 0; i--) {
-              let child = this.scene.children[i];
-              this.scene.remove(child);
-              child.dispose();
+              this.scene.remove(this.scene.children[i]);
+            }
+            // Dispose the Mobjects.
+            for (let mobject of Object.values(this.mobjectDict)) {
+              mobject.dispose();
             }
             this.frameData.length = 0;
           }

@@ -13,7 +13,6 @@ const DEFAULT_STYLE = {
 
 const STROKE_SHRINK_FACTOR = 700;
 
-// TODO: Make MobjectFillBufferGeometry a ShapeBufferGeometry.
 class Mobject extends THREE.Group {
   constructor(id, points, style) {
     super();
@@ -32,15 +31,24 @@ class Mobject extends THREE.Group {
     this.add(this.strokeMesh);
   }
 
-  update(points, style) {
+  update(points, style, needsRedraw, /* needsTriangulation */) {
+    if (needsRedraw) {
+      this.shapes = this.computeShapes(points);
+
+      // If a material is currently invisible and will continue to be invisible
+      // on the next frame, skip updating the corresponding geometry.
+      if (!(this.style.fillOpacity === 0 && style.fillOpacity === 0)) {
+        this.updateFillGeometry();
+      }
+      if (!(this.style.strokeOpacity === 0 && style.strokeOpacity === 0)) {
+        // TODO: Update this rather than destroying and recreating it.
+        this.strokeMesh.geometry.dispose();
+        this.strokeMesh.geometry = this.computeStrokeGeometry();
+      }
+    }
+
     this.style = Object.assign(this.style, style);
-    this.shapes = this.computeShapes(points);
-
-    this.updateFillGeometry();
     this.updateFillMaterial();
-
-    this.strokeMesh.geometry.dispose();
-    this.strokeMesh.geometry = this.computeStrokeGeometry();
     this.updateStrokeMaterial();
   }
 
