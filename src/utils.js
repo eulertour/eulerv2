@@ -904,28 +904,3 @@ export function getSceneConversionMatrix(
     [0, 0, 1],
   ]);
 }
-
-/* Returns the hex representation of the given color as a string. */
-export function manimColorToHex(color) {
-  let manimlib = window.pyodide.pyimport("manimlib");
-  let uppercaseColor = color.toUpperCase();
-  let ret;
-  if (uppercaseColor in manimlib.constants.COLOR_MAP) {
-    ret = manimlib.constants.COLOR_MAP[uppercaseColor];
-  } else if (`${uppercaseColor}_C` in manimlib.constants.COLOR_MAP) {
-    ret = manimlib.constants.COLOR_MAP[`${uppercaseColor}_C`];
-  } else if (color.startsWith('#')) {
-    ret = color;
-  } else {
-    // eslint-disable-next-line
-    console.warn(`Can't generate hex string for unknown color ${color}.`);
-    ret = undefined;
-  }
-  manimlib.destroy();
-  if (ret !== undefined) {
-    // Remove leading '#'.
-    return parseInt(ret.slice(1), 16);
-  } else {
-    return ret;
-  }
-}

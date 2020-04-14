@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import { MeshLine, MeshLineMaterial } from "three.meshline";
 import { BufferGeometryUtils } from "three/examples/jsm/utils/BufferGeometryUtils.js";
-import * as utils from "./utils.js";
 import { MobjectFillBufferGeometry } from "./MobjectFillBufferGeometry.js";
 
 const DEFAULT_STYLE = {
@@ -123,7 +122,7 @@ class Mobject extends THREE.Group {
 
   updateStrokeMaterial() {
     let { strokeColor, strokeOpacity, strokeWidth } = this.style;
-    this.strokeMesh.material.color.set(utils.manimColorToHex(strokeColor));
+    this.strokeMesh.material.color.set(strokeColor);
     this.strokeMesh.material.opacity = strokeOpacity;
     this.strokeMesh.material.lineWidth = strokeWidth / STROKE_SHRINK_FACTOR;
   }
@@ -147,7 +146,7 @@ class Mobject extends THREE.Group {
 
   updateFillMaterial() {
     let { fillColor, fillOpacity } = this.style;
-    this.fillMesh.material.color.set(utils.manimColorToHex(fillColor));
+    this.fillMesh.material.color.set(fillColor);
     this.fillMesh.material.opacity = fillOpacity;
   }
 }
