@@ -57,7 +57,7 @@
     <div class="headline mb-3">Test the installation</div>
 		<p>
       Type in <code>python -m manim -h</code> and if nothing went wrong during
-      the installtion process you should see the help text.
+      the installation process you should see the help text.
     </p>
 		<p>
       Use <code>python -m manim example_scene.py SquareToCircle -pl</code> to

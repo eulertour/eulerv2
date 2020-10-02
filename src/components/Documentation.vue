@@ -55,6 +55,7 @@
 import About from './docs/About.vue'
 import ExampleScene from './docs/ExampleScene.vue'
 import LinuxInstall from './docs/LinuxInstall.vue'
+import MacInstall from './docs/MacInstall.vue'
 import WindowsInstall from './docs/WindowsInstall.vue'
 import GeometryExhibit from './docs/GeometryExhibit.vue'
 import TexExhibit from './docs/TexExhibit.vue'
@@ -67,6 +68,7 @@ export default {
     About,
     ExampleScene,
     LinuxInstall,
+    MacInstall,
     WindowsInstall,
     GeometryExhibit,
     TexExhibit,
@@ -93,6 +95,7 @@ export default {
           title: 'Installation',
           items: [
             { title: 'Linux', component: 'LinuxInstall' },
+            { title: 'Mac', component: 'MacInstall' },
             { title: 'Windows', component: 'WindowsInstall' },
           ],
         },
