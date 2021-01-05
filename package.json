@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@simonwep/pickr": "^1.4.0",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "chroma-js": "^2.0.4",
     "codemirror": "^5.49.2",
     "core-js": "^3.6.4",
