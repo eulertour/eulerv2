@@ -15,7 +15,7 @@
     "core-js": "^3.6.4",
     "html2canvas": "^1.0.0-rc.5",
     "json-formatter-js": "^2.3.3",
-    "mathjs": "^6.2.5",
+    "mathjs": "^7.5.1",
     "path": "^0.12.7",
     "two.js": "https://github.com/jonobr1/two.js",
     "vue": "^2.6.10",
