@@ -22,7 +22,7 @@
     "vue-material": "^1.0.0-beta-11",
     "vue-prism-component": "^1.1.1",
     "vue-router": "^3.1.5",
-    "vuetify": "^2.2.11"
+    "vuetify": "^2.6.10"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.2.3",
